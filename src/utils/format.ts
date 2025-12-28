@@ -5,183 +5,76 @@
  * Icon modes:
  * - 'nerd' (default): Nerd Font icons - requires patched font
  * - 'unicode': Clean Unicode symbols - works everywhere
- * - 'emoji': Standard emoji - colorful fallback
  *
- * Set via: DEVLOG_ICON_MODE=nerd|unicode|emoji
+ * Set via: DEVLOG_ICON_MODE=nerd|unicode
+ *
+ * Features:
+ * - Smart Nerd Font detection (auto-detects terminal support)
+ * - React Ink rendering for complex layouts
+ * - Gradient text support
+ * - ASCII flowcharts (Mermaid alternative)
  */
 
 // =============================================================================
-// ICON SETS
+// RE-EXPORT FROM SPECIALIZED MODULES
 // =============================================================================
 
-type IconName =
-  | 'success' | 'error' | 'warning' | 'info'
-  | 'active' | 'paused' | 'completed' | 'failed' | 'pending'
-  | 'task' | 'issue' | 'feature' | 'note'
-  | 'arrow' | 'link' | 'back' | 'sync'
-  | 'folder' | 'file' | 'tag' | 'time'
-  | 'chart' | 'up' | 'down' | 'same'
-  | 'lock' | 'unlock' | 'user'
-  | 'git' | 'terminal' | 'code' | 'debug' | 'search'
-  | 'save' | 'load' | 'config' | 'heart';
+// Smart icon system with auto-detection
+export {
+  Icon,
+  icon,
+  hasNerdFontSupport,
+  resetIconCache,
+  unicodeIcons,
+  nerdIcons,
+  type IconName,
+  type NerdIconName,
+} from './icons.js';
 
-type IconSet = Record<IconName, string>;
-
-// Nerd Font icons (requires patched font like Hack Nerd Font, FiraCode Nerd, etc.)
-// Reference: https://www.nerdfonts.com/cheat-sheet
-const NerdIcons: IconSet = {
-  // Status indicators
-  success:   '\u{f00c}',  //  fa-check
-  error:     '\u{f00d}',  //  fa-times
-  warning:   '\u{f071}',  //  fa-exclamation-triangle
-  info:      '\u{f05a}',  //  fa-info-circle
-
-  // Task states
-  active:    '\u{f04b}',  //  fa-play
-  paused:    '\u{f04c}',  //  fa-pause
-  completed: '\u{f058}',  //  fa-check-circle
-  failed:    '\u{f057}',  //  fa-times-circle
-  pending:   '\u{f111}',  //  fa-circle (outline)
-
-  // Categories
-  task:      '\u{f0ae}',  //  fa-tasks
-  issue:     '\u{f188}',  //  fa-bug
-  feature:   '\u{f005}',  //  fa-star
-  note:      '\u{f249}',  //  fa-sticky-note
-
-  // Actions
-  arrow:     '\u{f061}',  //  fa-arrow-right
-  link:      '\u{f08e}',  //  fa-external-link
-  back:      '\u{f060}',  //  fa-arrow-left
-  sync:      '\u{f021}',  //  fa-refresh
-
-  // Data
-  folder:    '\u{f07b}',  //  fa-folder
-  file:      '\u{f15b}',  //  fa-file
-  tag:       '\u{f02b}',  //  fa-tag
-  time:      '\u{f017}',  //  fa-clock-o
-
-  // Metrics
-  chart:     '\u{f080}',  //  fa-bar-chart
-  up:        '\u{f062}',  //  fa-arrow-up
-  down:      '\u{f063}',  //  fa-arrow-down
-  same:      '\u{f068}',  //  fa-minus
-
-  // Session
-  lock:      '\u{f023}',  //  fa-lock
-  unlock:    '\u{f09c}',  //  fa-unlock
-  user:      '\u{f007}',  //  fa-user
-
-  // Dev tools
-  git:       '\u{e702}',  //  nf-dev-git_branch
-  terminal:  '\u{f120}',  //  fa-terminal
-  code:      '\u{f121}',  //  fa-code
-  debug:     '\u{f188}',  //  fa-bug
-  search:    '\u{f002}',  //  fa-search
-  save:      '\u{f0c7}',  //  fa-save
-  load:      '\u{f019}',  //  fa-download
-  config:    '\u{f013}',  //  fa-cog
-  heart:     '\u{f004}',  //  fa-heart
-};
-
-// Unicode fallback - works in any terminal
-const UnicodeIcons: IconSet = {
-  success: '●', error: '○', warning: '◐', info: 'ℹ',
-  active: '▶', paused: '⏸', completed: '✓', failed: '✗', pending: '○',
-  task: '◆', issue: '◇', feature: '★', note: '◎',
-  arrow: '→', link: '↗', back: '←', sync: '⟳',
-  folder: '▸', file: '▫', tag: '▪', time: '◷',
-  chart: '▥', up: '↑', down: '↓', same: '─',
-  lock: '⊘', unlock: '⊙', user: '◈',
-  git: '⎇', terminal: '▶', code: '⟨⟩', debug: '⚙', search: '⌕',
-  save: '↓', load: '↑', config: '⚙', heart: '♥',
-};
-
-// Emoji fallback - colorful, works on most systems
-const EmojiIcons: IconSet = {
-  success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️',
-  active: '▶️', paused: '⏸️', completed: '✅', failed: '❌', pending: '⏳',
-  task: '📋', issue: '🐛', feature: '⭐', note: '📝',
-  arrow: '➡️', link: '🔗', back: '⬅️', sync: '🔄',
-  folder: '📁', file: '📄', tag: '🏷️', time: '🕐',
-  chart: '📊', up: '📈', down: '📉', same: '➖',
-  lock: '🔒', unlock: '🔓', user: '👤',
-  git: '📦', terminal: '💻', code: '👨‍💻', debug: '🔧', search: '🔍',
-  save: '💾', load: '📥', config: '⚙️', heart: '💓',
-};
+// React Ink rendering
+export {
+  renderInkToString,
+  renderGradientText,
+  renderGradientDivider,
+  renderGradientBoxTop,
+  renderStatusCard,
+  renderResultBlock,
+  renderSessionInfo,
+  renderTaskList,
+  renderAsciiFlowchart,
+  renderQuickFlow,
+  renderGradientBox,
+  drawBox,
+  borderChars,
+  StatusCard,
+  ResultBlock,
+  SessionInfo,
+  TaskList,
+  AsciiFlowchart,
+  type GradientPreset,
+  type BorderStyle,
+  type StatusCardProps,
+  type ResultBlockProps,
+  type FlowNode,
+  type FlowEdge,
+} from './ink-renderer.js';
 
 // =============================================================================
-// ICON MODE SELECTION
+// LEGACY COMPATIBILITY - Keep existing icon aliases working
 // =============================================================================
 
-type IconMode = 'nerd' | 'unicode' | 'emoji';
-
-function detectIconMode(): IconMode {
-  // Explicit override via environment variable
-  const envMode = process.env.DEVLOG_ICON_MODE?.toLowerCase();
-  if (envMode === 'unicode' || envMode === 'emoji' || envMode === 'nerd') {
-    return envMode;
-  }
-
-  // Default to Nerd Fonts
-  return 'nerd';
-}
-
-function getIconSet(mode: IconMode): IconSet {
-  switch (mode) {
-    case 'nerd': return NerdIcons;
-    case 'emoji': return EmojiIcons;
-    case 'unicode': return UnicodeIcons;
-    default: return NerdIcons;
-  }
-}
-
-// Current mode and active icon set
-let currentMode: IconMode = detectIconMode();
-let activeIcons: IconSet = getIconSet(currentMode);
-
-/**
- * Change icon mode at runtime
- */
-export function setIconMode(mode: IconMode): void {
-  currentMode = mode;
-  activeIcons = getIconSet(mode);
-}
-
-/**
- * Get current icon mode
- */
-export function getIconMode(): IconMode {
-  return currentMode;
-}
-
-// =============================================================================
-// ICON ACCESS
-// =============================================================================
-
-/**
- * Dynamic icon getter - uses current mode
- */
-export const Icon: IconSet = new Proxy({} as IconSet, {
-  get(_target, prop: string) {
-    return activeIcons[prop as IconName] || prop;
-  },
-});
-
-/**
- * Get a specific icon by name
- */
-export function icon(name: IconName): string {
-  return activeIcons[name] || name;
-}
+import { Icon as IconInternal } from './icons.js';
 
 // Semantic aliases for common use cases
 export const Status = {
-  get ok() { return activeIcons.success; },
-  get err() { return activeIcons.error; },
-  get warn() { return activeIcons.warning; },
-  get info() { return activeIcons.info; },
+  get ok() { return IconInternal.success; },
+  get err() { return IconInternal.error; },
+  get warn() { return IconInternal.warning; },
+  get info() { return IconInternal.info; },
 } as const;
+
+// Internal alias for using Icon within this file
+const I = IconInternal;
 
 // =============================================================================
 // ANSI COLORS (optional - for terminal output)
@@ -267,8 +160,8 @@ export function kv(key: string, value: string | number | boolean | null | undefi
 /**
  * Format a section with items
  */
-export function section(title: string, items: string[], icon?: string): string {
-  const headerIcon = icon || Icon.folder;
+export function section(title: string, items: string[], iconStr?: string): string {
+  const headerIcon = iconStr || I.folder;
   const lines = [header(headerIcon, title, 3)];
   if (items.length === 0) {
     lines.push('_No items_');
@@ -343,28 +236,28 @@ export interface ToolResponse {
  * Build a success response
  */
 export function successResponse(title: string, body: string): string {
-  return `${Icon.success} **${title}**\n\n${body}`;
+  return `${I.success} **${title}**\n\n${body}`;
 }
 
 /**
  * Build an error response
  */
 export function errorResponse(title: string, body: string): string {
-  return `${Icon.error} **${title}**\n\n${body}`;
+  return `${I.error} **${title}**\n\n${body}`;
 }
 
 /**
  * Build a warning response
  */
 export function warningResponse(title: string, body: string): string {
-  return `${Icon.warning} **${title}**\n\n${body}`;
+  return `${I.warning} **${title}**\n\n${body}`;
 }
 
 /**
  * Build an info response
  */
 export function infoResponse(title: string, body: string): string {
-  return `${Icon.info} **${title}**\n\n${body}`;
+  return `${I.info} **${title}**\n\n${body}`;
 }
 
 // =============================================================================
@@ -381,19 +274,19 @@ export function formatWorkspaceStatus(data: {
   const lines: string[] = [];
 
   if (data.active) {
-    lines.push(header(Icon.success, 'Workspace Active', 2));
+    lines.push(header(I.success, 'Workspace Active', 2));
     if (data.task) lines.push(kv('Task', data.task));
     if (data.agent) lines.push(kv('Agent', code(data.agent)));
     if (data.duration) lines.push(kv('Duration', duration(data.duration)));
   } else {
-    lines.push(header(Icon.unlock, 'Workspace Available', 2));
+    lines.push(header(I.unlock, 'Workspace Available', 2));
     lines.push('No active session');
   }
 
   if (data.progress && data.progress.length > 0) {
     lines.push('');
-    lines.push(header(Icon.chart, 'Progress', 3));
-    data.progress.forEach(p => lines.push(listItem(Icon.arrow, p)));
+    lines.push(header(I.chart, 'Progress', 3));
+    data.progress.forEach(p => lines.push(listItem(I.arrow, p)));
   }
 
   return lines.join('\n');
@@ -410,10 +303,10 @@ export function formatTaskList(tasks: Array<{
   }
 
   const statusIcon = {
-    active: Icon.active,
-    paused: Icon.paused,
-    completed: Icon.completed,
-    pending: Icon.pending,
+    active: I.active,
+    paused: I.paused,
+    completed: I.completed,
+    pending: I.pending,
   };
 
   return tasks.map(t => {
@@ -426,7 +319,7 @@ export function formatTaskList(tasks: Array<{
 export function formatStats(stats: Record<string, number>): string {
   const lines: string[] = [];
   for (const [key, value] of Object.entries(stats)) {
-    lines.push(`${Icon.tag} **${key}:** ${value}`);
+    lines.push(`${I.tag} **${key}:** ${value}`);
   }
   return lines.join('\n');
 }
@@ -473,7 +366,7 @@ export function progressBar(current: number, total: number, width = 20): string 
   const pct = total > 0 ? current / total : 0;
   const filled = Math.round(pct * width);
   const empty = width - filled;
-  return `[${Icon.success.repeat(filled)}${Icon.pending.repeat(empty)}] ${Math.round(pct * 100)}%`;
+  return `[${I.success.repeat(filled)}${I.pending.repeat(empty)}] ${Math.round(pct * 100)}%`;
 }
 
 /**

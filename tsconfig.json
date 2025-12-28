@@ -3,6 +3,8 @@
     "target": "es2018",
     "module": "Node16",
     "moduleResolution": "Node16",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

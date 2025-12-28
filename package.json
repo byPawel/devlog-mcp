@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "fetch:spec-types": "curl -o spec.types.ts https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/refs/heads/main/schema/draft/schema.ts",
-    "build": "npm run build:esm && npm run build:cjs && npm run build:servers",
+    "build": "npm run build:esm && npm run build:servers",
     "build:esm": "mkdir -p dist/esm && echo '{\"type\": \"module\"}' > dist/esm/package.json && tsc -p tsconfig.prod.json",
     "build:esm:w": "npm run build:esm -- -w",
     "build:cjs": "mkdir -p dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json && tsc -p tsconfig.cjs.json",
@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "ajv": "^6.12.6",
+    "chalk": "^5.6.2",
     "content-type": "^1.0.5",
     "cors": "^2.8.5",
     "cross-spawn": "^7.0.5",
@@ -74,9 +75,13 @@
     "express": "^5.0.1",
     "express-rate-limit": "^7.5.0",
     "glob": "^11.0.3",
+    "gradient-string": "^3.0.0",
     "gray-matter": "^4.0.3",
+    "ink": "^6.6.0",
+    "ink-gradient": "^3.0.0",
     "pkce-challenge": "^5.0.0",
     "raw-body": "^3.0.0",
+    "react": "^19.2.3",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.24.1"
   },
