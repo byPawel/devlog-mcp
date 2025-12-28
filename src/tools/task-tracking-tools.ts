@@ -9,6 +9,7 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getCurrentWorkspace } from '../utils/workspace.js';
 import { extractMetadata, updateMetadata, formatDuration, calculateDuration } from '../utils/session-metadata.js';
+import { Icon, errorResponse } from '../utils/format.js';
 
 export const taskTrackingTools: ToolDefinition[] = [
   {
@@ -28,19 +29,19 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '❌ No active workspace. Use devlog_workspace_claim first.',
+              text: errorResponse('No Workspace', 'Use devlog_workspace_claim first.'),
             },
           ],
         };
       }
-      
+
       const metadata = await extractMetadata(workspace.path);
       if (!metadata) {
         return {
           content: [
             {
               type: 'text',
-              text: '❌ No tracking metadata found. Workspace may be corrupted.',
+              text: errorResponse('No Metadata', 'Tracking metadata not found. Workspace may be corrupted.'),
             },
           ],
         };
@@ -56,7 +57,7 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ Task title is required when starting a new task.',
+                  text: errorResponse('Missing Title', 'Task title is required when starting a new task.'),
                 },
               ],
             };
@@ -81,16 +82,16 @@ export const taskTrackingTools: ToolDefinition[] = [
           metadata.active_task = taskId;
           
           // Update workspace content
-          const updatedContent = workspace.content + 
-            `\n🎯 [${timeStr}] Started task: ${title}\n`;
+          const updatedContent = workspace.content +
+            `\n${Icon.task} [${timeStr}] Started task: ${title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `🎯 Task started: ${title}\nID: ${taskId}`,
+                text: `${Icon.task} Task started: ${title}\nID: ${taskId}`,
               },
             ],
           };
@@ -103,32 +104,32 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ No active task to pause.',
+                  text: errorResponse('No Task', 'No active task to pause.'),
                 },
               ],
             };
           }
-          
+
           activeTask.status = 'paused';
           metadata.active_task = undefined;
-          
+
           // Add pause to timing
           metadata.timing.pauses.push({
             start: now,
             end: now, // Will be updated on resume
             reason: reason || 'manual_pause'
           });
-          
-          const updatedContent = workspace.content + 
-            `\n⏸️ [${timeStr}] Paused: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
+
+          const updatedContent = workspace.content +
+            `\n${Icon.paused} [${timeStr}] Paused: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `⏸️ Task paused: ${activeTask.title}`,
+                text: `${Icon.paused} Task paused: ${activeTask.title}`,
               },
             ],
           };
@@ -141,15 +142,15 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ No paused task to resume.',
+                  text: errorResponse('No Task', 'No paused task to resume.'),
                 },
               ],
             };
           }
-          
+
           pausedTask.status = 'active';
           metadata.active_task = pausedTask.id;
-          
+
           // Update last pause end time
           const lastPause = metadata.timing.pauses[metadata.timing.pauses.length - 1];
           if (lastPause && !lastPause.end) {
@@ -157,17 +158,17 @@ export const taskTrackingTools: ToolDefinition[] = [
             const pauseDuration = calculateDuration(lastPause.start, lastPause.end);
             metadata.timing.pause_minutes += pauseDuration;
           }
-          
-          const updatedContent = workspace.content + 
-            `\n▶️ [${timeStr}] Resumed: ${pausedTask.title}\n`;
+
+          const updatedContent = workspace.content +
+            `\n${Icon.active} [${timeStr}] Resumed: ${pausedTask.title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `▶️ Task resumed: ${pausedTask.title}`,
+                text: `${Icon.active} Task resumed: ${pausedTask.title}`,
               },
             ],
           };
@@ -180,24 +181,24 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ No active task to iterate.',
+                  text: errorResponse('No Task', 'No active task to iterate.'),
                 },
               ],
             };
           }
-          
+
           activeTask.iterations++;
-          
-          const updatedContent = workspace.content + 
-            `\n🔄 [${timeStr}] Iteration ${activeTask.iterations} on: ${activeTask.title}\n`;
+
+          const updatedContent = workspace.content +
+            `\n${Icon.sync} [${timeStr}] Iteration ${activeTask.iterations} on: ${activeTask.title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `🔄 Iteration ${activeTask.iterations} on: ${activeTask.title}`,
+                text: `${Icon.sync} Iteration ${activeTask.iterations} on: ${activeTask.title}`,
               },
             ],
           };
@@ -210,34 +211,34 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ No active task to complete.',
+                  text: errorResponse('No Task', 'No active task to complete.'),
                 },
               ],
             };
           }
-          
+
           activeTask.status = 'completed';
           activeTask.end = now;
           activeTask.duration_minutes = calculateDuration(activeTask.start, activeTask.end);
           metadata.active_task = undefined;
-          
-          const updatedContent = workspace.content + 
-            `\n✅ [${timeStr}] Completed: ${activeTask.title} (${formatDuration(activeTask.duration_minutes)}, ${activeTask.iterations} iterations)\n`;
+
+          const updatedContent = workspace.content +
+            `\n${Icon.completed} [${timeStr}] Completed: ${activeTask.title} (${formatDuration(activeTask.duration_minutes)}, ${activeTask.iterations} iterations)\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `✅ Task completed: ${activeTask.title}\n` +
+                text: `${Icon.completed} Task completed: ${activeTask.title}\n` +
                       `Duration: ${formatDuration(activeTask.duration_minutes)}\n` +
                       `Iterations: ${activeTask.iterations}`,
               },
             ],
           };
         }
-        
+
         case 'abandon': {
           const activeTask = metadata.tasks.find(t => t.status === 'active' || t.status === 'paused');
           if (!activeTask) {
@@ -245,38 +246,38 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: '❌ No task to abandon.',
+                  text: errorResponse('No Task', 'No task to abandon.'),
                 },
               ],
             };
           }
-          
+
           activeTask.status = 'abandoned';
           activeTask.end = now;
           activeTask.duration_minutes = calculateDuration(activeTask.start, activeTask.end);
           metadata.active_task = undefined;
-          
-          const updatedContent = workspace.content + 
-            `\n❌ [${timeStr}] Abandoned: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
+
+          const updatedContent = workspace.content +
+            `\n${Icon.failed} [${timeStr}] Abandoned: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
-          
+
           return {
             content: [
               {
                 type: 'text',
-                text: `❌ Task abandoned: ${activeTask.title}`,
+                text: `${Icon.failed} Task abandoned: ${activeTask.title}`,
               },
             ],
           };
         }
-        
+
         default:
           return {
             content: [
               {
                 type: 'text',
-                text: '❌ Invalid action',
+                text: errorResponse('Invalid Action', 'Unknown task action.'),
               },
             ],
           };
@@ -297,59 +298,59 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '❌ No active workspace.',
+              text: errorResponse('No Workspace', 'No active workspace.'),
             },
           ],
         };
       }
-      
+
       const metadata = await extractMetadata(workspace.path);
       if (!metadata || metadata.tasks.length === 0) {
         return {
           content: [
             {
               type: 'text',
-              text: '📋 No tasks tracked in this session yet.',
+              text: `${Icon.task} No tasks tracked in this session yet.`,
             },
           ],
         };
       }
-      
-      let output = '📋 **Session Tasks**\n\n';
-      
+
+      let output = `${Icon.task} **Session Tasks**\n\n`;
+
       // Group by status
       const active = metadata.tasks.filter(t => t.status === 'active');
       const paused = metadata.tasks.filter(t => t.status === 'paused');
       const completed = metadata.tasks.filter(t => t.status === 'completed');
       const abandoned = metadata.tasks.filter(t => t.status === 'abandoned');
-      
+
       if (active.length > 0) {
-        output += '### 🟢 Active\n';
+        output += `### ${Icon.active} Active\n`;
         active.forEach(t => {
           const duration = calculateDuration(t.start, new Date().toISOString());
           output += `- ${t.title} (${formatDuration(duration)}, iteration ${t.iterations})\n`;
         });
         output += '\n';
       }
-      
+
       if (paused.length > 0) {
-        output += '### 🟡 Paused\n';
+        output += `### ${Icon.paused} Paused\n`;
         paused.forEach(t => {
           output += `- ${t.title} (iteration ${t.iterations})\n`;
         });
         output += '\n';
       }
-      
+
       if (completed.length > 0) {
-        output += '### ✅ Completed\n';
+        output += `### ${Icon.completed} Completed\n`;
         completed.forEach(t => {
           output += `- ${t.title} (${formatDuration(t.duration_minutes || 0)}, ${t.iterations} iterations)\n`;
         });
         output += '\n';
       }
-      
+
       if (abandoned.length > 0) {
-        output += '### ❌ Abandoned\n';
+        output += `### ${Icon.failed} Abandoned\n`;
         abandoned.forEach(t => {
           output += `- ${t.title}\n`;
         });

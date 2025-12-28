@@ -6,9 +6,9 @@ import { getCurrentWorkspace, generateAgentId, parseAgentFromContent } from '../
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
 import { acquireLock, releaseLock, checkLock, formatLockInfo } from '../utils/lock-manager.js';
-import { 
-  createInitialMetadata, 
-  updateMetadata, 
+import {
+  createInitialMetadata,
+  updateMetadata,
   extractMetadata,
   generateSessionSummary,
   formatDuration,
@@ -16,6 +16,7 @@ import {
 } from '../utils/session-metadata.js';
 import { enableToolTracking, disableToolTracking, flushToolTracking } from '../utils/tool-tracker.js';
 import { startHeartbeat, stopHeartbeat } from '../utils/heartbeat-manager.js';
+import { Icon, header, kv, code, successResponse, errorResponse } from '../utils/format.js';
 
 export const workspaceTools: ToolDefinition[] = [
   {
@@ -39,7 +40,7 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ ${lockResult.error}`,
+              text: errorResponse('Lock Conflict', lockResult.error || 'Failed to acquire lock'),
             },
           ],
         };
@@ -75,13 +76,13 @@ export const workspaceTools: ToolDefinition[] = [
       
       content += '---\n\n';
       content += `# Current Workspace\n\n`;
-      content += `## 🎯 Active Task\n${task}\n\n`;
-      content += `## 📊 Session Info\n`;
+      content += `## ${Icon.task} Active Task\n${task}\n\n`;
+      content += `## ${Icon.chart} Session Info\n`;
       content += `- Agent: ${agentId}\n`;
       content += `- Session: ${sessionId}\n`;
       content += `- Started: ${now}\n`;
       content += `- Lock expires: ${new Date(metadata.session.lock_expires || now).toLocaleString()}\n\n`;
-      content += `## 🚧 Progress\n\n`;
+      content += `## ${Icon.active} Progress\n\n`;
       content += `- [ ] Task started\n`;
       
       try {
@@ -98,12 +99,12 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ Workspace claimed successfully\n\n` +
-                    `Agent ID: ${agentId}\n` +
-                    `Session: ${sessionId}\n` +
-                    `Task: ${task}\n` +
-                    `Lock expires: in 30 minutes\n\n` +
-                    `💓 Tracking and heartbeat enabled.`,
+              text: successResponse('Workspace Claimed',
+                `${kv('Agent', code(agentId))}\n` +
+                `${kv('Session', code(sessionId))}\n` +
+                `${kv('Task', task)}\n` +
+                `${kv('Lock', 'expires in 30 minutes')}\n\n` +
+                `${Icon.heart} Tracking and heartbeat enabled.`),
             },
           ],
         };
@@ -114,7 +115,7 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to claim workspace: ${error}`,
+              text: errorResponse('Claim Failed', `${error}`),
             },
           ],
         };
@@ -138,17 +139,18 @@ export const workspaceTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `❌ No active workspace, but found existing lock:\n\n${formatLockInfo(lock)}\n\nUse devlog_workspace_claim to start a new session.`,
+                text: errorResponse('No Active Workspace',
+                  `Found existing lock:\n\n${formatLockInfo(lock)}\n\nUse ${code('devlog_workspace_claim')} to start.`),
               },
             ],
           };
         }
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: '❌ No active workspace found. Use devlog_workspace_claim to create one.',
+              text: errorResponse('No Workspace', `Use ${code('devlog_workspace_claim')} to create one.`),
             },
           ],
         };
@@ -162,32 +164,32 @@ export const workspaceTools: ToolDefinition[] = [
       
       // Get lock info
       const lock = await checkLock();
-      const lockInfo = lock ? `\n\n🔒 Lock Status:\n${formatLockInfo(lock)}` : '';
-      
+      const lockInfo = lock ? `\n\n${Icon.lock} **Lock Status:**\n${formatLockInfo(lock)}` : '';
+
       // Get tracking metadata
       const metadata = await extractMetadata(workspace.path);
       let trackingInfo = '';
-      
+
       if (metadata) {
         const activeTasks = metadata.tasks.filter(t => t.status === 'active').length;
         const completedTasks = metadata.tasks.filter(t => t.status === 'completed').length;
         const totalDuration = formatDuration(metadata.timing.total_minutes + metadata.timing.active_minutes);
-        
-        trackingInfo = `\n\n📊 Session Tracking:\n` +
-          `Duration: ${totalDuration} (Active: ${formatDuration(metadata.timing.active_minutes)})\n` +
-          `Tasks: ${activeTasks} active, ${completedTasks} completed\n` +
-          `Tool calls: ${Object.values(metadata.tool_usage).reduce((a, b) => a + b, 0)} total\n` +
-          `Pauses: ${metadata.timing.pauses.length}`;
+
+        trackingInfo = `\n\n${Icon.chart} **Session Tracking:**\n` +
+          `${kv('Duration', `${totalDuration} (Active: ${formatDuration(metadata.timing.active_minutes)})`)}\n` +
+          `${kv('Tasks', `${activeTasks} active, ${completedTasks} completed`)}\n` +
+          `${kv('Tool calls', Object.values(metadata.tool_usage).reduce((a, b) => a + b, 0))}\n` +
+          `${kv('Pauses', metadata.timing.pauses.length)}`;
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `📊 Workspace Status:\n\n` +
-              `Agent ID: ${agentId || 'Not set'}\n` +
-              `Task: ${task}\n` +
-              `Last Active: ${lastActive || 'Unknown'}` +
+            text: `${Icon.chart} **Workspace Status**\n\n` +
+              `${kv('Agent', code(agentId || 'Not set'))}\n` +
+              `${kv('Task', task)}\n` +
+              `${kv('Last Active', lastActive || 'Unknown')}` +
               lockInfo +
               trackingInfo,
           },
@@ -212,33 +214,33 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '❌ No active workspace. Use devlog_workspace_init first.',
+              text: errorResponse('No Workspace', `Use ${code('devlog_workspace_init')} first.`),
             },
           ],
         };
       }
-      
+
       const timestamp = new Date().toISOString().slice(11, 19); // HH:MM:SS
       const iconMap: Record<string, string> = {
-        progress: '✅',
-        note: '📝',
-        issue: '⚠️',
-        decision: '🎯'
+        progress: Icon.completed,
+        note: Icon.note,
+        issue: Icon.warning,
+        decision: Icon.task
       };
-      const icon = iconMap[type];
+      const logIcon = iconMap[type];
       
       // Append to workspace
-      const logEntry = `\n${icon} [${timestamp}] ${entry}\n`;
+      const logEntry = `\n${logIcon} [${timestamp}] ${entry}\n`;
       const updatedContent = workspace.content + logEntry;
-      
+
       try {
         await fs.writeFile(workspace.path, updatedContent);
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: `${icon} Logged: ${entry}`,
+              text: `${logIcon} Logged: ${entry}`,
             },
           ],
         };
@@ -247,7 +249,7 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to log entry: ${error}`,
+              text: errorResponse('Log Failed', `${error}`),
             },
           ],
         };
@@ -271,7 +273,7 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '❌ No active workspace to dump.',
+              text: errorResponse('No Workspace', 'Nothing to dump.'),
             },
           ],
         };
@@ -353,18 +355,18 @@ export const workspaceTools: ToolDefinition[] = [
       if (metadata && metadata.tasks.length > 0) {
         const completedTasks = metadata.tasks.filter(t => t.status === 'completed');
         const activeTasks = metadata.tasks.filter(t => t.status === 'active');
-        
+
         sessionContent += `## Summary\n`;
         if (completedTasks.length > 0) {
-          sessionContent += `### Completed\n`;
+          sessionContent += `### ${Icon.completed} Completed\n`;
           completedTasks.forEach(t => {
-            sessionContent += `- ✅ ${t.title} (${formatDuration(t.duration_minutes || 0)})\n`;
+            sessionContent += `- ${Icon.completed} ${t.title} (${formatDuration(t.duration_minutes || 0)})\n`;
           });
         }
         if (activeTasks.length > 0) {
-          sessionContent += `### In Progress\n`;
+          sessionContent += `### ${Icon.active} In Progress\n`;
           activeTasks.forEach(t => {
-            sessionContent += `- 🚧 ${t.title}\n`;
+            sessionContent += `- ${Icon.active} ${t.title}\n`;
           });
         }
         sessionContent += '\n';
@@ -395,21 +397,21 @@ export const workspaceTools: ToolDefinition[] = [
         } else {
           // Just update the workspace to show it was dumped
           const updatedContent = workspace.content.replace(
-            /## 🚧 Progress/,
-            `## 🚧 Progress\n\n📌 Session dumped to: [${filename}](daily/${filename})\n`
+            /## .* Progress/,
+            `## ${Icon.active} Progress\n\n${Icon.tag} Session dumped to: [${filename}](daily/${filename})\n`
           );
           await fs.writeFile(workspace.path, updatedContent);
         }
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: `✅ **WORKSPACE DUMPED**\n\n` +
-              `Session saved to: ${path.relative(DEVLOG_PATH, sessionFile)}\n` +
-              `Reason: ${reason}\n` +
-              (metadata ? `Duration: ${formatDuration(metadata.timing.total_minutes)} (Active: ${formatDuration(metadata.timing.active_minutes)})\n` : '') +
-              (keepActive ? '\nWorkspace kept active for continuation.' : 'New clean workspace created.'),
+              text: successResponse('Workspace Dumped',
+                `${kv('Saved to', path.relative(DEVLOG_PATH, sessionFile))}\n` +
+                `${kv('Reason', reason)}\n` +
+                (metadata ? `${kv('Duration', `${formatDuration(metadata.timing.total_minutes)} (Active: ${formatDuration(metadata.timing.active_minutes)})`)}\n` : '') +
+                `\n${keepActive ? `${Icon.active} Workspace kept active.` : `${Icon.completed} Workspace closed.`}`),
             },
           ],
         };
@@ -418,7 +420,7 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to dump workspace: ${error}`,
+              text: errorResponse('Dump Failed', `${error}`),
             },
           ],
         };

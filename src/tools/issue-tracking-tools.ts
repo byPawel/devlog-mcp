@@ -10,6 +10,7 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getCurrentWorkspace } from '../utils/workspace.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
+import { Icon, successResponse, errorResponse, kv, code } from '../utils/format.js';
 
 // Issue status enum
 // const _IssueStatus = z.enum(['pending', 'active', 'resolved', 'archived']);
@@ -82,23 +83,23 @@ ${issue.time_spent ? `time_spent: "${issue.time_spent}"` : ''}
 
 # Issue: ${issue.title}
 
-## 📋 Details
+## Details
 - **Category**: ${issue.category}
 - **Priority**: ${issue.priority}
 - **Status**: ${issue.status}
 - **Estimate**: ${issue.estimate}
 - **Created**: ${issue.created_date}
 
-${issue.description ? `## 📝 Description\n${issue.description}\n` : ''}
+${issue.description ? `## Description\n${issue.description}\n` : ''}
 
-## 🔧 Solution
+## Solution
 ${issue.solution || '_To be determined_'}
 
-## ⏱️ Time Tracking
+## Time Tracking
 ${issue.time_spent ? `- **Time Spent**: ${issue.time_spent}` : '- **Time Spent**: _Not started_'}
 ${issue.session_id ? `- **Session**: ${issue.session_id}` : ''}
 
-## 📝 Progress Log
+## Progress Log
 _Updates will be logged here during work sessions_
 `;
 }
@@ -257,11 +258,12 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ Issue created: ${title}\n` +
-                    `📁 File: ${issue.file_path}\n` +
-                    `🆔 ID: ${issueId}\n` +
-                    `📊 Category: ${category} | Priority: ${priority} | Estimate: ${estimate}\n\n` +
-                    `Use \`/issue:work\` to start working on this issue.`,
+              text: successResponse('Issue Created',
+                `${kv('Title', title)}\n` +
+                `${kv('File', issue.file_path)}\n` +
+                `${kv('ID', code(issueId))}\n` +
+                `${kv('Details', `${category} | ${priority} | ${estimate}`)}\n\n` +
+                `Use ${code('/issue:work')} to start working on this issue.`),
             },
           ],
         };
@@ -270,7 +272,7 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to create issue: ${error}`,
+              text: errorResponse('Issue Creation Failed', `${error}`),
             },
           ],
         };
@@ -326,40 +328,40 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `📋 No issues found matching criteria: status=${status}, priority=${priority}`,
+                text: `${Icon.issue} No issues found matching: status=${status}, priority=${priority}`,
               },
             ],
           };
         }
-        
+
         // Format output
-        let output = `📋 Issues (${limitedIssues.length}/${allIssues.length})\n\n`;
-        
+        let output = `${Icon.issue} **Issues** (${limitedIssues.length}/${allIssues.length})\n\n`;
+
         for (const issue of limitedIssues) {
-          const statusEmoji = {
-            pending: '⏳',
-            active: '🔄',
-            resolved: '✅',
-            archived: '📦'
-          }[issue.status] || '❓';
-          
-          const priorityEmoji = {
-            critical: '🔴',
-            high: '🟠',
-            medium: '🟡',
-            low: '🟢'
-          }[issue.priority] || '⚪';
-          
-          output += `${statusEmoji} **${issue.title}**\n`;
-          output += `   ${priorityEmoji} ${issue.priority} | ${issue.category} | ${issue.estimate}`;
+          const statusIcon = {
+            pending: Icon.pending,
+            active: Icon.sync,
+            resolved: Icon.completed,
+            archived: Icon.folder
+          }[issue.status] || Icon.info;
+
+          const priorityIcon = {
+            critical: Icon.error,
+            high: Icon.warning,
+            medium: Icon.info,
+            low: Icon.success
+          }[issue.priority] || Icon.pending;
+
+          output += `${statusIcon} **${issue.title}**\n`;
+          output += `   ${priorityIcon} ${issue.priority} | ${issue.category} | ${issue.estimate}`;
           if (issue.time_spent) {
-            output += ` | ⏱️ ${issue.time_spent}`;
+            output += ` | ${Icon.time} ${issue.time_spent}`;
           }
-          output += `\n   🆔 \`${issue.id}\` | 📅 ${issue.created_date.slice(0, 10)}\n\n`;
+          output += `\n   ${Icon.tag} \`${issue.id}\` | ${Icon.time} ${issue.created_date.slice(0, 10)}\n\n`;
         }
-        
-        output += `\n💡 Use \`/issue:work <issue_id>\` to start working on an issue\n`;
-        output += `💡 Use \`/issue:done <issue_id>\` to complete an issue`;
+
+        output += `\n${Icon.arrow} Use ${code('/issue:work <issue_id>')} to start working on an issue\n`;
+        output += `${Icon.arrow} Use ${code('/issue:done <issue_id>')} to complete an issue`;
         
         return {
           content: [
@@ -374,7 +376,7 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to list issues: ${error}`,
+              text: errorResponse('List Failed', `${error}`),
             },
           ],
         };
@@ -413,12 +415,12 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `❌ Issue not found: ${issue_id}\nUse \`/issue:list\` to see available issues.`,
+                text: errorResponse('Issue Not Found', `${issue_id}\nUse \`/issue:list\` to see available issues.`),
               },
             ],
           };
         }
-        
+
         // Parse existing issue
         const issue = await parseIssueFile(issueFile);
         if (!issue) {
@@ -426,7 +428,7 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `❌ Failed to parse issue file: ${issueFile}`,
+                text: errorResponse('Parse Failed', `Could not parse: ${issueFile}`),
               },
             ],
           };
@@ -453,12 +455,12 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `🔄 Started working on issue: ${issue.title}\n` +
-                    `📊 Category: ${issue.category} | Priority: ${issue.priority} | Estimate: ${issue.estimate}\n\n` +
-                    `📁 File: ${issue.file_path}\n\n` +
-                    `💡 This issue is now marked as 'active'\n` +
-                    `💡 Use \`mcp: devlog_task_track start "Issue: ${issue.title}"\` to start time tracking\n` +
-                    `💡 Use \`/issue:done ${issue_id}\` when completed`,
+              text: successResponse(`Working on: ${issue.title}`,
+                `${kv('Details', `${issue.category} | ${issue.priority} | ${issue.estimate}`)}\n` +
+                `${kv('File', issue.file_path)}\n\n` +
+                `${Icon.info} This issue is now marked as 'active'\n` +
+                `${Icon.info} Use ${code(`devlog_task_track start "Issue: ${issue.title}"`)} to start time tracking\n` +
+                `${Icon.info} Use ${code(`/issue:done ${issue_id}`)} when completed`),
             },
           ],
         };
@@ -467,7 +469,7 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to start working on issue: ${error}`,
+              text: errorResponse('Start Failed', `${error}`),
             },
           ],
         };
@@ -507,12 +509,12 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `❌ Issue not found: ${issue_id}`,
+                text: errorResponse('Issue Not Found', issue_id),
               },
             ],
           };
         }
-        
+
         // Parse existing issue
         const issue = await parseIssueFile(issueFile);
         if (!issue) {
@@ -520,12 +522,12 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `❌ Failed to parse issue file: ${issueFile}`,
+                text: errorResponse('Parse Failed', `Could not parse: ${issueFile}`),
               },
             ],
           };
         }
-        
+
         // Move to resolved
         const newFilePath = getIssueFilePath('resolved', issue_id);
         const resolvedDir = path.dirname(newFilePath);
@@ -548,11 +550,11 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ Issue completed: ${issue.title}\n` +
-                    `🔧 Solution: ${solution}\n\n` +
-                    `📁 File: ${newFilePath}\n\n` +
-                    `💡 Issue moved to 'resolved' status\n` +
-                    `💡 Use \`mcp: devlog_task_track complete\` to stop time tracking if active`,
+              text: successResponse(`Issue Completed: ${issue.title}`,
+                `${kv('Solution', solution)}\n` +
+                `${kv('File', newFilePath)}\n\n` +
+                `${Icon.info} Issue moved to 'resolved' status\n` +
+                `${Icon.info} Use ${code('devlog_task_track complete')} to stop time tracking if active`),
             },
           ],
         };
@@ -561,7 +563,7 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to complete issue: ${error}`,
+              text: errorResponse('Completion Failed', `${error}`),
             },
           ],
         };

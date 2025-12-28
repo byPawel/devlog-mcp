@@ -10,6 +10,7 @@ import matter from 'gray-matter';
 import { glob } from 'glob';
 import { z } from 'zod';
 import { CallToolResult } from '../types.js';
+import { Icon, successResponse, errorResponse, kv } from '../utils/format.js';
 
 const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
 
@@ -60,20 +61,20 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `✅ Regenerated current.md successfully\n\n` +
-                  `**Activity Summary:**\n` +
-                  `- 🚧 In Progress: ${analysis.inProgress.length}\n` +
-                  `- ✅ Recently Completed: ${analysis.recentlyCompleted.length}\n` +
-                  `- 📅 Upcoming Tasks: ${analysis.upcomingTasks.length}\n` +
-                  `- 🏷️ Active Tags: ${analysis.activeTags.size}\n\n` +
-                  `Path: ${currentPath}`
+            text: successResponse('Regenerated current.md',
+              `**Activity Summary:**\n` +
+              `- ${Icon.active} In Progress: ${analysis.inProgress.length}\n` +
+              `- ${Icon.completed} Recently Completed: ${analysis.recentlyCompleted.length}\n` +
+              `- ${Icon.time} Upcoming Tasks: ${analysis.upcomingTasks.length}\n` +
+              `- ${Icon.tag} Active Tags: ${analysis.activeTags.size}\n\n` +
+              `${kv('Path', currentPath)}`)
           }]
         };
       } catch (error) {
         return {
           content: [{
             type: 'text',
-            text: `❌ Failed to regenerate current.md: ${error instanceof Error ? error.message : String(error)}`
+            text: errorResponse('Regeneration Failed', error instanceof Error ? error.message : String(error))
           }]
         };
       }
@@ -105,15 +106,15 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `✅ Updated section "${section}" in current.md\n` +
-                  `Action: ${append ? 'Appended to' : 'Replaced'} section`
+            text: successResponse(`Updated "${section}"`,
+              `${kv('Action', append ? 'Appended to section' : 'Replaced section')}`)
           }]
         };
       } catch (error) {
         return {
           content: [{
             type: 'text',
-            text: `❌ Failed to update section: ${error instanceof Error ? error.message : String(error)}`
+            text: errorResponse('Update Failed', error instanceof Error ? error.message : String(error))
           }]
         };
       }
@@ -131,10 +132,10 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         const content = await fs.readFile(currentPath, 'utf-8');
         const parsed = matter(content);
         
-        // Extract key sections
-        const focusMatch = content.match(/## 🎯 Current Focus\s*\n([\s\S]*?)(?=\n##|$)/);
-        const inProgressMatch = content.match(/## 🚧 In Progress\s*\n([\s\S]*?)(?=\n##|$)/);
-        const nextStepsMatch = content.match(/## 📅 Next Steps\s*\n([\s\S]*?)(?=\n##|$)/);
+        // Extract key sections (support both old emoji and new icon formats)
+        const focusMatch = content.match(/## .* Current Focus\s*\n([\s\S]*?)(?=\n##|$)/);
+        const inProgressMatch = content.match(/## .* In Progress\s*\n([\s\S]*?)(?=\n##|$)/);
+        const nextStepsMatch = content.match(/## .* Next Steps\s*\n([\s\S]*?)(?=\n##|$)/);
         
         let summary = '# Current Workspace Status\n\n';
         
@@ -143,15 +144,15 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         }
         
         if (focusMatch) {
-          summary += `## 🎯 Current Focus\n${focusMatch[1].trim()}\n\n`;
+          summary += `## ${Icon.task} Current Focus\n${focusMatch[1].trim()}\n\n`;
         }
-        
+
         if (inProgressMatch) {
-          summary += `## 🚧 In Progress\n${inProgressMatch[1].trim()}\n\n`;
+          summary += `## ${Icon.active} In Progress\n${inProgressMatch[1].trim()}\n\n`;
         }
-        
+
         if (nextStepsMatch) {
-          summary += `## 📅 Next Steps\n${nextStepsMatch[1].trim()}\n\n`;
+          summary += `## ${Icon.time} Next Steps\n${nextStepsMatch[1].trim()}\n\n`;
         }
         
         return {
@@ -164,7 +165,7 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `❌ Failed to read current.md: ${error instanceof Error ? error.message : String(error)}`
+            text: errorResponse('Read Failed', error instanceof Error ? error.message : String(error))
           }]
         };
       }

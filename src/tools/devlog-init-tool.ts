@@ -8,6 +8,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
+import { Icon, successResponse, errorResponse, infoResponse } from '../utils/format.js';
 
 export const devlogInitTool: ToolDefinition = {
   name: 'devlog_init',
@@ -28,7 +29,7 @@ export const devlogInitTool: ToolDefinition = {
           content: [
             {
               type: 'text',
-              text: `ℹ️ DevLog already exists at: ${devlogPath}\nUse skipIfExists=false to reinitialize.`,
+              text: infoResponse('Already Exists', `DevLog at: ${devlogPath}\nUse skipIfExists=false to reinitialize.`),
             },
           ],
         };
@@ -170,25 +171,19 @@ private/
         content: [
           {
             type: 'text',
-            text: `✅ **DevLog Initialized Successfully!**
-
-Created at: ${devlogPath}
-
-Structure:
-${directories.map(d => `  📁 ${d.replace('devlog/', '')}/`).join('\n')}
-
-Files created:
-  📄 README.md - Documentation and conventions
-  📄 current.md - Active workspace
-  📄 .gitignore - Git ignore rules
-  📄 .config/search-mode - Search preferences
-
-Next steps:
-1. Run \`devlog_workspace_claim\` to start working
-2. Use \`devlog_session_log\` to track progress
-3. End with \`devlog_workspace_dump reason="session complete"\`
-
-Happy coding! 🚀`,
+            text: successResponse('DevLog Initialized',
+              `**Created at:** ${devlogPath}\n\n` +
+              `**Structure:**\n` +
+              `${directories.map(d => `  ${Icon.folder} ${d.replace('devlog/', '')}/`).join('\n')}\n\n` +
+              `**Files created:**\n` +
+              `  ${Icon.file} README.md - Documentation and conventions\n` +
+              `  ${Icon.file} current.md - Active workspace\n` +
+              `  ${Icon.file} .gitignore - Git ignore rules\n` +
+              `  ${Icon.file} .config/search-mode - Search preferences\n\n` +
+              `**Next steps:**\n` +
+              `1. Run \`devlog_workspace_claim\` to start working\n` +
+              `2. Use \`devlog_session_log\` to track progress\n` +
+              `3. End with \`devlog_workspace_dump reason="session complete"\``),
           },
         ],
       };
@@ -197,7 +192,7 @@ Happy coding! 🚀`,
         content: [
           {
             type: 'text',
-            text: `❌ Failed to initialize devlog: ${error}`,
+            text: errorResponse('Initialization Failed', `${error}`),
           },
         ],
       };

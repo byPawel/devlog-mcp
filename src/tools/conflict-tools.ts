@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
+import { Icon, successResponse, warningResponse } from '../utils/format.js';
 
 export const conflictTools: ToolDefinition[] = [
   {
@@ -29,18 +30,19 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ No conflicts found for feature: "${feature}"`,
+              text: successResponse('No Conflicts', `Safe to implement: "${feature}"`),
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `⚠️ Found ${conflicts.length} potential conflicts for "${feature}":\n\n` +
-              conflicts.map(c => `- ${c.file}\n  ${c.excerpt}`).join('\n\n'),
+            text: warningResponse(`${conflicts.length} Potential Conflicts`,
+              `Feature: "${feature}"\n\n` +
+              conflicts.map(c => `- ${c.file}\n  ${c.excerpt}`).join('\n\n')),
           },
         ],
       };
@@ -70,18 +72,18 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ No duplicates found. Safe to implement: "${description}"`,
+              text: successResponse('No Duplicates', `Safe to implement: "${description}"`),
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `⚠️ Found ${duplicates.length} similar implementations:\n\n` +
-              duplicates.map(d => `- ${d.file}\n  ${d.excerpt}`).join('\n\n'),
+            text: warningResponse(`${duplicates.length} Similar Implementations`,
+              duplicates.map(d => `- ${d.file}\n  ${d.excerpt}`).join('\n\n')),
           },
         ],
       };
@@ -113,30 +115,30 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ No regression history found for: "${component}"`,
+              text: successResponse('No Regressions', `Clean history for: "${component}"`),
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `⚠️ Regression history for "${component}":\n\n` +
+            text: warningResponse(`Regression History for "${component}"`,
               regressions.map(r => {
                 const content = r.fullContent || '';
                 const lines = content.split('\n');
-                const relevantLines = lines.filter(l => 
+                const relevantLines = lines.filter(l =>
                   l.toLowerCase().includes('broke') ||
                   l.toLowerCase().includes('regression') ||
                   l.toLowerCase().includes('failed') ||
                   l.toLowerCase().includes('bug') ||
                   l.toLowerCase().includes('issue')
                 );
-                
+
                 return `- ${r.file} (${r.lastModified.toISOString()})\n  ${relevantLines.join('\n  ') || r.excerpt}`;
-              }).join('\n\n'),
+              }).join('\n\n')),
           },
         ],
       };
