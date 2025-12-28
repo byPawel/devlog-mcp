@@ -31,7 +31,7 @@ export {
   type NerdIconName,
 } from './icons.js';
 
-// React Ink rendering
+// React Ink rendering - core
 export {
   renderInkToString,
   renderGradientText,
@@ -57,6 +57,37 @@ export {
   type ResultBlockProps,
   type FlowNode,
   type FlowEdge,
+  // Advanced visualization components
+  WorkflowCascade,
+  renderWorkflowCascade,
+  type WorkflowStep,
+  ModelChorus,
+  renderModelChorus,
+  type ModelResponse,
+  ProgressReel,
+  renderProgressReel,
+  type ProgressPhase,
+  SparklinesGrid,
+  renderSparklinesGrid,
+  type SparklineData,
+  ThinkingChainArbor,
+  renderThinkingChainArbor,
+  type ThinkingStep,
+  FocusSessionHorizon,
+  renderFocusSessionHorizon,
+  type FocusSessionSummary,
+  ReceiptPrinter,
+  renderReceipt,
+  type ReceiptData,
+  WaterfallTrace,
+  renderWaterfallTrace,
+  type WaterfallStep,
+  ErrorAutopsy,
+  renderErrorAutopsy,
+  type ErrorDetails,
+  SourceHeatmap,
+  renderSourceHeatmap,
+  type SourceCitation,
 } from './ink-renderer.js';
 
 // =============================================================================
