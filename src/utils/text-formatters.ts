@@ -280,3 +280,281 @@ export function reviewScore(current: number, potential?: number, max: number = 1
   }
   return chalk.bold('Score: ') + score(current, max);
 }
+
+// ============================================================================
+// GRADIENT DIVIDERS (256-color)
+// ============================================================================
+
+/**
+ * Create a gradient divider using ANSI 256 colors
+ */
+export function gradientDivider(
+  fromColor: number,
+  toColor: number,
+  char: string = '─',
+  width: number = 60
+): string {
+  let result = '';
+  for (let i = 0; i < width; i++) {
+    const colorCode = Math.round(fromColor + ((toColor - fromColor) * (i / width)));
+    result += chalk.ansi256(colorCode)(char);
+  }
+  return result;
+}
+
+export const gradients = {
+  /** Blue to purple gradient (nebula theme) */
+  blueToPurple: (width = 60) => gradientDivider(69, 141, '─', width),
+  /** Cyan to magenta gradient (cyberpunk theme) */
+  cyanToMagenta: (width = 60) => gradientDivider(51, 201, '═', width),
+  /** Green to yellow gradient */
+  greenToYellow: (width = 60) => gradientDivider(42, 226, '─', width),
+  /** Ocean gradient (blue shades) */
+  ocean: (width = 60) => gradientDivider(24, 39, '─', width),
+  /** Sunset gradient (red to orange) */
+  sunset: (width = 60) => gradientDivider(196, 214, '━', width),
+  /** Rainbow using fixed color stops */
+  rainbow: (width = 60) => {
+    const colors = [196, 208, 226, 46, 51, 57, 201]; // ROYGBIV
+    let result = '';
+    for (let i = 0; i < width; i++) {
+      const colorIndex = Math.floor((i / width) * colors.length);
+      result += chalk.ansi256(colors[colorIndex])('━');
+    }
+    return result;
+  },
+};
+
+// ============================================================================
+// DECORATIVE SEPARATORS
+// ============================================================================
+
+export const decorative = {
+  /** Starfield separator (random colors) */
+  starfield: (width = 60) => {
+    const stars = ['✦', '✧', '★', '☆', '·'];
+    let result = '';
+    for (let i = 0; i < width; i++) {
+      const star = stars[Math.floor(Math.random() * stars.length)];
+      result += chalk.ansi256(141 + Math.floor(Math.random() * 30))(star);
+    }
+    return result;
+  },
+
+  /** Circuit pattern (cyberpunk) */
+  circuit: () => chalk.cyan('─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─'),
+
+  /** Wave pattern (ocean) */
+  waves: () => chalk.blue('≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋'),
+
+  /** Sparkles */
+  sparkles: () => chalk.yellow('✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨'),
+
+  /** Arrows */
+  arrows: () => chalk.cyan('→ → → → → → → → → → → → → → →'),
+
+  /** Chevrons */
+  chevrons: () => chalk.magenta('» » » » » » » » » » » » » » »'),
+
+  /** Diamond chain */
+  diamonds: () => chalk.cyan('◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆'),
+
+  /** Fade dots */
+  fadeDots: () => chalk.gray('·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·'),
+
+  /** DNA helix */
+  dna: () => chalk.green('╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲'),
+
+  /** Binary */
+  binary: () => chalk.green('01001010 11010010 10110101 01101001'),
+};
+
+// ============================================================================
+// BOXED HEADERS & SECTIONS
+// ============================================================================
+
+const boxChars = {
+  rounded: { tl: '╭', tr: '╮', bl: '╰', br: '╯', h: '─', v: '│' },
+  sharp: { tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│' },
+  double: { tl: '╔', tr: '╗', bl: '╚', br: '╝', h: '═', v: '║' },
+  bold: { tl: '┏', tr: '┓', bl: '┗', br: '┛', h: '━', v: '┃' },
+};
+
+/**
+ * Create a boxed header line: ╭─── Title ───╮
+ */
+export function boxedHeader(
+  title: string,
+  options: {
+    width?: number;
+    style?: 'rounded' | 'sharp' | 'double' | 'bold';
+    color?: typeof chalk;
+  } = {}
+): string {
+  const { width = 50, style = 'rounded', color = chalk.cyan } = options;
+  const chars = boxChars[style];
+
+  const innerWidth = width - 2;
+  const titleLen = title.length + 2;
+  const leftPad = Math.floor((innerWidth - titleLen) / 2);
+  const rightPad = innerWidth - titleLen - leftPad;
+
+  return color(
+    chars.tl + chars.h.repeat(leftPad) + ' '
+  ) + chalk.bold.white(title) + color(
+    ' ' + chars.h.repeat(rightPad) + chars.tr
+  );
+}
+
+/**
+ * Create a full box around content
+ */
+export function boxSection(
+  title: string,
+  content: string,
+  options: {
+    width?: number;
+    style?: 'rounded' | 'sharp' | 'double' | 'bold';
+    color?: typeof chalk;
+  } = {}
+): string {
+  const { width = 50, style = 'rounded', color = chalk.cyan } = options;
+  const chars = boxChars[style];
+
+  const innerWidth = width - 4;
+  const titleLen = title.length + 2;
+  const leftPad = Math.floor((innerWidth - titleLen) / 2);
+  const rightPad = innerWidth - titleLen - leftPad;
+
+  const lines: string[] = [];
+
+  // Top border with title
+  lines.push(color(
+    chars.tl + chars.h.repeat(leftPad + 1) + ' '
+  ) + chalk.bold.white(title) + color(
+    ' ' + chars.h.repeat(rightPad + 1) + chars.tr
+  ));
+
+  // Content lines
+  const contentLines = content.split('\n');
+  for (const line of contentLines) {
+    const paddedLine = line.slice(0, innerWidth).padEnd(innerWidth);
+    lines.push(color(chars.v + ' ') + paddedLine + color(' ' + chars.v));
+  }
+
+  // Bottom border
+  lines.push(color(chars.bl + chars.h.repeat(width - 2) + chars.br));
+
+  return lines.join('\n');
+}
+
+// ============================================================================
+// SPARKLINES (ASCII data visualization)
+// ============================================================================
+
+const sparkChars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+
+/**
+ * Create a sparkline from data points
+ * Example: sparkline([1,3,5,2,8,4,6]) → "▁▃▅▂█▄▆"
+ */
+export function sparkline(data: number[], color?: typeof chalk): string {
+  if (data.length === 0) return '';
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const line = data.map(value => {
+    const normalized = (value - min) / range;
+    const index = Math.min(Math.floor(normalized * sparkChars.length), sparkChars.length - 1);
+    return sparkChars[index];
+  }).join('');
+
+  return color ? color(line) : chalk.cyan(line);
+}
+
+/**
+ * Create a labeled sparkline with min/max
+ */
+export function sparklineLabeled(label: string, data: number[]): string {
+  if (data.length === 0) return `${label}: (no data)`;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const line = sparkline(data);
+
+  return `${chalk.gray(label + ':')} ${line} ${chalk.gray(`(${min}-${max})`)}`;
+}
+
+// ============================================================================
+// TREE/LIST FORMATTING
+// ============================================================================
+
+/**
+ * Format items as a tree structure
+ */
+export function tree(items: string[], options: { indent?: number; color?: typeof chalk } = {}): string {
+  const { indent = 0, color = chalk.cyan } = options;
+  const prefix = '  '.repeat(indent);
+
+  return items.map((item, i) => {
+    const isLast = i === items.length - 1;
+    const branch = isLast ? '└── ' : '├── ';
+    return prefix + color(branch) + item;
+  }).join('\n');
+}
+
+/**
+ * Format as a bullet list with different levels
+ */
+export function bulletList(items: Array<{ text: string; level?: number }>): string {
+  const bullets = ['●', '○', '▸', '▹', '•'];
+  const colors = [chalk.cyan, chalk.yellow, chalk.green, chalk.magenta, chalk.gray];
+
+  return items.map(({ text, level = 0 }) => {
+    const bullet = bullets[Math.min(level, bullets.length - 1)];
+    const color = colors[Math.min(level, colors.length - 1)];
+    const indent = '  '.repeat(level);
+    return indent + color(bullet) + ' ' + text;
+  }).join('\n');
+}
+
+// ============================================================================
+// TABLE FORMATTING
+// ============================================================================
+
+/**
+ * Format data as a simple table
+ */
+export function table(
+  headers: string[],
+  rows: string[][],
+  options: { color?: typeof chalk } = {}
+): string {
+  const { color = chalk.cyan } = options;
+
+  // Calculate column widths
+  const widths = headers.map((h, i) => {
+    const maxRow = Math.max(...rows.map(r => (r[i] || '').length));
+    return Math.max(h.length, maxRow);
+  });
+
+  const lines: string[] = [];
+
+  // Header
+  const headerLine = headers.map((h, i) => chalk.bold(h.padEnd(widths[i]))).join(' │ ');
+  lines.push(headerLine);
+
+  // Separator
+  const separator = widths.map(w => color('─'.repeat(w))).join('─┼─');
+  lines.push(separator);
+
+  // Rows
+  for (const row of rows) {
+    const rowLine = row.map((cell, i) => (cell || '').padEnd(widths[i])).join(' │ ');
+    lines.push(rowLine);
+  }
+
+  return lines.join('\n');
+}
