@@ -10,6 +10,10 @@ import { render, Box, Text } from 'ink';
 import Gradient from 'ink-gradient';
 import gradientString from 'gradient-string';
 import { PassThrough } from 'stream';
+
+// Type for gradient-string functions
+type GradientFunction = (text: string) => string;
+type GradientStringModule = Record<string, GradientFunction>;
 import { icon, Icon } from './icons.js';
 
 // Force colors in non-TTY environment (MCP uses stdio)
@@ -67,6 +71,7 @@ export function renderInkToString(element: React.ReactElement): string {
   });
 
   const { unmount, cleanup } = render(element, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     stdout: stream as any,
     stdin: process.stdin,
     exitOnCtrlC: false,
@@ -87,7 +92,8 @@ export function renderInkToString(element: React.ReactElement): string {
  * Render text with gradient colors
  */
 export function renderGradientText(text: string, preset: GradientPreset = 'rainbow'): string {
-  const gradient = (gradientString as any)[preset] || gradientString.rainbow;
+  const gradients = gradientString as unknown as GradientStringModule;
+  const gradient = gradients[preset] || gradientString.rainbow;
   return gradient(text);
 }
 
@@ -328,7 +334,8 @@ export function renderGradientBox(
 ): string {
   const chars = borderChars.round;
   const innerWidth = width - 2;
-  const gradFn = (gradientString as any)[gradient] || gradientString.cristal;
+  const gradients = gradientString as unknown as GradientStringModule;
+  const gradFn = gradients[gradient] || gradientString.cristal;
 
   const topBorder = title
     ? `${chars.tl}${chars.h} ${title} ${chars.h.repeat(Math.max(0, innerWidth - title.length - 3))}${chars.tr}`
@@ -379,13 +386,14 @@ function renderNodeBox(label: string, type: FlowNode['type'] = 'process'): strin
         '│' + pad(label, width) + '│',
         '╰' + '─'.repeat(width) + '╯',
       ];
-    case 'decision':
+    case 'decision': {
       const half = Math.floor(width / 2);
       return [
         ' '.repeat(half) + '◇' + ' '.repeat(half),
         '◁' + pad(label, width) + '▷',
         ' '.repeat(half) + '◇' + ' '.repeat(half),
       ];
+    }
     case 'io':
       return [
         '╱' + '─'.repeat(width) + '╲',
@@ -542,7 +550,7 @@ export const WorkflowCascade: React.FC<{ steps: WorkflowStep[]; title?: string }
               <Text color={getStatusColor(step.status)}>{getStatusIcon(step.status)} </Text>
               <Text color="white" bold>{step.name}</Text>
               <Text color="gray"> → </Text>
-              <Gradient name={modelGradients[step.model.toLowerCase()] || 'rainbow' as any}>
+              <Gradient name={(modelGradients[step.model.toLowerCase()] || 'rainbow') as GradientPreset}>
                 <Text>{step.model}</Text>
               </Gradient>
               {step.duration && <Text color="gray"> ({step.duration}ms)</Text>}
@@ -587,7 +595,7 @@ export const ModelChorus: React.FC<{ responses: ModelResponse[]; title?: string 
         {responses.map((r, idx) => (
           <Box key={idx} flexDirection="column" marginBottom={1}>
             <Box>
-              <Gradient name={modelGradients[r.model.toLowerCase()] || 'rainbow' as any}>
+              <Gradient name={(modelGradients[r.model.toLowerCase()] || 'rainbow') as GradientPreset}>
                 <Text bold> {r.model.toUpperCase()} </Text>
               </Gradient>
               {r.confidence !== undefined && (
@@ -766,7 +774,7 @@ export const ThinkingChainArbor: React.FC<{ steps: ThinkingStep[]; title?: strin
               </Box>
               {step.model && (
                 <Box marginLeft={4}>
-                  <Gradient name={modelGradients[step.model.toLowerCase()] || 'rainbow' as any}>
+                  <Gradient name={(modelGradients[step.model.toLowerCase()] || 'rainbow') as GradientPreset}>
                     <Text dimColor>[{step.model}]</Text>
                   </Gradient>
                 </Box>
@@ -827,7 +835,7 @@ export const FocusSessionHorizon: React.FC<FocusSessionSummary> = (session) => {
       <Box marginTop={1} flexDirection="row" flexWrap="wrap">
         {session.models.map((model, idx) => (
           <Box key={idx} marginRight={1}>
-            <Gradient name={modelGradients[model.toLowerCase()] || 'rainbow' as any}>
+            <Gradient name={(modelGradients[model.toLowerCase()] || 'rainbow') as GradientPreset}>
               <Text>{model}</Text>
             </Gradient>
           </Box>
@@ -884,7 +892,7 @@ export const ReceiptPrinter: React.FC<ReceiptData> = ({
       </Box>
 
       <Box justifyContent="center" marginTop={1}>
-        <Gradient name={modelGradients[model.toLowerCase()] || 'rainbow' as any}>
+        <Gradient name={(modelGradients[model.toLowerCase()] || 'rainbow') as GradientPreset}>
           <Text>{model.toUpperCase()}</Text>
         </Gradient>
       </Box>

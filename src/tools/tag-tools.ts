@@ -3,7 +3,8 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
 import { renderOutput } from '../utils/render-output.js';
-import { icon } from '../utils/icons.js';
+// icon available for future use
+// import { icon } from '../utils/icons.js';
 
 export const tagTools: ToolDefinition[] = [
   {
@@ -81,13 +82,14 @@ export const tagTools: ToolDefinition[] = [
       
       const tagCoverage = filesWithTags > 0 ? ((filesWithTags / totalFiles) * 100).toFixed(1) : '0';
       
-      // Build table data
-      const tableRows = Object.entries(tagStats).flatMap(([category, values]) => {
+      // Build table data (for future table rendering)
+      const _tableRows = Object.entries(tagStats).flatMap(([category, values]) => {
         const sortedValues = Object.entries(values)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 3);
         return sortedValues.map(([v, c]) => [category, v, `${c}`]);
       });
+      void _tableRows; // Reserved for table component
 
       return {
         content: [

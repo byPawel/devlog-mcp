@@ -18,7 +18,6 @@ import React from 'react';
 import { render, Box, Text } from 'ink';
 import Gradient from 'ink-gradient';
 import { PassThrough } from 'stream';
-import chalk from 'chalk';
 import {
   Theme,
   RenderableResult,
@@ -59,6 +58,7 @@ export function renderInkToString(element: React.ReactElement): string {
   });
 
   const { unmount, cleanup } = render(element, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     stdout: stream as any,
     stdin: process.stdin,
     exitOnCtrlC: false,

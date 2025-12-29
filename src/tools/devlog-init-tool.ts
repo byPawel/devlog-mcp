@@ -9,7 +9,8 @@ import path from 'path';
 import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { renderOutput } from '../utils/render-output.js';
-import { icon } from '../utils/icons.js';
+// icon available for future use
+// import { icon } from '../utils/icons.js';
 
 export const devlogInitTool: ToolDefinition = {
   name: 'devlog_init',
@@ -176,11 +177,12 @@ private/
       // Create search mode config
       await fs.writeFile(path.join(devlogPath, '.config', 'search-mode'), 'auto');
       
-      // Build tree items for directories
-      const treeItems = directories.map(d => ({
+      // Build tree items for directories (for future tree rendering)
+      const _treeItems = directories.map(d => ({
         text: `${d.replace('devlog/', '')}/`,
         level: d.split('/').length - 1,
       }));
+      void _treeItems; // Reserved for tree component
 
       return {
         content: [

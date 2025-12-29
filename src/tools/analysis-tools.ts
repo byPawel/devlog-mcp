@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
-import { renderOutput } from '../utils/render-output.js';
+// renderOutput available for future migration
+// import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
 
 

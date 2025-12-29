@@ -3,7 +3,8 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { spawn } from 'child_process';
 import path from 'path';
-import { renderOutput } from '../utils/render-output.js';
+// renderOutput available for future migration
+// import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
 
 // Path to the Python ChromaDB indexer

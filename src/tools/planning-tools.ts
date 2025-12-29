@@ -5,7 +5,8 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
-import { renderOutput } from '../utils/render-output.js';
+// renderOutput available for future migration
+// import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
 
 // Helper function for analyzing codebase (duplicate for now, will be refactored)
