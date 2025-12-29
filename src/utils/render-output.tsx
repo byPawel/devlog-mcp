@@ -95,6 +95,7 @@ function StatusCard({ title, status, message, details }: StatusCardProps): JSX.E
       borderStyle={theme.borders.card}
       borderColor={theme.borderColors[status === 'active' ? 'info' : status]}
       paddingX={1}
+      width={80}
     >
       <Box>
         <Text backgroundColor={statusColors.bg} color={statusColors.fg} bold>
@@ -210,6 +211,7 @@ function WorkspaceStatus(props: WorkspaceStatusProps): JSX.Element {
       borderStyle={theme.borders.card}
       borderColor={theme.borderColors.default}
       paddingX={1}
+      width={80}
     >
       <Box>
         <Gradient name={theme.gradients.header}>
@@ -251,7 +253,7 @@ function SessionInfo(props: SessionInfoProps): JSX.Element {
   const theme = useTheme();
 
   return (
-    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={theme.borderColors.info} paddingX={1}>
+    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={theme.borderColors.info} paddingX={1} width={80}>
       <Box>
         <Text color={theme.colors.info} bold>
           {icon('session')} Session: {props.sessionId}
@@ -288,7 +290,7 @@ function ResultBlock({ title, content, borderColor, gradient }: ResultBlockProps
   const resolvedGradient = gradient || theme.gradients.header;
 
   return (
-    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={resolvedBorderColor} paddingX={1}>
+    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={resolvedBorderColor} paddingX={1} width={80}>
       <Box>
         <Gradient name={resolvedGradient}>
           <Text bold>{title}</Text>
@@ -308,7 +310,7 @@ function ErrorDisplay({ message, details }: { message: string; details?: string 
   const theme = useTheme();
 
   return (
-    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={theme.borderColors.error} paddingX={1}>
+    <Box flexDirection="column" borderStyle={theme.borders.card} borderColor={theme.borderColors.error} paddingX={1} width={80}>
       <Box>
         <Text backgroundColor={theme.status.error.bg} color={theme.status.error.fg} bold>
           {' '}{icon('error')} Error{' '}
