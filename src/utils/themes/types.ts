@@ -152,6 +152,58 @@ export interface SessionInfoProps {
 }
 
 // ============================================================================
+// DATA VISUALIZATION PROPS
+// ============================================================================
+
+export interface ProgressBarProps {
+  percent: number;
+  width?: number;
+  label?: string;
+  showPercent?: boolean;
+}
+
+export interface SparklineProps {
+  data: number[];
+  label?: string;
+  showMinMax?: boolean;
+}
+
+export interface TableProps {
+  headers: string[];
+  rows: string[][];
+}
+
+export interface TreeProps {
+  items: Array<{ text: string; level?: number }>;
+}
+
+export interface DividerProps {
+  style?: 'thin' | 'thick' | 'double' | 'gradient' | 'rainbow' | 'decorative';
+  width?: number;
+  decorativeStyle?: 'stars' | 'circuit' | 'waves' | 'diamonds' | 'arrows';
+}
+
+export interface BoxedSectionProps {
+  title: string;
+  content: string;
+  style?: 'rounded' | 'sharp' | 'double' | 'bold';
+}
+
+export interface MetricsRowProps {
+  model?: string;
+  durationMs?: number;
+  tokenCount?: number;
+  costAmount?: number;
+}
+
+export interface ScoreProps {
+  value: number;
+  max?: number;
+  label?: string;
+  showImprovement?: { from: number };
+}
+
+// ============================================================================
 // RENDERABLE RESULT TYPES (for tool output routing)
 // ============================================================================
 
@@ -164,7 +216,16 @@ export type RenderableResult =
   | { type: 'result-block'; data: ResultBlockProps }
   | { type: 'markdown'; data: { content: string } }
   | { type: 'text'; data: { text: string } }
-  | { type: 'error'; data: { message: string; details?: string } };
+  | { type: 'error'; data: { message: string; details?: string } }
+  // Data visualization
+  | { type: 'progress-bar'; data: ProgressBarProps }
+  | { type: 'sparkline'; data: SparklineProps }
+  | { type: 'table'; data: TableProps }
+  | { type: 'tree'; data: TreeProps }
+  | { type: 'divider'; data: DividerProps }
+  | { type: 'boxed-section'; data: BoxedSectionProps }
+  | { type: 'metrics-row'; data: MetricsRowProps }
+  | { type: 'score'; data: ScoreProps };
 
 // ============================================================================
 // JSON THEME INTERFACE (for external theme files)
