@@ -3,6 +3,7 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { spawn } from 'child_process';
 import path from 'path';
+import { Icon, successResponse, errorResponse } from '../utils/format.js';
 
 // Path to the Python ChromaDB indexer
 const INDEXER_PATH = path.join(process.cwd(), 'scripts', 'chromadb-smart-index.py');
@@ -103,9 +104,9 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `Found ${result.results.length} results for "${query}":\n\n` +
-              result.results.map((r, i: number) => 
-                `${i + 1}. ${r.file}\n   Source: ${r.source}\n   Type: ${r.type}\n   Relevance: ${r.relevance}\n   Preview: ${r.preview}`
+            text: `${Icon.search} **Found ${result.results.length} results** for "${query}":\n\n` +
+              result.results.map((r, i: number) =>
+                `${Icon.file} **${i + 1}. ${r.file}**\n   ${Icon.tag} Source: ${r.source}\n   ${Icon.info} Type: ${r.type}\n   ${Icon.chart} Relevance: ${r.relevance}\n   ${Icon.arrow} Preview: ${r.preview}`
               ).join('\n\n')
           }]
         };
@@ -113,7 +114,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `Error searching ChromaDB: ${(error as Error).message}`
+            text: `${Icon.error} **Error searching ChromaDB:** ${(error as Error).message}`
           }],
           isError: true
         };
@@ -140,7 +141,7 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `Successfully indexed Perplexity search: "${query}"`
+              text: `${Icon.success} **Indexed Perplexity search:** "${query}"`
             }]
           };
         } else if (type === 'jira') {
@@ -158,7 +159,7 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `Successfully indexed Jira issue: ${query}`
+              text: `${Icon.success} **Indexed Jira issue:** ${query}`
             }]
           };
         }
@@ -166,7 +167,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `Unknown content type: ${type}`
+            text: `${Icon.warning} **Unknown content type:** ${type}`
           }],
           isError: true
         };
@@ -174,7 +175,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `Error indexing content: ${(error as Error).message}`
+            text: `${Icon.error} **Error indexing content:** ${(error as Error).message}`
           }],
           isError: true
         };
@@ -201,22 +202,22 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `Reindexing complete:\n- Total files: ${match[1]}\n- Indexed: ${match[2]}\n- Collection size: ${match[3]} documents`
+              text: `${Icon.success} **Reindexing complete:**\n${Icon.file} Total files: ${match[1]}\n${Icon.sync} Indexed: ${match[2]}\n${Icon.folder} Collection size: ${match[3]} documents`
             }]
           };
         }
-        
+
         return {
           content: [{
             type: 'text',
-            text: 'Reindexing complete'
+            text: `${Icon.success} **Reindexing complete**`
           }]
         };
       } catch (error: unknown) {
         return {
           content: [{
             type: 'text',
-            text: `Error reindexing: ${(error as Error).message}`
+            text: `${Icon.error} **Error reindexing:** ${(error as Error).message}`
           }],
           isError: true
         };

@@ -3,6 +3,7 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
 import { CallToolResult } from '../types.js';
+import { Icon } from '../utils/format.js';
 
 export const basicTools: ToolDefinition[] = [
   {
@@ -15,7 +16,7 @@ export const basicTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `✅ MCP DevLog Server is working!\nDevLog Path: ${DEVLOG_PATH}`,
+            text: `${Icon.success} **MCP DevLog Server is working!**\n${Icon.folder} DevLog Path: ${DEVLOG_PATH}`,
           },
         ],
       };
@@ -35,17 +36,17 @@ export const basicTools: ToolDefinition[] = [
     handler: async ({ query, type, limit, tags }): Promise<CallToolResult> => {
       const results = await searchDevlogs(query || '', type, tags);
       const limited = results.slice(0, limit);
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `Found ${results.length} results${query ? ` for "${query}"` : ''}${tags ? ' with tag filters' : ''}:\n\n` +
+            text: `${Icon.search} **Found ${results.length} results**${query ? ` for "${query}"` : ''}${tags ? ' with tag filters' : ''}:\n\n` +
               limited.map(r => {
-                const tagStr = r.tags ? ` [${Object.entries(r.tags).map(([k, v]) => 
+                const tagStr = r.tags ? ` [${Object.entries(r.tags).map(([k, v]) =>
                   Array.isArray(v) ? `${k}: ${v.join(', ')}` : `${k}: ${v}`
                 ).join('; ')}]` : '';
-                return `- ${r.file}${tagStr}\n  Modified: ${r.lastModified.toISOString()}\n  ${r.title ? `Title: ${r.title}\n  ` : ''}${r.excerpt}`;
+                return `${Icon.file} **${r.file}**${tagStr}\n  ${Icon.time} Modified: ${r.lastModified.toISOString()}\n  ${r.title ? `${Icon.info} Title: ${r.title}\n  ` : ''}${Icon.arrow} ${r.excerpt}`;
               }).join('\n\n'),
           },
         ],
@@ -73,18 +74,18 @@ export const basicTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `No devlog entries found in the last ${days} days.`,
+              text: `${Icon.info} No devlog entries found in the last ${days} days.`,
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `Recent devlog entries (last ${days} days):\n\n` +
-              recent.map(r => `- ${r.file} (${r.lastModified.toISOString()})\n  ${r.excerpt}`).join('\n\n'),
+            text: `${Icon.time} **Recent devlog entries** (last ${days} days):\n\n` +
+              recent.map(r => `${Icon.file} **${r.file}** (${r.lastModified.toISOString()})\n  ${Icon.arrow} ${r.excerpt}`).join('\n\n'),
           },
         ],
       };

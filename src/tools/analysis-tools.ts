@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
+import { Icon } from '../utils/format.js';
 
 
 export const analysisTools: ToolDefinition[] = [
@@ -21,7 +22,7 @@ export const analysisTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❓ No feature found matching: "${feature}"`,
+              text: `${Icon.info} No feature found matching: "${feature}"`,
             },
           ],
         };
@@ -50,13 +51,20 @@ export const analysisTools: ToolDefinition[] = [
         else if (line.includes('🚧')) progress.push({ status: 'in_progress', text: line });
         else if (line.includes('📋')) progress.push({ status: 'todo', text: line });
       });
-      
+
+      const statusIcon = {
+        completed: Icon.completed,
+        in_progress: Icon.active,
+        planned: Icon.pending,
+        unknown: Icon.info
+      }[status] || Icon.info;
+
       return {
         content: [
           {
             type: 'text',
-            text: `Feature: "${feature}"\nStatus: ${status}\nFile: ${latest.file}\nLast Updated: ${latest.lastModified.toISOString()}\n\n` +
-              (progress.length > 0 ? 'Progress:\n' + progress.map(p => p.text).join('\n') : 'No detailed progress found'),
+            text: `${statusIcon} **Feature:** "${feature}"\n${Icon.tag} Status: ${status}\n${Icon.file} File: ${latest.file}\n${Icon.time} Last Updated: ${latest.lastModified.toISOString()}\n\n` +
+              (progress.length > 0 ? `${Icon.chart} **Progress:**\n` + progress.map(p => p.text).join('\n') : `${Icon.info} No detailed progress found`),
           },
         ],
       };
@@ -103,20 +111,20 @@ export const analysisTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `✅ No pending items found (staleness: ${staleness})`,
+              text: `${Icon.success} No pending items found (staleness: ${staleness})`,
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `Found ${filtered.length} pending items:\n\n` +
+            text: `${Icon.pending} **Found ${filtered.length} pending items:**\n\n` +
               filtered.map(f => {
                 const daysSince = Math.round((now.getTime() - f.lastModified.getTime()) / (1000 * 60 * 60 * 24));
-                return `- ${f.file} (${daysSince} days old)\n  ${f.excerpt}`;
+                return `${Icon.file} **${f.file}** (${daysSince} days old)\n  ${Icon.arrow} ${f.excerpt}`;
               }).join('\n\n'),
           },
         ],
@@ -181,12 +189,12 @@ export const analysisTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `📊 Development Velocity (${period}):\n\n` +
-              `Total Items: ${totalItems}\n` +
-              `Completed: ${completedItems.length}\n` +
-              `Average per day: ${avgPerDay.toFixed(1)}\n\n` +
-              `By Type:\n${Object.entries(byType).map(([t, c]) => `  - ${t}: ${c}`).join('\n')}\n\n` +
-              `By Day:\n${Object.entries(byDay).sort().map(([d, c]) => `  - ${d}: ${c}`).join('\n')}`,
+            text: `${Icon.chart} **Development Velocity** (${period}):\n\n` +
+              `${Icon.file} Total Items: ${totalItems}\n` +
+              `${Icon.completed} Completed: ${completedItems.length}\n` +
+              `${Icon.time} Average per day: ${avgPerDay.toFixed(1)}\n\n` +
+              `${Icon.folder} **By Type:**\n${Object.entries(byType).map(([t, c]) => `  ${Icon.arrow} ${t}: ${c}`).join('\n')}\n\n` +
+              `${Icon.time} **By Day:**\n${Object.entries(byDay).sort().map(([d, c]) => `  ${Icon.arrow} ${d}: ${c}`).join('\n')}`,
           },
         ],
       };
@@ -255,9 +263,9 @@ export const analysisTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `📅 Development Timeline (${range}):\n\n` +
-              Object.entries(grouped).map(([date, items]) => 
-                `${date}:\n${items.map(i => `  - ${i.file}${i.title ? ` - ${i.title}` : ''}`).join('\n')}`
+            text: `${Icon.time} **Development Timeline** (${range}):\n\n` +
+              Object.entries(grouped).map(([date, items]) =>
+                `${Icon.tag} **${date}:**\n${items.map(i => `  ${Icon.file} ${i.file}${i.title ? ` - ${i.title}` : ''}`).join('\n')}`
               ).join('\n\n'),
           },
         ],
@@ -288,22 +296,22 @@ export const analysisTools: ToolDefinition[] = [
       
       // Generate test checklist
       const checklist = [
-        '✅ Unit tests for core functionality',
-        '✅ Integration tests with dependent components',
-        '✅ Edge case handling',
-        '✅ Error scenarios',
-        '✅ Performance under load',
+        `${Icon.completed} Unit tests for core functionality`,
+        `${Icon.completed} Integration tests with dependent components`,
+        `${Icon.completed} Edge case handling`,
+        `${Icon.completed} Error scenarios`,
+        `${Icon.completed} Performance under load`,
       ];
-      
+
       // Add specific tests based on regressions
       if (regressions.length > 0) {
-        checklist.push('⚠️ Regression tests:');
+        checklist.push(`${Icon.warning} **Regression tests:**`);
         regressions.forEach(r => {
           const content = r.fullContent || '';
-          if (content.includes('null')) checklist.push('  - Test null value handling');
-          if (content.includes('undefined')) checklist.push('  - Test undefined value handling');
-          if (content.includes('performance')) checklist.push('  - Test performance regression');
-          if (content.includes('memory')) checklist.push('  - Test memory usage');
+          if (content.includes('null')) checklist.push(`  ${Icon.arrow} Test null value handling`);
+          if (content.includes('undefined')) checklist.push(`  ${Icon.arrow} Test undefined value handling`);
+          if (content.includes('performance')) checklist.push(`  ${Icon.arrow} Test performance regression`);
+          if (content.includes('memory')) checklist.push(`  ${Icon.arrow} Test memory usage`);
         });
       }
       
@@ -328,25 +336,25 @@ export const analysisTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `Test Checklist for "${feature}":\n\n` +
+              text: `${Icon.task} **Test Checklist** for "${feature}":\n\n` +
                 checklist.join('\n') + '\n\n' +
-                `Found ${regressions.length} previous regressions to consider.\n\n` +
-                'Detailed test scenarios:\n' +
-                '1. Happy path: Normal operation with valid inputs\n' +
-                '2. Error handling: Invalid inputs, missing data\n' +
-                '3. Edge cases: Boundary values, empty sets\n' +
-                '4. Integration: With other system components\n' +
-                '5. Performance: Load testing, memory usage',
+                `${Icon.warning} Found ${regressions.length} previous regressions to consider.\n\n` +
+                `${Icon.chart} **Detailed test scenarios:**\n` +
+                `${Icon.arrow} 1. Happy path: Normal operation with valid inputs\n` +
+                `${Icon.arrow} 2. Error handling: Invalid inputs, missing data\n` +
+                `${Icon.arrow} 3. Edge cases: Boundary values, empty sets\n` +
+                `${Icon.arrow} 4. Integration: With other system components\n` +
+                `${Icon.arrow} 5. Performance: Load testing, memory usage`,
             },
           ],
         };
       }
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: `Test Checklist for "${feature}":\n\n${checklist.join('\n')}`,
+            text: `${Icon.task} **Test Checklist** for "${feature}":\n\n${checklist.join('\n')}`,
           },
         ],
       };

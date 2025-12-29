@@ -5,6 +5,7 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
+import { Icon, successResponse, errorResponse } from '../utils/format.js';
 
 // Helper function for analyzing codebase (duplicate for now, will be refactored)
 // async function analyzeCodebaseForFeature(feature: string) {
@@ -40,102 +41,102 @@ export const planningTools: ToolDefinition[] = [
       context: z.string().optional().describe('Additional context or requirements'),
     },
     handler: async ({ feature, approach, context }): Promise<CallToolResult> => {
-      let plan = `# Implementation Plan: ${feature}\n\n`;
-      
+      let plan = `# ${Icon.task} Implementation Plan: ${feature}\n\n`;
+
       // Add context if provided
       if (context) {
-        plan += `## Context\n${context}\n\n`;
+        plan += `## ${Icon.info} Context\n${context}\n\n`;
       }
-      
+
       // Based on approach, gather information
       switch (approach) {
         case 'use_existing_research': {
           // Search for existing research
           const research = await searchDevlogs(feature, 'insights');
           if (research.length > 0) {
-            plan += `## Existing Research Found\n`;
+            plan += `## ${Icon.search} Existing Research Found\n`;
             research.slice(0, 3).forEach(r => {
-              plan += `- ${r.file}: ${r.excerpt}\n`;
+              plan += `${Icon.file} ${r.file}: ${r.excerpt}\n`;
             });
             plan += '\n';
           } else {
-            plan += `## Note\nNo existing research found for "${feature}". Consider using 'do_new_research' approach.\n\n`;
+            plan += `## ${Icon.note} Note\nNo existing research found for "${feature}". Consider using 'do_new_research' approach.\n\n`;
           }
           break;
         }
-        
+
         case 'do_new_research': {
-          plan += `## Research Needed\n`;
+          plan += `## ${Icon.search} Research Needed\n`;
           plan += `1. Search for "${feature}" implementation patterns\n`;
           plan += `2. Review documentation and best practices\n`;
           plan += `3. Check for similar implementations in codebase\n`;
           plan += `4. Identify potential conflicts or dependencies\n\n`;
-          plan += `💡 Use Perplexity or Claude.ai to research this feature, then save findings with devlog_capture_research.\n\n`;
+          plan += `${Icon.sparkle} Use Perplexity or Claude.ai to research this feature, then save findings with devlog_capture_research.\n\n`;
           break;
         }
-        
+
         case 'use_docs': {
-          plan += `## Documentation Review\n`;
+          plan += `## ${Icon.file} Documentation Review\n`;
           plan += `Search project documentation for:\n`;
-          plan += `- API references related to ${feature}\n`;
-          plan += `- Architecture decisions that might impact this feature\n`;
-          plan += `- Existing patterns or conventions to follow\n\n`;
+          plan += `${Icon.arrow} API references related to ${feature}\n`;
+          plan += `${Icon.arrow} Architecture decisions that might impact this feature\n`;
+          plan += `${Icon.arrow} Existing patterns or conventions to follow\n\n`;
           break;
         }
       }
-      
+
       // Search for similar features to learn from
       const similarFeatures = await searchDevlogs(feature.split(' ')[0], 'features');
       if (similarFeatures.length > 0) {
-        plan += `## Similar Features (for reference)\n`;
+        plan += `## ${Icon.folder} Similar Features (for reference)\n`;
         similarFeatures.slice(0, 3).forEach(f => {
-          plan += `- ${f.file}\n`;
+          plan += `${Icon.file} ${f.file}\n`;
         });
         plan += '\n';
       }
-      
+
       // Check for conflicts
       const conflicts = await searchDevlogs(feature);
-      const potentialConflicts = conflicts.filter(c => 
-        c.fullContent?.includes('conflict') || 
+      const potentialConflicts = conflicts.filter(c =>
+        c.fullContent?.includes('conflict') ||
         c.fullContent?.includes('broke') ||
         c.fullContent?.includes('regression')
       );
-      
+
       if (potentialConflicts.length > 0) {
-        plan += `## ⚠️ Potential Conflicts\n`;
+        plan += `## ${Icon.warning} Potential Conflicts\n`;
         potentialConflicts.slice(0, 3).forEach(c => {
-          plan += `- ${c.file}: Check for conflicts\n`;
+          plan += `${Icon.error} ${c.file}: Check for conflicts\n`;
         });
         plan += '\n';
       }
       
       // Generate implementation steps
-      plan += `## Implementation Steps\n`;
+      plan += `## ${Icon.chart} Implementation Steps\n`;
       plan += `1. **Research & Planning** ${approach === 'do_new_research' ? '(REQUIRED)' : '(if needed)'}\n`;
-      plan += `   - Gather requirements and constraints\n`;
-      plan += `   - Review existing patterns\n`;
-      plan += `   - Document approach in insights/\n\n`;
-      
+      plan += `   ${Icon.arrow} Gather requirements and constraints\n`;
+      plan += `   ${Icon.arrow} Review existing patterns\n`;
+      plan += `   ${Icon.arrow} Document approach in insights/\n\n`;
+
       plan += `2. **Core Implementation**\n`;
-      plan += `   - Create feature branch\n`;
-      plan += `   - Implement core functionality\n`;
-      plan += `   - Add necessary types/interfaces\n\n`;
-      
+      plan += `   ${Icon.arrow} Create feature branch\n`;
+      plan += `   ${Icon.arrow} Implement core functionality\n`;
+      plan += `   ${Icon.arrow} Add necessary types/interfaces\n\n`;
+
       plan += `3. **Integration**\n`;
-      plan += `   - Update dependent components\n`;
-      plan += `   - Ensure backward compatibility\n`;
-      plan += `   - Handle edge cases\n\n`;
-      
+      plan += `   ${Icon.arrow} Update dependent components\n`;
+      plan += `   ${Icon.arrow} Ensure backward compatibility\n`;
+      plan += `   ${Icon.arrow} Handle edge cases\n\n`;
+
       plan += `4. **Testing & Validation**\n`;
-      plan += `   - Write unit tests\n`;
-      plan += `   - Manual testing\n`;
-      plan += `   - Performance validation\n\n`;
-      
+      plan += `   ${Icon.arrow} Write unit tests\n`;
+      plan += `   ${Icon.arrow} Manual testing\n`;
+      plan += `   ${Icon.arrow} Performance validation\n\n`;
+
       plan += `5. **Documentation**\n`;
-      plan += `   - Update feature status in features/\n`;
-      plan += `   - Document in devlog\n`;
-      plan += `   - Update any relevant configs\n\n`;
+      plan += `   ${Icon.arrow} Update feature status in features/\n`;
+      plan += `   ${Icon.arrow} Document in devlog\n`;
+      plan += `   ${Icon.arrow} Update any relevant configs\n\n`;
       
       // Save plan to file
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -144,12 +145,12 @@ export const planningTools: ToolDefinition[] = [
       try {
         await fs.mkdir(path.dirname(planFile), { recursive: true });
         await fs.writeFile(planFile, plan);
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: `✅ Feature plan created: ${planFile}\n\n${plan}`,
+              text: `${Icon.success} **Feature plan created:** ${planFile}\n\n${plan}`,
             },
           ],
         };
@@ -158,7 +159,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `Plan for "${feature}":\n\n${plan}\n\n⚠️ Could not save to file: ${error}`,
+              text: `${Icon.task} Plan for "${feature}":\n\n${plan}\n\n${Icon.warning} Could not save to file: ${error}`,
             },
           ],
         };
@@ -224,12 +225,12 @@ export const planningTools: ToolDefinition[] = [
       try {
         await fs.mkdir(path.dirname(filePath), { recursive: true });
         await fs.writeFile(filePath, content);
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: `✅ Research captured: ${filePath}\n\nTopic: ${topic}\n\nUse 'devlog_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
+              text: `${Icon.success} **Research captured:** ${filePath}\n\n${Icon.tag} Topic: ${topic}\n\n${Icon.sparkle} Use 'devlog_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
             },
           ],
         };
@@ -238,7 +239,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `❌ Failed to save research: ${error}`,
+              text: `${Icon.error} **Failed to save research:** ${error}`,
             },
           ],
         };
@@ -275,65 +276,65 @@ export const planningTools: ToolDefinition[] = [
       const suggestions: string[] = [];
       
       // Priority 1: In-progress items
-      const inProgress = pending.filter(p => 
-        p.fullContent?.includes('in progress') || 
+      const inProgress = pending.filter(p =>
+        p.fullContent?.includes('in progress') ||
         p.fullContent?.includes('🚧')
       );
-      
+
       if (inProgress.length > 0) {
-        suggestions.push('## 🚧 Continue In-Progress Work');
+        suggestions.push(`## ${Icon.active} Continue In-Progress Work`);
         inProgress.slice(0, 3).forEach(item => {
-          suggestions.push(`- Complete: ${item.file}`);
+          suggestions.push(`${Icon.arrow} Complete: ${item.file}`);
         });
         suggestions.push('');
       }
-      
+
       // Priority 2: Context-specific tasks
       if (context) {
-        const contextTasks = pending.filter(p => 
+        const contextTasks = pending.filter(p =>
           p.fullContent?.toLowerCase().includes(context.toLowerCase())
         );
-        
+
         if (contextTasks.length > 0) {
-          suggestions.push(`## 🎯 ${context} Tasks`);
+          suggestions.push(`## ${Icon.target} ${context} Tasks`);
           contextTasks.slice(0, 3).forEach(task => {
-            suggestions.push(`- ${task.file}`);
+            suggestions.push(`${Icon.arrow} ${task.file}`);
           });
           suggestions.push('');
         }
       }
-      
+
       // Priority 3: Research to implement
       if (recentResearch.length > 0) {
-        suggestions.push('## 💡 Implement Recent Research');
+        suggestions.push(`## ${Icon.sparkle} Implement Recent Research`);
         recentResearch.slice(0, 3).forEach(research => {
           const topic = research.title || research.file.split('/').pop()?.replace('.md', '');
-          suggestions.push(`- Plan and implement: ${topic}`);
+          suggestions.push(`${Icon.arrow} Plan and implement: ${topic}`);
         });
         suggestions.push('');
       }
-      
+
       // Priority 4: Stale items
       const now = new Date();
       const staleItems = pending.filter(p => {
         const daysSince = (now.getTime() - p.lastModified.getTime()) / (1000 * 60 * 60 * 24);
         return daysSince > 7;
       });
-      
+
       if (staleItems.length > 0) {
-        suggestions.push('## ⏰ Address Stale Items');
+        suggestions.push(`## ${Icon.time} Address Stale Items`);
         staleItems.slice(0, 3).forEach(item => {
           const daysSince = Math.round((now.getTime() - item.lastModified.getTime()) / (1000 * 60 * 60 * 24));
-          suggestions.push(`- ${item.file} (${daysSince} days old)`);
+          suggestions.push(`${Icon.warning} ${item.file} (${daysSince} days old)`);
         });
         suggestions.push('');
       }
-      
+
       // Add general suggestions
-      suggestions.push('## 📋 General Suggestions');
-      suggestions.push('- Run `devlog_velocity_insights` to check your productivity patterns');
-      suggestions.push('- Use `devlog_tag_stats` to ensure good documentation coverage');
-      suggestions.push('- Review `devlog_pending staleness=stale` for forgotten tasks');
+      suggestions.push(`## ${Icon.task} General Suggestions`);
+      suggestions.push(`${Icon.chart} Run \`devlog_velocity_insights\` to check your productivity patterns`);
+      suggestions.push(`${Icon.tag} Use \`devlog_tag_stats\` to ensure good documentation coverage`);
+      suggestions.push(`${Icon.search} Review \`devlog_pending staleness=stale\` for forgotten tasks`);
       
       return {
         content: [
