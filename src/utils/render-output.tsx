@@ -11,10 +11,14 @@
  *   });
  */
 
+// MUST be first - forces color support before chalk/ink load
+import './color-setup.js';
+
 import React from 'react';
 import { render, Box, Text } from 'ink';
 import Gradient from 'ink-gradient';
 import { PassThrough } from 'stream';
+import chalk from 'chalk';
 import {
   Theme,
   RenderableResult,
