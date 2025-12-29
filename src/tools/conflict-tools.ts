@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
-import { Icon, successResponse, warningResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
 
 export const conflictTools: ToolDefinition[] = [
   {
@@ -30,7 +30,14 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse('No Conflicts', `Safe to implement: "${feature}"`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Conflicts',
+                  status: 'success',
+                  message: `Safe to implement: "${feature}"`,
+                },
+              }),
             },
           ],
         };
@@ -40,9 +47,17 @@ export const conflictTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: warningResponse(`${conflicts.length} Potential Conflicts`,
-              `Feature: "${feature}"\n\n` +
-              conflicts.map(c => `- ${c.file}\n  ${c.excerpt}`).join('\n\n')),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: `${conflicts.length} Potential Conflicts`,
+                status: 'warning',
+                message: `Feature: "${feature}"`,
+                details: Object.fromEntries(
+                  conflicts.slice(0, 5).map((c, i) => [`Conflict ${i + 1}`, c.file])
+                ),
+              },
+            }),
           },
         ],
       };
@@ -72,7 +87,14 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse('No Duplicates', `Safe to implement: "${description}"`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Duplicates',
+                  status: 'success',
+                  message: `Safe to implement: "${description}"`,
+                },
+              }),
             },
           ],
         };
@@ -82,8 +104,17 @@ export const conflictTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: warningResponse(`${duplicates.length} Similar Implementations`,
-              duplicates.map(d => `- ${d.file}\n  ${d.excerpt}`).join('\n\n')),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: `${duplicates.length} Similar Implementations`,
+                status: 'warning',
+                message: 'Review existing implementations before proceeding.',
+                details: Object.fromEntries(
+                  duplicates.slice(0, 5).map((d, i) => [`Match ${i + 1}`, d.file])
+                ),
+              },
+            }),
           },
         ],
       };
@@ -115,7 +146,14 @@ export const conflictTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse('No Regressions', `Clean history for: "${component}"`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Regressions',
+                  status: 'success',
+                  message: `Clean history for: "${component}"`,
+                },
+              }),
             },
           ],
         };
@@ -125,20 +163,20 @@ export const conflictTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: warningResponse(`Regression History for "${component}"`,
-              regressions.map(r => {
-                const content = r.fullContent || '';
-                const lines = content.split('\n');
-                const relevantLines = lines.filter(l =>
-                  l.toLowerCase().includes('broke') ||
-                  l.toLowerCase().includes('regression') ||
-                  l.toLowerCase().includes('failed') ||
-                  l.toLowerCase().includes('bug') ||
-                  l.toLowerCase().includes('issue')
-                );
-
-                return `- ${r.file} (${r.lastModified.toISOString()})\n  ${relevantLines.join('\n  ') || r.excerpt}`;
-              }).join('\n\n')),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: `Regression History: ${component}`,
+                status: 'warning',
+                message: `Found ${regressions.length} past issues.`,
+                details: Object.fromEntries(
+                  regressions.slice(0, 5).map((r, i) => [
+                    `Issue ${i + 1}`,
+                    `${r.file} (${r.lastModified.toISOString().split('T')[0]})`
+                  ])
+                ),
+              },
+            }),
           },
         ],
       };

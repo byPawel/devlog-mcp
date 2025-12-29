@@ -8,7 +8,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
-import { Icon, successResponse, errorResponse, infoResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 export const devlogInitTool: ToolDefinition = {
   name: 'devlog_init',
@@ -29,7 +30,15 @@ export const devlogInitTool: ToolDefinition = {
           content: [
             {
               type: 'text',
-              text: infoResponse('Already Exists', `DevLog at: ${devlogPath}\nUse skipIfExists=false to reinitialize.`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Already Exists',
+                  status: 'info',
+                  message: 'Use skipIfExists=false to reinitialize.',
+                  details: { 'Path': devlogPath },
+                },
+              }),
             },
           ],
         };
@@ -167,23 +176,29 @@ private/
       // Create search mode config
       await fs.writeFile(path.join(devlogPath, '.config', 'search-mode'), 'auto');
       
+      // Build tree items for directories
+      const treeItems = directories.map(d => ({
+        text: `${d.replace('devlog/', '')}/`,
+        level: d.split('/').length - 1,
+      }));
+
       return {
         content: [
           {
             type: 'text',
-            text: successResponse('DevLog Initialized',
-              `**Created at:** ${devlogPath}\n\n` +
-              `**Structure:**\n` +
-              `${directories.map(d => `  ${Icon.folder} ${d.replace('devlog/', '')}/`).join('\n')}\n\n` +
-              `**Files created:**\n` +
-              `  ${Icon.file} README.md - Documentation and conventions\n` +
-              `  ${Icon.file} current.md - Active workspace\n` +
-              `  ${Icon.file} .gitignore - Git ignore rules\n` +
-              `  ${Icon.file} .config/search-mode - Search preferences\n\n` +
-              `**Next steps:**\n` +
-              `1. Run \`devlog_workspace_claim\` to start working\n` +
-              `2. Use \`devlog_session_log\` to track progress\n` +
-              `3. End with \`devlog_workspace_dump reason="session complete"\``),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'DevLog Initialized',
+                status: 'success',
+                message: `Created at: ${devlogPath}`,
+                details: {
+                  'Directories': `${directories.length} created`,
+                  'Files': 'README.md, current.md, .gitignore',
+                  'Next': 'Run devlog_workspace_claim to start',
+                },
+              },
+            }),
           },
         ],
       };
@@ -192,7 +207,14 @@ private/
         content: [
           {
             type: 'text',
-            text: errorResponse('Initialization Failed', `${error}`),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Initialization Failed',
+                status: 'error',
+                message: `${error}`,
+              },
+            }),
           },
         ],
       };

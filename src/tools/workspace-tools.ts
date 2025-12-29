@@ -5,7 +5,7 @@ import { ToolDefinition } from './registry.js';
 import { getCurrentWorkspace, generateAgentId, parseAgentFromContent } from '../utils/workspace.js';
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
-import { acquireLock, releaseLock, checkLock, formatLockInfo } from '../utils/lock-manager.js';
+import { acquireLock, releaseLock, checkLock } from '../utils/lock-manager.js';
 import {
   createInitialMetadata,
   updateMetadata,
@@ -16,7 +16,8 @@ import {
 } from '../utils/session-metadata.js';
 import { enableToolTracking, disableToolTracking, flushToolTracking } from '../utils/tool-tracker.js';
 import { startHeartbeat, stopHeartbeat } from '../utils/heartbeat-manager.js';
-import { Icon, header, kv, code, successResponse, errorResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 export const workspaceTools: ToolDefinition[] = [
   {
@@ -40,7 +41,14 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Lock Conflict', lockResult.error || 'Failed to acquire lock'),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Lock Conflict',
+                  status: 'error',
+                  message: lockResult.error || 'Failed to acquire lock',
+                },
+              }),
             },
           ],
         };
@@ -76,13 +84,13 @@ export const workspaceTools: ToolDefinition[] = [
       
       content += '---\n\n';
       content += `# Current Workspace\n\n`;
-      content += `## ${Icon.task} Active Task\n${task}\n\n`;
-      content += `## ${Icon.chart} Session Info\n`;
+      content += `## ${icon('task')} Active Task\n${task}\n\n`;
+      content += `## ${icon('chart')} Session Info\n`;
       content += `- Agent: ${agentId}\n`;
       content += `- Session: ${sessionId}\n`;
       content += `- Started: ${now}\n`;
       content += `- Lock expires: ${new Date(metadata.session.lock_expires || now).toLocaleString()}\n\n`;
-      content += `## ${Icon.active} Progress\n\n`;
+      content += `## ${icon('active')} Progress\n\n`;
       content += `- [ ] Task started\n`;
       
       try {
@@ -94,17 +102,25 @@ export const workspaceTools: ToolDefinition[] = [
         // Enable tool tracking and heartbeat
         await enableToolTracking();
         await startHeartbeat(agentId);
-        
+
         return {
           content: [
             {
               type: 'text',
-              text: successResponse('Workspace Claimed',
-                `${kv('Agent', code(agentId))}\n` +
-                `${kv('Session', code(sessionId))}\n` +
-                `${kv('Task', task)}\n` +
-                `${kv('Lock', 'expires in 30 minutes')}\n\n` +
-                `${Icon.heart} Tracking and heartbeat enabled.`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Workspace Claimed',
+                  status: 'success',
+                  message: `${icon('heart')} Tracking and heartbeat enabled.`,
+                  details: {
+                    'Agent': agentId,
+                    'Session': sessionId,
+                    'Task': task,
+                    'Lock': 'expires in 30 minutes',
+                  },
+                },
+              }),
             },
           ],
         };
@@ -115,7 +131,14 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Claim Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Claim Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };
@@ -130,7 +153,7 @@ export const workspaceTools: ToolDefinition[] = [
     inputSchema: {},
     handler: async (): Promise<CallToolResult> => {
       const workspace = await getCurrentWorkspace();
-      
+
       if (!workspace.exists || !workspace.content) {
         // Check if there's a stale lock
         const lock = await checkLock();
@@ -139,8 +162,17 @@ export const workspaceTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('No Active Workspace',
-                  `Found existing lock:\n\n${formatLockInfo(lock)}\n\nUse ${code('devlog_workspace_claim')} to start.`),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'No Active Workspace',
+                    status: 'warning',
+                    message: `Found existing lock by ${lock.agent_id}. Use devlog_workspace_claim to start.`,
+                    details: {
+                      'Lock expires': lock.expires_at,
+                    },
+                  },
+                }),
               },
             ],
           };
@@ -150,48 +182,68 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('No Workspace', `Use ${code('devlog_workspace_claim')} to create one.`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Workspace',
+                  status: 'info',
+                  message: 'Use devlog_workspace_claim to create one.',
+                },
+              }),
             },
           ],
         };
       }
-      
+
       const { agentId, lastActive } = parseAgentFromContent(workspace.content);
-      
+
       // Extract task from content
       const taskMatch = workspace.content.match(/task:\s*"([^"]+)"/);
       const task = taskMatch ? taskMatch[1] : 'Unknown';
-      
+
       // Get lock info
       const lock = await checkLock();
-      const lockInfo = lock ? `\n\n${Icon.lock} **Lock Status:**\n${formatLockInfo(lock)}` : '';
 
       // Get tracking metadata
       const metadata = await extractMetadata(workspace.path);
-      let trackingInfo = '';
+
+      // Build details
+      const details: Record<string, string> = {
+        'Agent': agentId || 'Not set',
+        'Task': task,
+        'Last Active': lastActive || 'Unknown',
+      };
+
+      if (lock) {
+        details['Lock'] = `expires ${lock.expires_at}`;
+      }
 
       if (metadata) {
         const activeTasks = metadata.tasks.filter(t => t.status === 'active').length;
         const completedTasks = metadata.tasks.filter(t => t.status === 'completed').length;
         const totalDuration = formatDuration(metadata.timing.total_minutes + metadata.timing.active_minutes);
+        const toolCalls = Object.values(metadata.tool_usage).reduce((a, b) => a + b, 0);
 
-        trackingInfo = `\n\n${Icon.chart} **Session Tracking:**\n` +
-          `${kv('Duration', `${totalDuration} (Active: ${formatDuration(metadata.timing.active_minutes)})`)}\n` +
-          `${kv('Tasks', `${activeTasks} active, ${completedTasks} completed`)}\n` +
-          `${kv('Tool calls', Object.values(metadata.tool_usage).reduce((a, b) => a + b, 0))}\n` +
-          `${kv('Pauses', metadata.timing.pauses.length)}`;
+        details['Duration'] = `${totalDuration} (Active: ${formatDuration(metadata.timing.active_minutes)})`;
+        details['Tasks'] = `${activeTasks} active, ${completedTasks} completed`;
+        details['Tool calls'] = `${toolCalls}`;
       }
 
       return {
         content: [
           {
             type: 'text',
-            text: `${Icon.chart} **Workspace Status**\n\n` +
-              `${kv('Agent', code(agentId || 'Not set'))}\n` +
-              `${kv('Task', task)}\n` +
-              `${kv('Last Active', lastActive || 'Unknown')}` +
-              lockInfo +
-              trackingInfo,
+            text: renderOutput({
+              type: 'workspace-status',
+              data: {
+                workspaceId: workspace.path.split('/').pop() || 'workspace',
+                isLocked: !!lock,
+                lockedBy: lock?.agent_id,
+                task: task,
+                sessionDuration: metadata ? formatDuration(metadata.timing.total_minutes) : undefined,
+                entries: metadata?.tasks.length,
+              },
+            }),
           },
         ],
       };
@@ -208,13 +260,20 @@ export const workspaceTools: ToolDefinition[] = [
     },
     handler: async ({ entry, type }): Promise<CallToolResult> => {
       const workspace = await getCurrentWorkspace();
-      
+
       if (!workspace.exists || !workspace.content) {
         return {
           content: [
             {
               type: 'text',
-              text: errorResponse('No Workspace', `Use ${code('devlog_workspace_init')} first.`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Workspace',
+                  status: 'error',
+                  message: 'Use devlog_workspace_claim first.',
+                },
+              }),
             },
           ],
         };
@@ -222,13 +281,13 @@ export const workspaceTools: ToolDefinition[] = [
 
       const timestamp = new Date().toISOString().slice(11, 19); // HH:MM:SS
       const iconMap: Record<string, string> = {
-        progress: Icon.completed,
-        note: Icon.note,
-        issue: Icon.warning,
-        decision: Icon.task
+        progress: icon('completed'),
+        note: icon('note'),
+        issue: icon('warning'),
+        decision: icon('task'),
       };
       const logIcon = iconMap[type];
-      
+
       // Append to workspace
       const logEntry = `\n${logIcon} [${timestamp}] ${entry}\n`;
       const updatedContent = workspace.content + logEntry;
@@ -240,7 +299,18 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${logIcon} Logged: ${entry}`,
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Entry Logged',
+                  status: 'success',
+                  message: entry,
+                  details: {
+                    'Type': type,
+                    'Time': timestamp,
+                  },
+                },
+              }),
             },
           ],
         };
@@ -249,7 +319,14 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Log Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Log Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };
@@ -267,13 +344,20 @@ export const workspaceTools: ToolDefinition[] = [
     },
     handler: async ({ reason, keepActive = true }): Promise<CallToolResult> => {
       const workspace = await getCurrentWorkspace();
-      
+
       if (!workspace.exists || !workspace.content) {
         return {
           content: [
             {
               type: 'text',
-              text: errorResponse('No Workspace', 'Nothing to dump.'),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Workspace',
+                  status: 'error',
+                  message: 'Nothing to dump.',
+                },
+              }),
             },
           ],
         };
@@ -358,15 +442,15 @@ export const workspaceTools: ToolDefinition[] = [
 
         sessionContent += `## Summary\n`;
         if (completedTasks.length > 0) {
-          sessionContent += `### ${Icon.completed} Completed\n`;
+          sessionContent += `### ${icon('completed')} Completed\n`;
           completedTasks.forEach(t => {
-            sessionContent += `- ${Icon.completed} ${t.title} (${formatDuration(t.duration_minutes || 0)})\n`;
+            sessionContent += `- ${icon('completed')} ${t.title} (${formatDuration(t.duration_minutes || 0)})\n`;
           });
         }
         if (activeTasks.length > 0) {
-          sessionContent += `### ${Icon.active} In Progress\n`;
+          sessionContent += `### ${icon('active')} In Progress\n`;
           activeTasks.forEach(t => {
-            sessionContent += `- ${Icon.active} ${t.title}\n`;
+            sessionContent += `- ${icon('active')} ${t.title}\n`;
           });
         }
         sessionContent += '\n';
@@ -398,20 +482,34 @@ export const workspaceTools: ToolDefinition[] = [
           // Just update the workspace to show it was dumped
           const updatedContent = workspace.content.replace(
             /## .* Progress/,
-            `## ${Icon.active} Progress\n\n${Icon.tag} Session dumped to: [${filename}](daily/${filename})\n`
+            `## ${icon('active')} Progress\n\n${icon('tag')} Session dumped to: [${filename}](daily/${filename})\n`
           );
           await fs.writeFile(workspace.path, updatedContent);
+        }
+
+        const details: Record<string, string> = {
+          'Saved to': path.relative(DEVLOG_PATH, sessionFile),
+          'Reason': reason,
+        };
+        if (metadata) {
+          details['Duration'] = `${formatDuration(metadata.timing.total_minutes)} (Active: ${formatDuration(metadata.timing.active_minutes)})`;
         }
 
         return {
           content: [
             {
               type: 'text',
-              text: successResponse('Workspace Dumped',
-                `${kv('Saved to', path.relative(DEVLOG_PATH, sessionFile))}\n` +
-                `${kv('Reason', reason)}\n` +
-                (metadata ? `${kv('Duration', `${formatDuration(metadata.timing.total_minutes)} (Active: ${formatDuration(metadata.timing.active_minutes)})`)}\n` : '') +
-                `\n${keepActive ? `${Icon.active} Workspace kept active.` : `${Icon.completed} Workspace closed.`}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Workspace Dumped',
+                  status: 'success',
+                  message: keepActive
+                    ? `${icon('active')} Workspace kept active.`
+                    : `${icon('completed')} Workspace closed.`,
+                  details,
+                },
+              }),
             },
           ],
         };
@@ -420,7 +518,14 @@ export const workspaceTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Dump Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Dump Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };

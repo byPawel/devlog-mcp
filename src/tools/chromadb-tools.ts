@@ -3,7 +3,8 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { spawn } from 'child_process';
 import path from 'path';
-import { Icon, successResponse, errorResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 // Path to the Python ChromaDB indexer
 const INDEXER_PATH = path.join(process.cwd(), 'scripts', 'chromadb-smart-index.py');
@@ -104,9 +105,9 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `${Icon.search} **Found ${result.results.length} results** for "${query}":\n\n` +
+            text: `${icon('search')} **Found ${result.results.length} results** for "${query}":\n\n` +
               result.results.map((r, i: number) =>
-                `${Icon.file} **${i + 1}. ${r.file}**\n   ${Icon.tag} Source: ${r.source}\n   ${Icon.info} Type: ${r.type}\n   ${Icon.chart} Relevance: ${r.relevance}\n   ${Icon.arrow} Preview: ${r.preview}`
+                `${icon('file')} **${i + 1}. ${r.file}**\n   ${icon('tag')} Source: ${r.source}\n   ${icon('info')} Type: ${r.type}\n   ${icon('chart')} Relevance: ${r.relevance}\n   ${icon('arrow')} Preview: ${r.preview}`
               ).join('\n\n')
           }]
         };
@@ -114,7 +115,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `${Icon.error} **Error searching ChromaDB:** ${(error as Error).message}`
+            text: `${icon('error')} **Error searching ChromaDB:** ${(error as Error).message}`
           }],
           isError: true
         };
@@ -141,7 +142,7 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `${Icon.success} **Indexed Perplexity search:** "${query}"`
+              text: `${icon('success')} **Indexed Perplexity search:** "${query}"`
             }]
           };
         } else if (type === 'jira') {
@@ -159,7 +160,7 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `${Icon.success} **Indexed Jira issue:** ${query}`
+              text: `${icon('success')} **Indexed Jira issue:** ${query}`
             }]
           };
         }
@@ -167,7 +168,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `${Icon.warning} **Unknown content type:** ${type}`
+            text: `${icon('warning')} **Unknown content type:** ${type}`
           }],
           isError: true
         };
@@ -175,7 +176,7 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `${Icon.error} **Error indexing content:** ${(error as Error).message}`
+            text: `${icon('error')} **Error indexing content:** ${(error as Error).message}`
           }],
           isError: true
         };
@@ -202,7 +203,7 @@ export const chromadbTools: ToolDefinition[] = [
           return {
             content: [{
               type: 'text',
-              text: `${Icon.success} **Reindexing complete:**\n${Icon.file} Total files: ${match[1]}\n${Icon.sync} Indexed: ${match[2]}\n${Icon.folder} Collection size: ${match[3]} documents`
+              text: `${icon('success')} **Reindexing complete:**\n${icon('file')} Total files: ${match[1]}\n${icon('sync')} Indexed: ${match[2]}\n${icon('folder')} Collection size: ${match[3]} documents`
             }]
           };
         }
@@ -210,14 +211,14 @@ export const chromadbTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: `${Icon.success} **Reindexing complete**`
+            text: `${icon('success')} **Reindexing complete**`
           }]
         };
       } catch (error: unknown) {
         return {
           content: [{
             type: 'text',
-            text: `${Icon.error} **Error reindexing:** ${(error as Error).message}`
+            text: `${icon('error')} **Error reindexing:** ${(error as Error).message}`
           }],
           isError: true
         };

@@ -5,7 +5,8 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
-import { Icon, successResponse, errorResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 // Helper function for analyzing codebase (duplicate for now, will be refactored)
 // async function analyzeCodebaseForFeature(feature: string) {
@@ -41,11 +42,11 @@ export const planningTools: ToolDefinition[] = [
       context: z.string().optional().describe('Additional context or requirements'),
     },
     handler: async ({ feature, approach, context }): Promise<CallToolResult> => {
-      let plan = `# ${Icon.task} Implementation Plan: ${feature}\n\n`;
+      let plan = `# ${icon('task')} Implementation Plan: ${feature}\n\n`;
 
       // Add context if provided
       if (context) {
-        plan += `## ${Icon.info} Context\n${context}\n\n`;
+        plan += `## ${icon('info')} Context\n${context}\n\n`;
       }
 
       // Based on approach, gather information
@@ -54,33 +55,33 @@ export const planningTools: ToolDefinition[] = [
           // Search for existing research
           const research = await searchDevlogs(feature, 'insights');
           if (research.length > 0) {
-            plan += `## ${Icon.search} Existing Research Found\n`;
+            plan += `## ${icon('search')} Existing Research Found\n`;
             research.slice(0, 3).forEach(r => {
-              plan += `${Icon.file} ${r.file}: ${r.excerpt}\n`;
+              plan += `${icon('file')} ${r.file}: ${r.excerpt}\n`;
             });
             plan += '\n';
           } else {
-            plan += `## ${Icon.note} Note\nNo existing research found for "${feature}". Consider using 'do_new_research' approach.\n\n`;
+            plan += `## ${icon('note')} Note\nNo existing research found for "${feature}". Consider using 'do_new_research' approach.\n\n`;
           }
           break;
         }
 
         case 'do_new_research': {
-          plan += `## ${Icon.search} Research Needed\n`;
+          plan += `## ${icon('search')} Research Needed\n`;
           plan += `1. Search for "${feature}" implementation patterns\n`;
           plan += `2. Review documentation and best practices\n`;
           plan += `3. Check for similar implementations in codebase\n`;
           plan += `4. Identify potential conflicts or dependencies\n\n`;
-          plan += `${Icon.sparkle} Use Perplexity or Claude.ai to research this feature, then save findings with devlog_capture_research.\n\n`;
+          plan += `${icon('sparkle')} Use Perplexity or Claude.ai to research this feature, then save findings with devlog_capture_research.\n\n`;
           break;
         }
 
         case 'use_docs': {
-          plan += `## ${Icon.file} Documentation Review\n`;
+          plan += `## ${icon('file')} Documentation Review\n`;
           plan += `Search project documentation for:\n`;
-          plan += `${Icon.arrow} API references related to ${feature}\n`;
-          plan += `${Icon.arrow} Architecture decisions that might impact this feature\n`;
-          plan += `${Icon.arrow} Existing patterns or conventions to follow\n\n`;
+          plan += `${icon('arrow')} API references related to ${feature}\n`;
+          plan += `${icon('arrow')} Architecture decisions that might impact this feature\n`;
+          plan += `${icon('arrow')} Existing patterns or conventions to follow\n\n`;
           break;
         }
       }
@@ -88,9 +89,9 @@ export const planningTools: ToolDefinition[] = [
       // Search for similar features to learn from
       const similarFeatures = await searchDevlogs(feature.split(' ')[0], 'features');
       if (similarFeatures.length > 0) {
-        plan += `## ${Icon.folder} Similar Features (for reference)\n`;
+        plan += `## ${icon('folder')} Similar Features (for reference)\n`;
         similarFeatures.slice(0, 3).forEach(f => {
-          plan += `${Icon.file} ${f.file}\n`;
+          plan += `${icon('file')} ${f.file}\n`;
         });
         plan += '\n';
       }
@@ -104,39 +105,39 @@ export const planningTools: ToolDefinition[] = [
       );
 
       if (potentialConflicts.length > 0) {
-        plan += `## ${Icon.warning} Potential Conflicts\n`;
+        plan += `## ${icon('warning')} Potential Conflicts\n`;
         potentialConflicts.slice(0, 3).forEach(c => {
-          plan += `${Icon.error} ${c.file}: Check for conflicts\n`;
+          plan += `${icon('error')} ${c.file}: Check for conflicts\n`;
         });
         plan += '\n';
       }
       
       // Generate implementation steps
-      plan += `## ${Icon.chart} Implementation Steps\n`;
+      plan += `## ${icon('chart')} Implementation Steps\n`;
       plan += `1. **Research & Planning** ${approach === 'do_new_research' ? '(REQUIRED)' : '(if needed)'}\n`;
-      plan += `   ${Icon.arrow} Gather requirements and constraints\n`;
-      plan += `   ${Icon.arrow} Review existing patterns\n`;
-      plan += `   ${Icon.arrow} Document approach in insights/\n\n`;
+      plan += `   ${icon('arrow')} Gather requirements and constraints\n`;
+      plan += `   ${icon('arrow')} Review existing patterns\n`;
+      plan += `   ${icon('arrow')} Document approach in insights/\n\n`;
 
       plan += `2. **Core Implementation**\n`;
-      plan += `   ${Icon.arrow} Create feature branch\n`;
-      plan += `   ${Icon.arrow} Implement core functionality\n`;
-      plan += `   ${Icon.arrow} Add necessary types/interfaces\n\n`;
+      plan += `   ${icon('arrow')} Create feature branch\n`;
+      plan += `   ${icon('arrow')} Implement core functionality\n`;
+      plan += `   ${icon('arrow')} Add necessary types/interfaces\n\n`;
 
       plan += `3. **Integration**\n`;
-      plan += `   ${Icon.arrow} Update dependent components\n`;
-      plan += `   ${Icon.arrow} Ensure backward compatibility\n`;
-      plan += `   ${Icon.arrow} Handle edge cases\n\n`;
+      plan += `   ${icon('arrow')} Update dependent components\n`;
+      plan += `   ${icon('arrow')} Ensure backward compatibility\n`;
+      plan += `   ${icon('arrow')} Handle edge cases\n\n`;
 
       plan += `4. **Testing & Validation**\n`;
-      plan += `   ${Icon.arrow} Write unit tests\n`;
-      plan += `   ${Icon.arrow} Manual testing\n`;
-      plan += `   ${Icon.arrow} Performance validation\n\n`;
+      plan += `   ${icon('arrow')} Write unit tests\n`;
+      plan += `   ${icon('arrow')} Manual testing\n`;
+      plan += `   ${icon('arrow')} Performance validation\n\n`;
 
       plan += `5. **Documentation**\n`;
-      plan += `   ${Icon.arrow} Update feature status in features/\n`;
-      plan += `   ${Icon.arrow} Document in devlog\n`;
-      plan += `   ${Icon.arrow} Update any relevant configs\n\n`;
+      plan += `   ${icon('arrow')} Update feature status in features/\n`;
+      plan += `   ${icon('arrow')} Document in devlog\n`;
+      plan += `   ${icon('arrow')} Update any relevant configs\n\n`;
       
       // Save plan to file
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -150,7 +151,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${Icon.success} **Feature plan created:** ${planFile}\n\n${plan}`,
+              text: `${icon('success')} **Feature plan created:** ${planFile}\n\n${plan}`,
             },
           ],
         };
@@ -159,7 +160,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${Icon.task} Plan for "${feature}":\n\n${plan}\n\n${Icon.warning} Could not save to file: ${error}`,
+              text: `${icon('task')} Plan for "${feature}":\n\n${plan}\n\n${icon('warning')} Could not save to file: ${error}`,
             },
           ],
         };
@@ -230,7 +231,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${Icon.success} **Research captured:** ${filePath}\n\n${Icon.tag} Topic: ${topic}\n\n${Icon.sparkle} Use 'devlog_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
+              text: `${icon('success')} **Research captured:** ${filePath}\n\n${icon('tag')} Topic: ${topic}\n\n${icon('sparkle')} Use 'devlog_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
             },
           ],
         };
@@ -239,7 +240,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${Icon.error} **Failed to save research:** ${error}`,
+              text: `${icon('error')} **Failed to save research:** ${error}`,
             },
           ],
         };
@@ -282,9 +283,9 @@ export const planningTools: ToolDefinition[] = [
       );
 
       if (inProgress.length > 0) {
-        suggestions.push(`## ${Icon.active} Continue In-Progress Work`);
+        suggestions.push(`## ${icon('active')} Continue In-Progress Work`);
         inProgress.slice(0, 3).forEach(item => {
-          suggestions.push(`${Icon.arrow} Complete: ${item.file}`);
+          suggestions.push(`${icon('arrow')} Complete: ${item.file}`);
         });
         suggestions.push('');
       }
@@ -296,9 +297,9 @@ export const planningTools: ToolDefinition[] = [
         );
 
         if (contextTasks.length > 0) {
-          suggestions.push(`## ${Icon.target} ${context} Tasks`);
+          suggestions.push(`## ${icon('target')} ${context} Tasks`);
           contextTasks.slice(0, 3).forEach(task => {
-            suggestions.push(`${Icon.arrow} ${task.file}`);
+            suggestions.push(`${icon('arrow')} ${task.file}`);
           });
           suggestions.push('');
         }
@@ -306,10 +307,10 @@ export const planningTools: ToolDefinition[] = [
 
       // Priority 3: Research to implement
       if (recentResearch.length > 0) {
-        suggestions.push(`## ${Icon.sparkle} Implement Recent Research`);
+        suggestions.push(`## ${icon('sparkle')} Implement Recent Research`);
         recentResearch.slice(0, 3).forEach(research => {
           const topic = research.title || research.file.split('/').pop()?.replace('.md', '');
-          suggestions.push(`${Icon.arrow} Plan and implement: ${topic}`);
+          suggestions.push(`${icon('arrow')} Plan and implement: ${topic}`);
         });
         suggestions.push('');
       }
@@ -322,19 +323,19 @@ export const planningTools: ToolDefinition[] = [
       });
 
       if (staleItems.length > 0) {
-        suggestions.push(`## ${Icon.time} Address Stale Items`);
+        suggestions.push(`## ${icon('time')} Address Stale Items`);
         staleItems.slice(0, 3).forEach(item => {
           const daysSince = Math.round((now.getTime() - item.lastModified.getTime()) / (1000 * 60 * 60 * 24));
-          suggestions.push(`${Icon.warning} ${item.file} (${daysSince} days old)`);
+          suggestions.push(`${icon('warning')} ${item.file} (${daysSince} days old)`);
         });
         suggestions.push('');
       }
 
       // Add general suggestions
-      suggestions.push(`## ${Icon.task} General Suggestions`);
-      suggestions.push(`${Icon.chart} Run \`devlog_velocity_insights\` to check your productivity patterns`);
-      suggestions.push(`${Icon.tag} Use \`devlog_tag_stats\` to ensure good documentation coverage`);
-      suggestions.push(`${Icon.search} Review \`devlog_pending staleness=stale\` for forgotten tasks`);
+      suggestions.push(`## ${icon('task')} General Suggestions`);
+      suggestions.push(`${icon('chart')} Run \`devlog_velocity_insights\` to check your productivity patterns`);
+      suggestions.push(`${icon('tag')} Use \`devlog_tag_stats\` to ensure good documentation coverage`);
+      suggestions.push(`${icon('search')} Review \`devlog_pending staleness=stale\` for forgotten tasks`);
       
       return {
         content: [

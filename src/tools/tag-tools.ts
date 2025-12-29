@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { CallToolResult } from '../types.js';
-import { Icon } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 export const tagTools: ToolDefinition[] = [
   {
@@ -80,20 +81,32 @@ export const tagTools: ToolDefinition[] = [
       
       const tagCoverage = filesWithTags > 0 ? ((filesWithTags / totalFiles) * 100).toFixed(1) : '0';
       
+      // Build table data
+      const tableRows = Object.entries(tagStats).flatMap(([category, values]) => {
+        const sortedValues = Object.entries(values)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+        return sortedValues.map(([v, c]) => [category, v, `${c}`]);
+      });
+
       return {
         content: [
           {
             type: 'text',
-            text: `${Icon.chart} **Tag Statistics**\n\n` +
-              `Total files: ${totalFiles}\n` +
-              `Files with tags: ${filesWithTags} (${tagCoverage}%)\n\n` +
-              `**Tag usage by category:**\n` +
-              Object.entries(tagStats).map(([category, values]) => {
-                const sortedValues = Object.entries(values)
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 5);
-                return `\n${Icon.tag} **${category}:**\n${sortedValues.map(([v, c]) => `  - ${v}: ${c}`).join('\n')}`;
-              }).join(''),
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Tag Statistics',
+                status: 'info',
+                message: `${filesWithTags} of ${totalFiles} files have tags (${tagCoverage}%)`,
+                details: Object.fromEntries(
+                  Object.entries(tagStats).map(([cat, vals]) => [
+                    cat,
+                    Object.entries(vals).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([v, c]) => `${v}(${c})`).join(', ')
+                  ])
+                ),
+              },
+            }),
           },
         ],
       };

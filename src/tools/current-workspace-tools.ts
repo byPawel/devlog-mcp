@@ -10,7 +10,8 @@ import matter from 'gray-matter';
 import { glob } from 'glob';
 import { z } from 'zod';
 import { CallToolResult } from '../types.js';
-import { Icon, successResponse, errorResponse, kv } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
 
@@ -61,20 +62,35 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: successResponse('Regenerated current.md',
-              `**Activity Summary:**\n` +
-              `- ${Icon.active} In Progress: ${analysis.inProgress.length}\n` +
-              `- ${Icon.completed} Recently Completed: ${analysis.recentlyCompleted.length}\n` +
-              `- ${Icon.time} Upcoming Tasks: ${analysis.upcomingTasks.length}\n` +
-              `- ${Icon.tag} Active Tags: ${analysis.activeTags.size}\n\n` +
-              `${kv('Path', currentPath)}`)
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Regenerated current.md',
+                status: 'success',
+                message: 'Workspace updated based on recent activity.',
+                details: {
+                  'In Progress': `${analysis.inProgress.length}`,
+                  'Completed': `${analysis.recentlyCompleted.length}`,
+                  'Upcoming': `${analysis.upcomingTasks.length}`,
+                  'Active Tags': `${analysis.activeTags.size}`,
+                  'Path': currentPath,
+                },
+              },
+            }),
           }]
         };
       } catch (error) {
         return {
           content: [{
             type: 'text',
-            text: errorResponse('Regeneration Failed', error instanceof Error ? error.message : String(error))
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Regeneration Failed',
+                status: 'error',
+                message: error instanceof Error ? error.message : String(error),
+              },
+            }),
           }]
         };
       }
@@ -106,21 +122,34 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: successResponse(`Updated "${section}"`,
-              `${kv('Action', append ? 'Appended to section' : 'Replaced section')}`)
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: `Updated "${section}"`,
+                status: 'success',
+                message: append ? 'Appended to section' : 'Replaced section',
+              },
+            }),
           }]
         };
       } catch (error) {
         return {
           content: [{
             type: 'text',
-            text: errorResponse('Update Failed', error instanceof Error ? error.message : String(error))
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Update Failed',
+                status: 'error',
+                message: error instanceof Error ? error.message : String(error),
+              },
+            }),
           }]
         };
       }
     }
   },
-  
+
   {
     name: 'devlog_get_current_focus',
     title: 'Get Current Focus',
@@ -144,15 +173,15 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         }
         
         if (focusMatch) {
-          summary += `## ${Icon.task} Current Focus\n${focusMatch[1].trim()}\n\n`;
+          summary += `## ${icon('task')} Current Focus\n${focusMatch[1].trim()}\n\n`;
         }
 
         if (inProgressMatch) {
-          summary += `## ${Icon.active} In Progress\n${inProgressMatch[1].trim()}\n\n`;
+          summary += `## ${icon('active')} In Progress\n${inProgressMatch[1].trim()}\n\n`;
         }
 
         if (nextStepsMatch) {
-          summary += `## ${Icon.time} Next Steps\n${nextStepsMatch[1].trim()}\n\n`;
+          summary += `## ${icon('time')} Next Steps\n${nextStepsMatch[1].trim()}\n\n`;
         }
         
         return {
@@ -165,7 +194,14 @@ export const currentWorkspaceTools: ToolDefinition[] = [
         return {
           content: [{
             type: 'text',
-            text: errorResponse('Read Failed', error instanceof Error ? error.message : String(error))
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'Read Failed',
+                status: 'error',
+                message: error instanceof Error ? error.message : String(error),
+              },
+            }),
           }]
         };
       }

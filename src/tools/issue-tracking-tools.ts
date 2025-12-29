@@ -10,7 +10,8 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getCurrentWorkspace } from '../utils/workspace.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
-import { Icon, successResponse, errorResponse, kv, code } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 // Issue status enum
 // const _IssueStatus = z.enum(['pending', 'active', 'resolved', 'archived']);
@@ -258,12 +259,20 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse('Issue Created',
-                `${kv('Title', title)}\n` +
-                `${kv('File', issue.file_path)}\n` +
-                `${kv('ID', code(issueId))}\n` +
-                `${kv('Details', `${category} | ${priority} | ${estimate}`)}\n\n` +
-                `Use ${code('/issue:work')} to start working on this issue.`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Issue Created',
+                  status: 'success',
+                  message: `Use \`/issue:work\` to start working on this issue.`,
+                  details: {
+                    'Title': title,
+                    'File': issue.file_path,
+                    'ID': issueId,
+                    'Details': `${category} | ${priority} | ${estimate}`,
+                  },
+                },
+              }),
             },
           ],
         };
@@ -272,7 +281,14 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Issue Creation Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Issue Creation Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };
@@ -328,40 +344,40 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.issue} No issues found matching: status=${status}, priority=${priority}`,
+                text: `${icon('issue')} No issues found matching: status=${status}, priority=${priority}`,
               },
             ],
           };
         }
 
         // Format output
-        let output = `${Icon.issue} **Issues** (${limitedIssues.length}/${allIssues.length})\n\n`;
+        let output = `${icon('issue')} **Issues** (${limitedIssues.length}/${allIssues.length})\n\n`;
 
         for (const issue of limitedIssues) {
           const statusIcon = {
-            pending: Icon.pending,
-            active: Icon.sync,
-            resolved: Icon.completed,
-            archived: Icon.folder
-          }[issue.status] || Icon.info;
+            pending: icon('pending'),
+            active: icon('sync'),
+            resolved: icon('completed'),
+            archived: icon('folder')
+          }[issue.status] || icon('info');
 
           const priorityIcon = {
-            critical: Icon.error,
-            high: Icon.warning,
-            medium: Icon.info,
-            low: Icon.success
-          }[issue.priority] || Icon.pending;
+            critical: icon('error'),
+            high: icon('warning'),
+            medium: icon('info'),
+            low: icon('success')
+          }[issue.priority] || icon('pending');
 
           output += `${statusIcon} **${issue.title}**\n`;
           output += `   ${priorityIcon} ${issue.priority} | ${issue.category} | ${issue.estimate}`;
           if (issue.time_spent) {
-            output += ` | ${Icon.time} ${issue.time_spent}`;
+            output += ` | ${icon('time')} ${issue.time_spent}`;
           }
-          output += `\n   ${Icon.tag} \`${issue.id}\` | ${Icon.time} ${issue.created_date.slice(0, 10)}\n\n`;
+          output += `\n   ${icon('tag')} \`${issue.id}\` | ${icon('time')} ${issue.created_date.slice(0, 10)}\n\n`;
         }
 
-        output += `\n${Icon.arrow} Use ${code('/issue:work <issue_id>')} to start working on an issue\n`;
-        output += `${Icon.arrow} Use ${code('/issue:done <issue_id>')} to complete an issue`;
+        output += `\n${icon('arrow')} Use \`/issue:work <issue_id>\` to start working on an issue\n`;
+        output += `${icon('arrow')} Use \`/issue:done <issue_id>\` to complete an issue`;
         
         return {
           content: [
@@ -376,7 +392,14 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('List Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'List Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };
@@ -415,7 +438,14 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('Issue Not Found', `${issue_id}\nUse \`/issue:list\` to see available issues.`),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'Issue Not Found',
+                    status: 'error',
+                    message: `${issue_id}\nUse \`/issue:list\` to see available issues.`,
+                  },
+                }),
               },
             ],
           };
@@ -428,7 +458,14 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('Parse Failed', `Could not parse: ${issueFile}`),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'Parse Failed',
+                    status: 'error',
+                    message: `Could not parse: ${issueFile}`,
+                  },
+                }),
               },
             ],
           };
@@ -455,12 +492,18 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse(`Working on: ${issue.title}`,
-                `${kv('Details', `${issue.category} | ${issue.priority} | ${issue.estimate}`)}\n` +
-                `${kv('File', issue.file_path)}\n\n` +
-                `${Icon.info} This issue is now marked as 'active'\n` +
-                `${Icon.info} Use ${code(`devlog_task_track start "Issue: ${issue.title}"`)} to start time tracking\n` +
-                `${Icon.info} Use ${code(`/issue:done ${issue_id}`)} when completed`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: `Working on: ${issue.title}`,
+                  status: 'success',
+                  message: `${icon('info')} This issue is now marked as 'active'\n${icon('info')} Use \`devlog_task_track start "Issue: ${issue.title}"\` to start time tracking\n${icon('info')} Use \`/issue:done ${issue_id}\` when completed`,
+                  details: {
+                    'Details': `${issue.category} | ${issue.priority} | ${issue.estimate}`,
+                    'File': issue.file_path,
+                  },
+                },
+              }),
             },
           ],
         };
@@ -469,7 +512,14 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Start Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Start Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };
@@ -509,7 +559,14 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('Issue Not Found', issue_id),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'Issue Not Found',
+                    status: 'error',
+                    message: issue_id,
+                  },
+                }),
               },
             ],
           };
@@ -522,7 +579,14 @@ export const issueTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('Parse Failed', `Could not parse: ${issueFile}`),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'Parse Failed',
+                    status: 'error',
+                    message: `Could not parse: ${issueFile}`,
+                  },
+                }),
               },
             ],
           };
@@ -550,11 +614,18 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: successResponse(`Issue Completed: ${issue.title}`,
-                `${kv('Solution', solution)}\n` +
-                `${kv('File', newFilePath)}\n\n` +
-                `${Icon.info} Issue moved to 'resolved' status\n` +
-                `${Icon.info} Use ${code('devlog_task_track complete')} to stop time tracking if active`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: `Issue Completed: ${issue.title}`,
+                  status: 'success',
+                  message: `${icon('info')} Issue moved to 'resolved' status\n${icon('info')} Use \`devlog_task_track complete\` to stop time tracking if active`,
+                  details: {
+                    'Solution': solution,
+                    'File': newFilePath,
+                  },
+                },
+              }),
             },
           ],
         };
@@ -563,7 +634,14 @@ export const issueTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('Completion Failed', `${error}`),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Completion Failed',
+                  status: 'error',
+                  message: `${error}`,
+                },
+              }),
             },
           ],
         };

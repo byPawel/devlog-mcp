@@ -9,7 +9,8 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getCurrentWorkspace } from '../utils/workspace.js';
 import { extractMetadata, updateMetadata, formatDuration, calculateDuration } from '../utils/session-metadata.js';
-import { Icon, errorResponse } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
+import { icon } from '../utils/icons.js';
 
 export const taskTrackingTools: ToolDefinition[] = [
   {
@@ -29,7 +30,14 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('No Workspace', 'Use devlog_workspace_claim first.'),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Workspace',
+                  status: 'error',
+                  message: 'Use devlog_workspace_claim first.',
+                },
+              }),
             },
           ],
         };
@@ -41,7 +49,14 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('No Metadata', 'Tracking metadata not found. Workspace may be corrupted.'),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Metadata',
+                  status: 'error',
+                  message: 'Tracking metadata not found. Workspace may be corrupted.',
+                },
+              }),
             },
           ],
         };
@@ -57,7 +72,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('Missing Title', 'Task title is required when starting a new task.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'Missing Title',
+                      status: 'error',
+                      message: 'Task title is required when starting a new task.',
+                    },
+                  }),
                 },
               ],
             };
@@ -83,7 +105,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           
           // Update workspace content
           const updatedContent = workspace.content +
-            `\n${Icon.task} [${timeStr}] Started task: ${title}\n`;
+            `\n${icon('task')} [${timeStr}] Started task: ${title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -91,7 +113,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.task} Task started: ${title}\nID: ${taskId}`,
+                text: `${icon('task')} Task started: ${title}\nID: ${taskId}`,
               },
             ],
           };
@@ -104,7 +126,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('No Task', 'No active task to pause.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'No Task',
+                      status: 'error',
+                      message: 'No active task to pause.',
+                    },
+                  }),
                 },
               ],
             };
@@ -121,7 +150,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           });
 
           const updatedContent = workspace.content +
-            `\n${Icon.paused} [${timeStr}] Paused: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
+            `\n${icon('paused')} [${timeStr}] Paused: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -129,7 +158,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.paused} Task paused: ${activeTask.title}`,
+                text: `${icon('paused')} Task paused: ${activeTask.title}`,
               },
             ],
           };
@@ -142,7 +171,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('No Task', 'No paused task to resume.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'No Task',
+                      status: 'error',
+                      message: 'No paused task to resume.',
+                    },
+                  }),
                 },
               ],
             };
@@ -160,7 +196,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           }
 
           const updatedContent = workspace.content +
-            `\n${Icon.active} [${timeStr}] Resumed: ${pausedTask.title}\n`;
+            `\n${icon('active')} [${timeStr}] Resumed: ${pausedTask.title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -168,7 +204,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.active} Task resumed: ${pausedTask.title}`,
+                text: `${icon('active')} Task resumed: ${pausedTask.title}`,
               },
             ],
           };
@@ -181,7 +217,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('No Task', 'No active task to iterate.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'No Task',
+                      status: 'error',
+                      message: 'No active task to iterate.',
+                    },
+                  }),
                 },
               ],
             };
@@ -190,7 +233,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           activeTask.iterations++;
 
           const updatedContent = workspace.content +
-            `\n${Icon.sync} [${timeStr}] Iteration ${activeTask.iterations} on: ${activeTask.title}\n`;
+            `\n${icon('sync')} [${timeStr}] Iteration ${activeTask.iterations} on: ${activeTask.title}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -198,7 +241,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.sync} Iteration ${activeTask.iterations} on: ${activeTask.title}`,
+                text: `${icon('sync')} Iteration ${activeTask.iterations} on: ${activeTask.title}`,
               },
             ],
           };
@@ -211,7 +254,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('No Task', 'No active task to complete.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'No Task',
+                      status: 'error',
+                      message: 'No active task to complete.',
+                    },
+                  }),
                 },
               ],
             };
@@ -223,7 +273,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           metadata.active_task = undefined;
 
           const updatedContent = workspace.content +
-            `\n${Icon.completed} [${timeStr}] Completed: ${activeTask.title} (${formatDuration(activeTask.duration_minutes)}, ${activeTask.iterations} iterations)\n`;
+            `\n${icon('completed')} [${timeStr}] Completed: ${activeTask.title} (${formatDuration(activeTask.duration_minutes)}, ${activeTask.iterations} iterations)\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -231,7 +281,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.completed} Task completed: ${activeTask.title}\n` +
+                text: `${icon('completed')} Task completed: ${activeTask.title}\n` +
                       `Duration: ${formatDuration(activeTask.duration_minutes)}\n` +
                       `Iterations: ${activeTask.iterations}`,
               },
@@ -246,7 +296,14 @@ export const taskTrackingTools: ToolDefinition[] = [
               content: [
                 {
                   type: 'text',
-                  text: errorResponse('No Task', 'No task to abandon.'),
+                  text: renderOutput({
+                    type: 'status-card',
+                    data: {
+                      title: 'No Task',
+                      status: 'error',
+                      message: 'No task to abandon.',
+                    },
+                  }),
                 },
               ],
             };
@@ -258,7 +315,7 @@ export const taskTrackingTools: ToolDefinition[] = [
           metadata.active_task = undefined;
 
           const updatedContent = workspace.content +
-            `\n${Icon.failed} [${timeStr}] Abandoned: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
+            `\n${icon('failed')} [${timeStr}] Abandoned: ${activeTask.title}${reason ? ` (${reason})` : ''}\n`;
           await fs.writeFile(workspace.path, updatedContent);
           await updateMetadata(workspace.path, metadata);
 
@@ -266,7 +323,7 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: `${Icon.failed} Task abandoned: ${activeTask.title}`,
+                text: `${icon('failed')} Task abandoned: ${activeTask.title}`,
               },
             ],
           };
@@ -277,7 +334,14 @@ export const taskTrackingTools: ToolDefinition[] = [
             content: [
               {
                 type: 'text',
-                text: errorResponse('Invalid Action', 'Unknown task action.'),
+                text: renderOutput({
+                  type: 'status-card',
+                  data: {
+                    title: 'Invalid Action',
+                    status: 'error',
+                    message: 'Unknown task action.',
+                  },
+                }),
               },
             ],
           };
@@ -298,7 +362,14 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: errorResponse('No Workspace', 'No active workspace.'),
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'No Workspace',
+                  status: 'error',
+                  message: 'No active workspace.',
+                },
+              }),
             },
           ],
         };
@@ -310,13 +381,13 @@ export const taskTrackingTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${Icon.task} No tasks tracked in this session yet.`,
+              text: `${icon('task')} No tasks tracked in this session yet.`,
             },
           ],
         };
       }
 
-      let output = `${Icon.task} **Session Tasks**\n\n`;
+      let output = `${icon('task')} **Session Tasks**\n\n`;
 
       // Group by status
       const active = metadata.tasks.filter(t => t.status === 'active');
@@ -325,7 +396,7 @@ export const taskTrackingTools: ToolDefinition[] = [
       const abandoned = metadata.tasks.filter(t => t.status === 'abandoned');
 
       if (active.length > 0) {
-        output += `### ${Icon.active} Active\n`;
+        output += `### ${icon('active')} Active\n`;
         active.forEach(t => {
           const duration = calculateDuration(t.start, new Date().toISOString());
           output += `- ${t.title} (${formatDuration(duration)}, iteration ${t.iterations})\n`;
@@ -334,7 +405,7 @@ export const taskTrackingTools: ToolDefinition[] = [
       }
 
       if (paused.length > 0) {
-        output += `### ${Icon.paused} Paused\n`;
+        output += `### ${icon('paused')} Paused\n`;
         paused.forEach(t => {
           output += `- ${t.title} (iteration ${t.iterations})\n`;
         });
@@ -342,7 +413,7 @@ export const taskTrackingTools: ToolDefinition[] = [
       }
 
       if (completed.length > 0) {
-        output += `### ${Icon.completed} Completed\n`;
+        output += `### ${icon('completed')} Completed\n`;
         completed.forEach(t => {
           output += `- ${t.title} (${formatDuration(t.duration_minutes || 0)}, ${t.iterations} iterations)\n`;
         });
@@ -350,7 +421,7 @@ export const taskTrackingTools: ToolDefinition[] = [
       }
 
       if (abandoned.length > 0) {
-        output += `### ${Icon.failed} Abandoned\n`;
+        output += `### ${icon('failed')} Abandoned\n`;
         abandoned.forEach(t => {
           output += `- ${t.title}\n`;
         });
