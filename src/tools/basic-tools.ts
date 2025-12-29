@@ -3,7 +3,7 @@ import { ToolDefinition } from './registry.js';
 import { searchDevlogs } from '../utils/search.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
 import { CallToolResult } from '../types.js';
-import { Icon } from '../utils/format.js';
+import { renderOutput } from '../utils/render-output.js';
 
 export const basicTools: ToolDefinition[] = [
   {
@@ -16,13 +16,23 @@ export const basicTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `${Icon.success} **MCP DevLog Server is working!**\n${Icon.folder} DevLog Path: ${DEVLOG_PATH}`,
+            text: renderOutput({
+              type: 'status-card',
+              data: {
+                title: 'MCP DevLog Server',
+                status: 'success',
+                message: 'Server is working!',
+                details: {
+                  'DevLog Path': DEVLOG_PATH,
+                },
+              },
+            }),
           },
         ],
       };
     }
   },
-  
+
   {
     name: 'search_devlogs',
     title: 'Search DevLogs',
@@ -41,19 +51,22 @@ export const basicTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `${Icon.search} **Found ${results.length} results**${query ? ` for "${query}"` : ''}${tags ? ' with tag filters' : ''}:\n\n` +
-              limited.map(r => {
-                const tagStr = r.tags ? ` [${Object.entries(r.tags).map(([k, v]) =>
-                  Array.isArray(v) ? `${k}: ${v.join(', ')}` : `${k}: ${v}`
-                ).join('; ')}]` : '';
-                return `${Icon.file} **${r.file}**${tagStr}\n  ${Icon.time} Modified: ${r.lastModified.toISOString()}\n  ${r.title ? `${Icon.info} Title: ${r.title}\n  ` : ''}${Icon.arrow} ${r.excerpt}`;
-              }).join('\n\n'),
+            text: renderOutput({
+              type: 'search-results',
+              data: limited.map(r => ({
+                file: r.file,
+                title: r.title,
+                excerpt: r.excerpt,
+                tags: r.tags,
+                lastModified: r.lastModified,
+              })),
+            }),
           },
         ],
       };
     }
   },
-  
+
   {
     name: 'list_recent_devlogs',
     title: 'List Recent DevLogs',
@@ -65,16 +78,23 @@ export const basicTools: ToolDefinition[] = [
     handler: async ({ days, type }): Promise<CallToolResult> => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
-      
+
       const results = await searchDevlogs('', type);
       const recent = results.filter(r => r.lastModified > cutoffDate);
-      
+
       if (recent.length === 0) {
         return {
           content: [
             {
               type: 'text',
-              text: `${Icon.info} No devlog entries found in the last ${days} days.`,
+              text: renderOutput({
+                type: 'status-card',
+                data: {
+                  title: 'Recent DevLogs',
+                  status: 'info',
+                  message: `No devlog entries found in the last ${days} days.`,
+                },
+              }),
             },
           ],
         };
@@ -84,8 +104,15 @@ export const basicTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `${Icon.time} **Recent devlog entries** (last ${days} days):\n\n` +
-              recent.map(r => `${Icon.file} **${r.file}** (${r.lastModified.toISOString()})\n  ${Icon.arrow} ${r.excerpt}`).join('\n\n'),
+            text: renderOutput({
+              type: 'search-results',
+              data: recent.map(r => ({
+                file: r.file,
+                title: r.title,
+                excerpt: r.excerpt,
+                lastModified: r.lastModified,
+              })),
+            }),
           },
         ],
       };
