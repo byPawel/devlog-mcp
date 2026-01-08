@@ -1,9 +1,10 @@
 /**
  * Session metadata management for time tracking
- * Handles JSON metadata at bottom of files
+ * Stores JSON metadata in .mcp/session.json (NOT in markdown files)
  */
 
 import { promises as fs } from 'fs';
+import { dirname, join } from 'path';
 
 export interface SessionMetadata {
   session: {
@@ -46,23 +47,66 @@ export interface SessionMetadata {
   };
 }
 
-const METADATA_START = '<!-- DEVLOG_METADATA (do not edit manually)';
-const METADATA_END = '-->';
+// Legacy markers for migration
+const LEGACY_METADATA_START = '<!-- DEVLOG_METADATA (do not edit manually)';
+const LEGACY_METADATA_END = '-->';
+
+/**
+ * Get the path to session.json from a devlog file path
+ */
+function getSessionJsonPath(devlogFilePath: string): string {
+  const devlogDir = dirname(devlogFilePath);
+  return join(devlogDir, '.mcp', 'session.json');
+}
+
+/**
+ * Migrate legacy metadata from markdown to session.json
+ */
+async function migrateLegacyMetadata(devlogFilePath: string): Promise<SessionMetadata | null> {
+  try {
+    const content = await fs.readFile(devlogFilePath, 'utf-8');
+
+    // Check for legacy embedded metadata
+    const startIdx = content.indexOf(LEGACY_METADATA_START);
+    if (startIdx === -1) return null;
+
+    const jsonStart = startIdx + LEGACY_METADATA_START.length;
+    const endIdx = content.indexOf(LEGACY_METADATA_END, jsonStart);
+    if (endIdx === -1) return null;
+
+    const jsonStr = content.substring(jsonStart, endIdx).trim();
+    const metadata = JSON.parse(jsonStr) as SessionMetadata;
+
+    // Remove legacy metadata from markdown
+    const cleanContent = content.substring(0, startIdx).trimEnd() +
+                        content.substring(endIdx + LEGACY_METADATA_END.length);
+
+    // Write cleaned markdown
+    await fs.writeFile(devlogFilePath, cleanContent);
+
+    // Save to session.json
+    const sessionPath = getSessionJsonPath(devlogFilePath);
+    await fs.mkdir(dirname(sessionPath), { recursive: true });
+    await fs.writeFile(sessionPath, JSON.stringify(metadata, null, 2));
+
+    return metadata;
+  } catch {
+    return null;
+  }
+}
 
 export async function extractMetadata(filePath: string): Promise<SessionMetadata | null> {
   try {
-    const content = await fs.readFile(filePath, 'utf-8');
-    
-    // Find metadata section
-    const startIdx = content.indexOf(METADATA_START);
-    if (startIdx === -1) return null;
-    
-    const jsonStart = startIdx + METADATA_START.length;
-    const endIdx = content.indexOf(METADATA_END, jsonStart);
-    if (endIdx === -1) return null;
-    
-    const jsonStr = content.substring(jsonStart, endIdx).trim();
-    return JSON.parse(jsonStr);
+    const sessionPath = getSessionJsonPath(filePath);
+
+    try {
+      // Try to read from session.json
+      const content = await fs.readFile(sessionPath, 'utf-8');
+      return JSON.parse(content);
+    } catch {
+      // If session.json doesn't exist, try to migrate legacy metadata
+      return await migrateLegacyMetadata(filePath);
+    }
   } catch {
     return null;
   }
@@ -70,26 +114,15 @@ export async function extractMetadata(filePath: string): Promise<SessionMetadata
 
 export async function updateMetadata(filePath: string, metadata: SessionMetadata): Promise<void> {
   try {
-    let content = await fs.readFile(filePath, 'utf-8');
-    
-    // Remove existing metadata if present
-    const startIdx = content.indexOf(METADATA_START);
-    if (startIdx !== -1) {
-      const endIdx = content.indexOf(METADATA_END, startIdx);
-      if (endIdx !== -1) {
-        content = content.substring(0, startIdx).trimEnd() + 
-                  content.substring(endIdx + METADATA_END.length);
-      }
-    }
-    
-    // Append new metadata
-    const metadataSection = `\n\n${METADATA_START}\n${JSON.stringify(metadata, null, 2)}\n${METADATA_END}`;
-    content = content.trimEnd() + metadataSection;
-    
-    // Write atomically
-    const tempFile = `${filePath}.tmp`;
-    await fs.writeFile(tempFile, content);
-    await fs.rename(tempFile, filePath);
+    const sessionPath = getSessionJsonPath(filePath);
+
+    // Ensure .mcp directory exists
+    await fs.mkdir(dirname(sessionPath), { recursive: true });
+
+    // Write atomically to session.json
+    const tempFile = `${sessionPath}.tmp`;
+    await fs.writeFile(tempFile, JSON.stringify(metadata, null, 2));
+    await fs.rename(tempFile, sessionPath);
   } catch (error) {
     throw new Error(`Failed to update metadata: ${error}`);
   }

@@ -37,17 +37,39 @@ export async function startHeartbeat(agentId: string): Promise<void> {
       
       // Check if we've been inactive
       if (timeSinceLastActivity > INACTIVE_THRESHOLD) {
-        // Add pause period
-        const pauseStart = new Date(lastActivityTime.getTime() + 1000); // 1 second after last activity
-        metadata.timing.pauses.push({
-          start: pauseStart.toISOString(),
-          end: now.toISOString(),
-          reason: 'auto_inactive'
-        });
-        
-        const pauseMinutes = Math.round((now.getTime() - pauseStart.getTime()) / 60000);
-        metadata.timing.pause_minutes += pauseMinutes;
-        
+        const pauseStart = new Date(lastActivityTime.getTime() + 1000);
+        const lastPause = metadata.timing.pauses[metadata.timing.pauses.length - 1];
+
+        // Extend last pause if it's recent auto_inactive (within 10 min), otherwise create new
+        if (lastPause?.reason === 'auto_inactive') {
+          const lastPauseEnd = new Date(lastPause.end).getTime();
+          const gapMinutes = (pauseStart.getTime() - lastPauseEnd) / 60000;
+
+          if (gapMinutes < 10) {
+            // Extend existing pause
+            const oldDuration = Math.round((lastPauseEnd - new Date(lastPause.start).getTime()) / 60000);
+            lastPause.end = now.toISOString();
+            const newDuration = Math.round((now.getTime() - new Date(lastPause.start).getTime()) / 60000);
+            metadata.timing.pause_minutes += (newDuration - oldDuration);
+          } else {
+            // Gap too large, create new pause
+            metadata.timing.pauses.push({
+              start: pauseStart.toISOString(),
+              end: now.toISOString(),
+              reason: 'auto_inactive'
+            });
+            metadata.timing.pause_minutes += Math.round((now.getTime() - pauseStart.getTime()) / 60000);
+          }
+        } else {
+          // No previous pause or different reason, create new
+          metadata.timing.pauses.push({
+            start: pauseStart.toISOString(),
+            end: now.toISOString(),
+            reason: 'auto_inactive'
+          });
+          metadata.timing.pause_minutes += Math.round((now.getTime() - pauseStart.getTime()) / 60000);
+        }
+
         // Update last activity to now to prevent duplicate pauses
         lastActivityTime = now;
       } else {
