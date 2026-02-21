@@ -444,7 +444,7 @@ const TRIGGER_PATTERNS: TriggerPattern[] = [
 ];
 
 /** Number of characters before a trigger match to scan for negation. */
-const NEGATION_WINDOW = 10;
+const NEGATION_WINDOW = 25;
 
 /** Patterns that negate a relation when found within the negation window. */
 const NEGATION_PATTERNS = /\b(?:not|no|don't|doesn't|does\s+not|do\s+not|never|without|isn't|aren't|won't)\b/i;
