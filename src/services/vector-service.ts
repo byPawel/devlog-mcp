@@ -5,7 +5,7 @@
  *
  * Handles:
  * - Embeddings via Ollama (nomic-embed-text)
- * - Chunking logic (whole file ≤8k, else 4k chunks)
+ * - Chunking logic (whole file ≤2k tokens, else 512-token line-aware sliding windows)
  * - LanceDB vector storage
  * - Hybrid search (FTS5 + vectors via Reciprocal Rank Fusion)
  */
@@ -20,9 +20,9 @@ import { EmbeddingCache } from './embedding-cache.js';
 // Constants
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const EMBEDDING_MODEL = 'nomic-embed-text';
-const MAX_TOKENS_WHOLE_FILE = 8000;
-const CHUNK_SIZE_TOKENS = 4000;
-const CHUNK_OVERLAP_TOKENS = 500;
+const MAX_TOKENS_WHOLE_FILE = 2000;
+const CHUNK_SIZE_TOKENS = 512;
+const CHUNK_OVERLAP_TOKENS = 128;
 const APPROX_CHARS_PER_TOKEN = 4;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -200,46 +200,69 @@ export class ChunkingService {
     }
 
     const chunks: Chunk[] = [];
-    const chunkSizeChars = CHUNK_SIZE_TOKENS * APPROX_CHARS_PER_TOKEN;
-    const overlapChars = CHUNK_OVERLAP_TOKENS * APPROX_CHARS_PER_TOKEN;
+    const chunkBudget = CHUNK_SIZE_TOKENS * APPROX_CHARS_PER_TOKEN;
+    const overlapBudget = CHUNK_OVERLAP_TOKENS * APPROX_CHARS_PER_TOKEN;
 
-    let currentPos = 0;
+    let lineIdx = 0;
     let chunkIndex = 0;
 
-    while (currentPos < totalChars) {
-      const endPos = Math.min(currentPos + chunkSizeChars, totalChars);
+    while (lineIdx < lines.length) {
+      let charCount = 0;
+      const startLineIdx = lineIdx;
 
-      let adjustedEndPos = endPos;
-      if (endPos < totalChars) {
-        const nextNewline = content.indexOf('\n', endPos);
-        if (nextNewline !== -1 && nextNewline < endPos + 200) {
-          adjustedEndPos = nextNewline + 1;
+      // Accumulate lines until we reach the character budget
+      while (lineIdx < lines.length) {
+        const lineLen = lines[lineIdx].length + 1; // +1 for '\n'
+        if (charCount > 0 && charCount + lineLen > chunkBudget) {
+          break;
         }
+        // Force-include the line if it's the first one (even if it exceeds budget)
+        charCount += lineLen;
+        lineIdx++;
       }
 
-      const chunkText = content.slice(currentPos, adjustedEndPos);
+      // Build chunk text: join selected lines with '\n'
+      const selectedLines = lines.slice(startLineIdx, lineIdx);
+      let chunkText = selectedLines.join('\n');
 
-      const startLine = this.charToLine(content, currentPos);
-      const endLine = this.charToLine(content, adjustedEndPos - 1);
+      // Non-final chunks end with '\n'
+      if (lineIdx < lines.length) {
+        chunkText += '\n';
+      }
+
+      // Compute char positions in original content
+      const startChar = lines.slice(0, startLineIdx).reduce(
+        (sum, l) => sum + l.length + 1, 0
+      );
+      const endChar = startChar + chunkText.length;
 
       chunks.push({
         chunkId: `${docId}_${chunkIndex}`,
         docId,
         chunkIndex,
         text: chunkText,
-        startLine,
-        endLine,
-        startChar: currentPos,
-        endChar: adjustedEndPos,
-        headerContext: this.extractNearestHeader(content, currentPos),
+        startLine: startLineIdx + 1,
+        endLine: startLineIdx + selectedLines.length,
+        startChar,
+        endChar,
+        headerContext: this.extractNearestHeader(content, startChar) || this.extractFirstHeader(content),
         tokenCount: Math.ceil(chunkText.length / APPROX_CHARS_PER_TOKEN),
       });
 
-      currentPos = adjustedEndPos - overlapChars;
-      if (currentPos <= chunks[chunks.length - 1].startChar) {
-        currentPos = adjustedEndPos;
-      }
       chunkIndex++;
+
+      // Rewind by overlap: step back lines worth ~overlapBudget characters
+      if (lineIdx < lines.length) {
+        let rewindChars = 0;
+        let rewindLines = 0;
+        for (let i = lineIdx - 1; i > startLineIdx; i--) {
+          const lineLen = lines[i].length + 1;
+          if (rewindChars + lineLen > overlapBudget) break;
+          rewindChars += lineLen;
+          rewindLines++;
+        }
+        lineIdx -= rewindLines;
+      }
     }
 
     return chunks;
