@@ -268,22 +268,25 @@ export class EntityExtractor {
     return spans;
   }
 
+  /** Compiled regex from SERVICE_GAZETTEER — matches any known service name in one pass. */
+  private static readonly SERVICE_RE = new RegExp(
+    `\\b(${Array.from(SERVICE_GAZETTEER).join('|')})\\b`, 'gi'
+  );
+
   private extractServices(text: string): RawSpan[] {
     const spans: RawSpan[] = [];
 
-    // Word boundary match against gazetteer (case-insensitive)
-    const re = /\b(\w+)\b/g;
+    // Single-pass gazetteer match via compiled regex
+    EntityExtractor.SERVICE_RE.lastIndex = 0;
     let match: RegExpExecArray | null;
-    while ((match = re.exec(text)) !== null) {
-      if (SERVICE_GAZETTEER.has(match[1].toLowerCase())) {
-        spans.push({
-          type: 'service',
-          name: match[1],
-          start: match.index,
-          end: match.index + match[1].length,
-          confidence: 0.85,
-        });
-      }
+    while ((match = EntityExtractor.SERVICE_RE.exec(text)) !== null) {
+      spans.push({
+        type: 'service',
+        name: match[1],
+        start: match.index,
+        end: match.index + match[1].length,
+        confidence: 0.85,
+      });
     }
 
     // URL patterns (extract hostname as service hint)
@@ -557,14 +560,15 @@ export class RelationDetector {
     if (direction === 'before') {
       const fragment = text.slice(Math.max(0, position - 60), position).trim();
       const words = fragment.split(/\s+/);
-      // Take the last meaningful word(s) before the trigger
       const word = words[words.length - 1] || 'unknown';
-      return { canonicalName: word.toLowerCase().replace(/[^a-z0-9_-]/g, ''), type: 'concept' };
+      const canonical = word.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'unknown';
+      return { canonicalName: canonical, type: 'concept' };
     } else {
       const fragment = text.slice(position, Math.min(text.length, position + 60)).trim();
       const words = fragment.split(/\s+/);
       const word = words[0] || 'unknown';
-      return { canonicalName: word.toLowerCase().replace(/[^a-z0-9_-]/g, ''), type: 'concept' };
+      const canonical = word.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'unknown';
+      return { canonicalName: canonical, type: 'concept' };
     }
   }
 
