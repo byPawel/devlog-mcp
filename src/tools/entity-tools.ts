@@ -10,6 +10,8 @@ import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getSqliteDb } from '../db/index.js';
 import { DEVLOG_PATH } from '../shared/devlog-utils.js';
+import { LlmEntityExtractor } from '../services/llm-entity-extractor.js';
+import { EntityPersistence } from '../services/entity-extractor.js';
 import * as path from 'node:path';
 
 function getSqlite() {
@@ -58,6 +60,12 @@ interface EntityWithDocCount {
 
 interface CountRow {
   count: number;
+}
+
+interface DocRow {
+  id: string;
+  title: string;
+  content: string | null;
 }
 
 export const entityTools: ToolDefinition[] = [
@@ -123,6 +131,128 @@ export const entityTools: ToolDefinition[] = [
 
         // Mode 2: Search entities
         return handleEntitySearch(db, query, type, limit);
+      } catch (error: unknown) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `**Error:** ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  },
+  {
+    name: 'devlog_entity_extract_deep',
+    title: 'Deep Entity Extraction',
+    description:
+      'Run LLM-powered deep entity extraction on a document. Uses Ollama to extract richer entities and relations than regex alone, then persists to the knowledge graph. Requires Ollama with an inference model (default: llama3.2).',
+    inputSchema: {
+      docId: z.string().describe('Document ID to extract entities from'),
+      text: z
+        .string()
+        .optional()
+        .describe('Text to extract from (if omitted, reads document content from database)'),
+    },
+    handler: async (args: {
+      docId: string;
+      text?: string;
+    }): Promise<CallToolResult> => {
+      const { docId } = args;
+      let { text } = args;
+
+      let db;
+      try {
+        db = getSqlite();
+      } catch {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: '**Error:** Database not initialized. Run `devlog_init` first.',
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      try {
+        // If no text provided, read from database
+        if (!text) {
+          const doc = db
+            .prepare('SELECT id, title, content FROM docs WHERE id = ?')
+            .get(docId) as DocRow | undefined;
+
+          if (!doc || !doc.content) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `**Error:** Document "${docId}" not found or has no content.`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          text = doc.content;
+        }
+
+        // Run deep extraction
+        const extractor = new LlmEntityExtractor();
+        const healthy = await extractor.healthCheck();
+
+        if (!healthy) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: '**Error:** Ollama inference model not available. Ensure Ollama is running with an inference model (e.g., `ollama pull llama3.2`).',
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const result = await extractor.extract(text);
+
+        // Persist to database
+        const persistence = new EntityPersistence(db);
+        persistence.persistForDocument(docId, result.entities, result.relations);
+
+        // Format output
+        const lines: string[] = [
+          `## Deep Entity Extraction: ${docId}`,
+          `- **Source:** ${result.source}`,
+          result.llmModel ? `- **Model:** ${result.llmModel}` : '',
+          `- **Entities found:** ${result.entities.length}`,
+          `- **Relations found:** ${result.relations.length}`,
+          '',
+        ].filter(Boolean);
+
+        if (result.entities.length > 0) {
+          lines.push('### Entities');
+          for (const e of result.entities) {
+            const conf = e.confidence < 1.0 ? ` (${(e.confidence * 100).toFixed(0)}%)` : '';
+            const desc = e.context ? ` - ${e.context}` : '';
+            lines.push(`- **${e.name}** [${e.type}]${conf}${desc}`);
+          }
+        }
+
+        if (result.relations.length > 0) {
+          lines.push('', '### Relations');
+          for (const r of result.relations) {
+            const conf = r.confidence < 1.0 ? ` (${(r.confidence * 100).toFixed(0)}%)` : '';
+            lines.push(`- ${r.sourceCanonical} --[${r.relationType}]--> ${r.targetCanonical}${conf}`);
+          }
+        }
+
+        lines.push('', '*Entities and relations persisted to knowledge graph.*');
+
+        return {
+          content: [{ type: 'text', text: lines.join('\n') }],
+        };
       } catch (error: unknown) {
         return {
           content: [
