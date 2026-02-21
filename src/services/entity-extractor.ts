@@ -1,3 +1,5 @@
+import Database from 'better-sqlite3';
+
 /**
  * EntityExtractor — regex-based entity extraction with span merging
  *
@@ -614,5 +616,100 @@ export class RelationDetector {
     }
 
     return best;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EntityPersistence
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Persists extracted entities and relations to SQLite.
+ *
+ * Uses better-sqlite3 transactions for atomicity. All SQL is parameterized.
+ * Idempotent: deletes old doc_entities before re-inserting.
+ * Stores raw surface form in metadata_json for provenance.
+ */
+export class EntityPersistence {
+  private db: Database.Database;
+  private stmtUpsertEntity: Database.Statement;
+  private stmtGetEntityId: Database.Statement;
+  private stmtDeleteDocEntities: Database.Statement;
+  private stmtInsertDocEntity: Database.Statement;
+  private stmtUpsertEntityRelation: Database.Statement;
+
+  constructor(db: Database.Database) {
+    this.db = db;
+    this.stmtUpsertEntity = db.prepare(`
+      INSERT INTO entities (type, name, canonical_name, metadata_json, updated_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(type, canonical_name) DO UPDATE SET
+        updated_at = CURRENT_TIMESTAMP,
+        metadata_json = CASE
+          WHEN excluded.metadata_json IS NOT NULL THEN excluded.metadata_json
+          ELSE entities.metadata_json
+        END
+    `);
+    this.stmtGetEntityId = db.prepare(
+      'SELECT id FROM entities WHERE type = ? AND canonical_name = ?'
+    );
+    this.stmtDeleteDocEntities = db.prepare(
+      'DELETE FROM doc_entities WHERE doc_id = ?'
+    );
+    this.stmtInsertDocEntity = db.prepare(
+      'INSERT OR IGNORE INTO doc_entities (doc_id, entity_id, relation_type, context, confidence) VALUES (?, ?, ?, ?, ?)'
+    );
+    this.stmtUpsertEntityRelation = db.prepare(
+      'INSERT OR IGNORE INTO entity_relations (source_id, target_id, relation_type, weight) VALUES (?, ?, ?, ?)'
+    );
+  }
+
+  /**
+   * Persist extracted entities and relations for a document.
+   * Runs in a single transaction for atomicity.
+   * Idempotent: deletes old doc_entities before re-inserting.
+   */
+  persistForDocument(
+    docId: string,
+    entities: ExtractedEntity[],
+    relations: ExtractedRelation[],
+  ): void {
+    const persist = this.db.transaction(() => {
+      // 1. Upsert all entities, collect IDs
+      const entityIdMap = new Map<string, number>();
+      for (const entity of entities) {
+        const metadataJson = JSON.stringify({ surfaceForm: entity.name });
+        this.stmtUpsertEntity.run(entity.type, entity.name, entity.canonicalName, metadataJson);
+        const row = this.stmtGetEntityId.get(entity.type, entity.canonicalName) as { id: number } | undefined;
+        if (row) {
+          entityIdMap.set(`${entity.type}:${entity.canonicalName}`, row.id);
+        }
+      }
+
+      // 2. Delete old doc_entities for this document
+      this.stmtDeleteDocEntities.run(docId);
+
+      // 3. Insert new doc_entities
+      for (const relation of relations) {
+        const entityKey = `${relation.sourceType}:${relation.sourceCanonical}`;
+        const entityId = entityIdMap.get(entityKey);
+        if (!entityId) continue;
+        this.stmtInsertDocEntity.run(docId, entityId, relation.relationType, relation.evidence, relation.confidence);
+      }
+
+      // 4. Insert entity-to-entity relations (skip "mentions")
+      for (const relation of relations) {
+        if (relation.relationType === 'mentions') continue;
+        const sourceKey = `${relation.sourceType}:${relation.sourceCanonical}`;
+        const targetKey = `${relation.targetType}:${relation.targetCanonical}`;
+        const sourceId = entityIdMap.get(sourceKey);
+        const targetId = entityIdMap.get(targetKey);
+        if (sourceId && targetId && sourceId !== targetId) {
+          this.stmtUpsertEntityRelation.run(sourceId, targetId, relation.relationType, relation.confidence);
+        }
+      }
+    });
+
+    persist();
   }
 }

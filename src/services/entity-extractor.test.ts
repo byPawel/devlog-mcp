@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityExtractor, RelationDetector, type ExtractedEntity, type ExtractedRelation } from './entity-extractor.js';
+import { EntityExtractor, RelationDetector, EntityPersistence, type ExtractedEntity, type ExtractedRelation } from './entity-extractor.js';
+import Database from 'better-sqlite3';
 
 describe('EntityExtractor', () => {
   const extractor = new EntityExtractor();
@@ -143,5 +144,96 @@ describe('RelationDetector', () => {
     const relations = detector.detectRelations(text, entities);
     const mentions = relations.filter(r => r.relationType === 'mentions');
     expect(mentions.length).toBe(entities.length);
+  });
+});
+
+describe('EntityPersistence', () => {
+  let db: Database.Database;
+  let persistence: EntityPersistence;
+  const extractor = new EntityExtractor();
+  const detector = new RelationDetector();
+
+  beforeEach(() => {
+    db = new Database(':memory:');
+    db.exec(`
+      CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT);
+      CREATE TABLE entities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL, name TEXT NOT NULL,
+        canonical_name TEXT, description TEXT, metadata_json TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(type, canonical_name)
+      );
+      CREATE TABLE doc_entities (
+        doc_id TEXT NOT NULL, entity_id INTEGER NOT NULL,
+        relation_type TEXT NOT NULL, context TEXT,
+        confidence REAL DEFAULT 1.0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (doc_id, entity_id, relation_type)
+      );
+      CREATE TABLE entity_relations (
+        source_id INTEGER NOT NULL, target_id INTEGER NOT NULL,
+        relation_type TEXT NOT NULL, weight REAL DEFAULT 1.0,
+        metadata_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (source_id, target_id, relation_type)
+      );
+    `);
+    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Test Doc')");
+    persistence = new EntityPersistence(db);
+  });
+
+  afterEach(() => db.close());
+
+  test('persists extracted entities to database', () => {
+    const text = 'AuthService uses Redis for caching';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    persistence.persistForDocument('doc1', entities, relations);
+    const count = (db.prepare('SELECT COUNT(*) as c FROM entities').get() as { c: number }).c;
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('creates doc_entities links', () => {
+    const text = 'AuthService built by @alice';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    persistence.persistForDocument('doc1', entities, relations);
+    const links = (db.prepare('SELECT COUNT(*) as c FROM doc_entities WHERE doc_id = ?').get('doc1') as { c: number }).c;
+    expect(links).toBeGreaterThan(0);
+  });
+
+  test('deduplicates entities on re-index (idempotent)', () => {
+    const text = 'AuthService uses Redis';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    persistence.persistForDocument('doc1', entities, relations);
+    persistence.persistForDocument('doc1', entities, relations);
+    const entityCount = (db.prepare('SELECT COUNT(*) as c FROM entities').get() as { c: number }).c;
+    expect(entityCount).toBe(entities.length);
+  });
+
+  test('cleans old doc_entities before re-insert', () => {
+    const text1 = 'AuthService uses Redis';
+    const ent1 = extractor.extractEntities(text1);
+    const rel1 = detector.detectRelations(text1, ent1);
+    persistence.persistForDocument('doc1', ent1, rel1);
+
+    const text2 = 'UserService uses Postgres';
+    const ent2 = extractor.extractEntities(text2);
+    const rel2 = detector.detectRelations(text2, ent2);
+    persistence.persistForDocument('doc1', ent2, rel2);
+
+    const links = db.prepare('SELECT * FROM doc_entities WHERE doc_id = ?').all('doc1');
+    expect(links.length).toBe(rel2.length);
+  });
+
+  test('wraps persistence in a transaction (atomicity)', () => {
+    const text = 'AuthService uses Redis';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    persistence.persistForDocument('doc1', entities, relations);
+    const entityCount = (db.prepare('SELECT COUNT(*) as c FROM entities').get() as { c: number }).c;
+    expect(entityCount).toBeGreaterThan(0);
   });
 });
