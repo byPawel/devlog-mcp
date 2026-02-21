@@ -50,7 +50,7 @@ export function parseMarkdownFrontmatter(raw: string): ParseResult {
 }
 
 export class MarkdownImporter {
-  static detectFormat(content: string, filename: string): DocFormat {
+  static detectFormat(_content: string, filename: string): DocFormat {
     const basename = path.basename(filename, path.extname(filename));
     if (['MEMORY', 'SOUL', 'USER', 'IDENTITY'].includes(basename.toUpperCase())) {
       return 'openclaw-memory';

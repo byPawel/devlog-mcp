@@ -268,11 +268,6 @@ export class ChunkingService {
     return chunks;
   }
 
-  private charToLine(content: string, charPos: number): number {
-    const beforePos = content.slice(0, charPos);
-    return beforePos.split('\n').length;
-  }
-
   private extractFirstHeader(content: string): string | null {
     const match = content.match(/^#+\s+(.+)$/m);
     return match ? match[1].trim() : null;
