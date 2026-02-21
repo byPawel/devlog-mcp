@@ -15,6 +15,7 @@ import * as crypto from 'node:crypto';
 import Database from 'better-sqlite3';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import { EmbeddingCache } from './embedding-cache.js';
 
 // Constants
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
@@ -89,10 +90,12 @@ export interface SearchResult {
 export class EmbeddingService {
   private ollamaUrl: string;
   private model: string;
+  private cache?: EmbeddingCache;
 
-  constructor(ollamaUrl = OLLAMA_URL, model = EMBEDDING_MODEL) {
+  constructor(ollamaUrl = OLLAMA_URL, model = EMBEDDING_MODEL, cache?: EmbeddingCache) {
     this.ollamaUrl = ollamaUrl;
     this.model = model;
+    this.cache = cache;
   }
 
   async embed(text: string): Promise<EmbeddingResult> {
@@ -105,6 +108,24 @@ export class EmbeddingService {
       throw new Error('Empty text after cleaning');
     }
 
+    // Check cache before calling Ollama
+    if (this.cache) {
+      const contentHash = crypto.createHash('sha256').update(cleanText).digest('hex');
+      const cached = this.cache.get(contentHash);
+      if (cached) {
+        return { embedding: cached.embedding, tokenCount: cached.tokenCount };
+      }
+
+      // Cache miss - call Ollama and store result
+      const result = await this.callOllama(cleanText);
+      this.cache.set(contentHash, result.embedding, result.tokenCount);
+      return result;
+    }
+
+    return this.callOllama(cleanText);
+  }
+
+  private async callOllama(cleanText: string): Promise<EmbeddingResult> {
     const response = await fetch(`${this.ollamaUrl}/api/embed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
