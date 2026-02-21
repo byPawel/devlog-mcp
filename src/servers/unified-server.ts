@@ -13,6 +13,7 @@ import { devlogInitTool } from '../tools/devlog-init-tool.js';
 import { questionTools } from '../tools/question-tools.js';
 import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
+import { contextTools } from '../tools/context-tools.js';
 import { basicTools } from '../tools/basic-tools.js';
 import type { ToolDefinition } from '../tools/registry.js';
 
@@ -23,6 +24,7 @@ async function main() {
     ...questionTools,
     ...assetTools,
     ...planTools,
+    ...contextTools,
     devlogInitTool,
     ...basicTools,
   ];
