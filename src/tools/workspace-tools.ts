@@ -337,12 +337,16 @@ export const workspaceTools: ToolDefinition[] = [
   {
     name: 'devlog_workspace_dump',
     title: 'Dump Workspace',
-    description: 'Save current workspace to daily log with tracking analytics',
+    description: 'Save current workspace to daily log with tracking analytics. Shows exact save location.',
     inputSchema: {
       reason: z.string().describe('Reason for dumping workspace'),
       keepActive: z.boolean().optional().default(true).describe('Keep workspace active after dump'),
+      status: z.enum(['active', 'pending', 'backlog', 'done', 'paused', 'blocked']).optional().default('active')
+        .describe('Status for the saved devlog (default: active)'),
+      docType: z.enum(['issue', 'prd', 'research', 'decision', 'note', 'session', 'plan']).optional().default('session')
+        .describe('Document type for categorization'),
     },
-    handler: async ({ reason, keepActive = true }): Promise<CallToolResult> => {
+    handler: async ({ reason, keepActive = true, status = 'active', docType = 'session' }): Promise<CallToolResult> => {
       const workspace = await getCurrentWorkspace();
 
       if (!workspace.exists || !workspace.content) {
@@ -416,12 +420,14 @@ export const workspaceTools: ToolDefinition[] = [
         sessionContent += `duration_hours: ${(metadata.timing.total_minutes / 60).toFixed(1)}\n`;
       }
       
+      sessionContent += `status: "${status}"\n`;
+      sessionContent += `docType: "${docType}"\n`;
       sessionContent += 'tags:\n';
-      sessionContent += '  type: session\n';
+      sessionContent += `  type: ${docType}\n`;
       sessionContent += '  scope: [' + (metadata ? Object.keys(metadata.activity_breakdown)
         .filter(k => metadata.activity_breakdown[k as keyof typeof metadata.activity_breakdown] > 0)
         .join(', ') : 'general') + ']\n';
-      sessionContent += '  status: ' + (keepActive ? 'paused' : 'completed') + '\n';
+      sessionContent += `  status: ${status}\n`;
       sessionContent += `  focus: "${task}"\n`;
       
       if (metadata && metadata.timing.total_minutes > 0) {
@@ -488,7 +494,10 @@ export const workspaceTools: ToolDefinition[] = [
         }
 
         const details: Record<string, string> = {
-          'Saved to': path.relative(DEVLOG_PATH, sessionFile),
+          'Full path': sessionFile,
+          'Relative': path.relative(DEVLOG_PATH, sessionFile),
+          'Status': status.toUpperCase(),
+          'Type': docType,
           'Reason': reason,
         };
         if (metadata) {
@@ -502,11 +511,9 @@ export const workspaceTools: ToolDefinition[] = [
               text: renderOutput({
                 type: 'status-card',
                 data: {
-                  title: 'Workspace Dumped',
+                  title: `${icon('completed')} Saved to Devlog`,
                   status: 'success',
-                  message: keepActive
-                    ? `${icon('active')} Workspace kept active.`
-                    : `${icon('completed')} Workspace closed.`,
+                  message: `📍 ${sessionFile}`,
                   details,
                 },
               }),
