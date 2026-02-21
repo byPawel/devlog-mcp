@@ -7,6 +7,7 @@
 
 import Database from 'better-sqlite3';
 import { createVectorServices } from './vector-service.js';
+import { EntityExtractor, RelationDetector, EntityPersistence } from './entity-extractor.js';
 
 const STARTUP_DELAY_MS = 5000;
 
@@ -16,9 +17,41 @@ interface DocRow {
   content: string | null;
 }
 
+/**
+ * Run entity extraction on all docs with content.
+ * Synchronous (no Ollama needed) — safe to run even when Ollama is offline.
+ */
+function runEntityExtraction(sqliteDb: Database.Database): void {
+  const extractor = new EntityExtractor();
+  const relationDetector = new RelationDetector();
+  const persistence = new EntityPersistence(sqliteDb);
+
+  const docs = sqliteDb.prepare(
+    'SELECT id, title, content FROM docs WHERE content IS NOT NULL AND content != \'\''
+  ).all() as DocRow[];
+
+  let totalEntities = 0;
+
+  for (const doc of docs) {
+    try {
+      const entities = extractor.extractEntities(doc.content!);
+      const relations = relationDetector.detectRelations(doc.content!, entities);
+      persistence.persistForDocument(doc.id, entities, relations);
+      totalEntities += entities.length;
+    } catch (err) {
+      console.error(`[EntityExtraction] Failed for doc ${doc.id}:`, err);
+    }
+  }
+
+  console.error(`[EntityExtraction] Done: ${docs.length} docs processed, ${totalEntities} entities extracted`);
+}
+
 export function startBackgroundIndexer(sqliteDb: Database.Database, projectPath: string): void {
   setTimeout(async () => {
     try {
+      // Entity extraction runs first — no Ollama dependency
+      runEntityExtraction(sqliteDb);
+
       const { indexingService, embeddingService } = createVectorServices(sqliteDb, projectPath);
 
       // Health check Ollama
