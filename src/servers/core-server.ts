@@ -8,6 +8,9 @@ import { createDevlogServer, startServer } from './base-server.js';
 import { workspaceTools } from '../tools/workspace-tools.js';
 import { currentWorkspaceTools } from '../tools/current-workspace-tools.js';
 import { devlogInitTool } from '../tools/devlog-init-tool.js';
+import { questionTools } from '../tools/question-tools.js';
+import { assetTools } from '../tools/asset-tools.js';
+import { planTools } from '../tools/plan-tools.js';
 
 // Select only the core tools
 const coreTools = [
@@ -16,10 +19,19 @@ const coreTools = [
   workspaceTools.find(t => t.name === 'devlog_workspace_claim')!,
   workspaceTools.find(t => t.name === 'devlog_workspace_dump')!,
   workspaceTools.find(t => t.name === 'devlog_session_log')!,
-  
+
   // Current.md management
   currentWorkspaceTools.find(t => t.name === 'devlog_current_update')!,
-  
+
+  // Question tracking
+  ...questionTools,
+
+  // Asset management (images, files)
+  ...assetTools,
+
+  // Plan tracking with timestamps
+  ...planTools,
+
   // Initialization
   devlogInitTool
 ].filter(Boolean);

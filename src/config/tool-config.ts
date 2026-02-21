@@ -36,9 +36,14 @@ export function loadToolConfig(): ToolConfig {
     
     // Search tools
     devlog_search: { enabled: true },
-    devlog_search_semantic: { 
-      enabled: process.env.DEVLOG_ENABLE_SEMANTIC_SEARCH === 'true' 
-    }
+    devlog_search_semantic: {
+      enabled: process.env.DEVLOG_ENABLE_SEMANTIC_SEARCH === 'true'
+    },
+
+    // Tachibot bridge tools (connects tachibot-mcp to devlog persistence)
+    bridge_index_research: { enabled: process.env.DEVLOG_ENABLE_TACHIBOT_BRIDGE === 'true' },
+    bridge_import_plan: { enabled: process.env.DEVLOG_ENABLE_TACHIBOT_BRIDGE === 'true' },
+    bridge_get_context: { enabled: process.env.DEVLOG_ENABLE_TACHIBOT_BRIDGE === 'true' },
   };
 
   // Load from environment variable
