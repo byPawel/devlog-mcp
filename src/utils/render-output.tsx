@@ -78,7 +78,7 @@ export function renderInkToString(element: React.ReactElement): string {
 /**
  * Status Card Component
  */
-function StatusCard({ title, status, message, details }: StatusCardProps): JSX.Element {
+function StatusCard({ title, status, message, details }: StatusCardProps): React.ReactElement {
   const theme = useTheme();
   const statusColors = theme.status[status];
   const statusIcon = {
@@ -122,7 +122,7 @@ function StatusCard({ title, status, message, details }: StatusCardProps): JSX.E
 /**
  * Search Results Component
  */
-function SearchResults({ results }: { results: SearchResultProps[] }): JSX.Element {
+function SearchResults({ results }: { results: SearchResultProps[] }): React.ReactElement {
   const theme = useTheme();
 
   if (results.length === 0) {
@@ -168,7 +168,7 @@ function SearchResults({ results }: { results: SearchResultProps[] }): JSX.Eleme
 /**
  * Task List Component
  */
-function TaskList({ tasks }: { tasks: TaskItemProps[] }): JSX.Element {
+function TaskList({ tasks }: { tasks: TaskItemProps[] }): React.ReactElement {
   const theme = useTheme();
 
   const statusConfig = {
@@ -200,7 +200,7 @@ function TaskList({ tasks }: { tasks: TaskItemProps[] }): JSX.Element {
 /**
  * Workspace Status Component
  */
-function WorkspaceStatus(props: WorkspaceStatusProps): JSX.Element {
+function WorkspaceStatus(props: WorkspaceStatusProps): React.ReactElement {
   const theme = useTheme();
   const lockIcon = props.isLocked ? icon('locked') : icon('unlocked');
   const lockColor = props.isLocked ? theme.colors.warning : theme.colors.success;
@@ -249,7 +249,7 @@ function WorkspaceStatus(props: WorkspaceStatusProps): JSX.Element {
 /**
  * Session Info Component
  */
-function SessionInfo(props: SessionInfoProps): JSX.Element {
+function SessionInfo(props: SessionInfoProps): React.ReactElement {
   const theme = useTheme();
 
   return (
@@ -284,7 +284,7 @@ function SessionInfo(props: SessionInfoProps): JSX.Element {
 /**
  * Result Block Component
  */
-function ResultBlock({ title, content, borderColor, gradient }: ResultBlockProps): JSX.Element {
+function ResultBlock({ title, content, borderColor, gradient }: ResultBlockProps): React.ReactElement {
   const theme = useTheme();
   const resolvedBorderColor = borderColor || theme.borderColors.default;
   const resolvedGradient = gradient || theme.gradients.header;
@@ -306,7 +306,7 @@ function ResultBlock({ title, content, borderColor, gradient }: ResultBlockProps
 /**
  * Error Display Component
  */
-function ErrorDisplay({ message, details }: { message: string; details?: string }): JSX.Element {
+function ErrorDisplay({ message, details }: { message: string; details?: string }): React.ReactElement {
   const theme = useTheme();
 
   return (
@@ -338,7 +338,7 @@ const sparkChars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 /**
  * Progress Bar Component
  */
-function ProgressBar({ percent, width = 20, label, showPercent = true }: ProgressBarProps): JSX.Element {
+function ProgressBar({ percent, width = 20, label, showPercent = true }: ProgressBarProps): React.ReactElement {
   const theme = useTheme();
   const clamped = Math.max(0, Math.min(100, percent));
   const filled = Math.round((clamped / 100) * width);
@@ -359,7 +359,7 @@ function ProgressBar({ percent, width = 20, label, showPercent = true }: Progres
 /**
  * Sparkline Component
  */
-function Sparkline({ data, label, showMinMax = true }: SparklineProps): JSX.Element {
+function Sparkline({ data, label, showMinMax = true }: SparklineProps): React.ReactElement {
   const theme = useTheme();
 
   if (data.length === 0) {
@@ -388,7 +388,7 @@ function Sparkline({ data, label, showMinMax = true }: SparklineProps): JSX.Elem
 /**
  * Table Component
  */
-function Table({ headers, rows }: TableProps): JSX.Element {
+function Table({ headers, rows }: TableProps): React.ReactElement {
   const theme = useTheme();
 
   // Calculate column widths
@@ -435,7 +435,7 @@ function Table({ headers, rows }: TableProps): JSX.Element {
 /**
  * Tree Component
  */
-function Tree({ items }: TreeProps): JSX.Element {
+function Tree({ items }: TreeProps): React.ReactElement {
   const theme = useTheme();
   const bullets = ['●', '○', '▸', '▹', '•'];
   const colors = [theme.colors.primary, theme.colors.warning, theme.colors.success, theme.colors.secondary, theme.colors.muted];
@@ -461,7 +461,7 @@ function Tree({ items }: TreeProps): JSX.Element {
 /**
  * Divider Component
  */
-function Divider({ style = 'thin', width = 50, decorativeStyle }: DividerProps): JSX.Element {
+function Divider({ style = 'thin', width = 50, decorativeStyle }: DividerProps): React.ReactElement {
   const theme = useTheme();
 
   const chars: Record<string, string> = {
@@ -527,7 +527,7 @@ const boxChars = {
 /**
  * Boxed Section Component
  */
-function BoxedSection({ title, content, style = 'rounded' }: BoxedSectionProps): JSX.Element {
+function BoxedSection({ title, content, style = 'rounded' }: BoxedSectionProps): React.ReactElement {
   const theme = useTheme();
   const chars = boxChars[style];
   const contentLines = content.split('\n');
@@ -570,7 +570,7 @@ function BoxedSection({ title, content, style = 'rounded' }: BoxedSectionProps):
 /**
  * Metrics Row Component (model badge with stats)
  */
-function MetricsRow({ model, durationMs, tokenCount, costAmount }: MetricsRowProps): JSX.Element {
+function MetricsRow({ model, durationMs, tokenCount, costAmount }: MetricsRowProps): React.ReactElement {
   const theme = useTheme();
 
   const formatDuration = (ms: number) => {
@@ -620,7 +620,7 @@ function MetricsRow({ model, durationMs, tokenCount, costAmount }: MetricsRowPro
 /**
  * Score Component
  */
-function Score({ value, max = 10, label, showImprovement }: ScoreProps): JSX.Element {
+function Score({ value, max = 10, label, showImprovement }: ScoreProps): React.ReactElement {
   const theme = useTheme();
 
   const getColor = (v: number, m: number) => {
@@ -652,7 +652,7 @@ function Score({ value, max = 10, label, showImprovement }: ScoreProps): JSX.Ele
  * Markdown Renderer Component (simple version)
  * TODO: Implement full markdown parsing with marked/markdown-it
  */
-function MarkdownContent({ content }: { content: string }): JSX.Element {
+function MarkdownContent({ content }: { content: string }): React.ReactElement {
   const theme = useTheme();
 
   // Simple line-by-line rendering for now
@@ -722,7 +722,7 @@ function MarkdownContent({ content }: { content: string }): JSX.Element {
 /**
  * Route RenderableResult to appropriate Ink component
  */
-function RenderableRouter({ result }: { result: RenderableResult }): JSX.Element {
+function RenderableRouter({ result }: { result: RenderableResult }): React.ReactElement {
   switch (result.type) {
     case 'status-card':
       return <StatusCard {...result.data} />;
