@@ -13,6 +13,8 @@
 
 export type EntityType = 'person' | 'project' | 'file' | 'service' | 'component' | 'concept';
 
+export type RelationType = 'mentions' | 'implements' | 'depends_on' | 'blocks' | 'authored_by';
+
 export interface ExtractedEntity {
   type: EntityType;
   name: string;
@@ -21,6 +23,16 @@ export interface ExtractedEntity {
   start: number;
   end: number;
   context: string;
+}
+
+export interface ExtractedRelation {
+  relationType: RelationType;
+  sourceCanonical: string;
+  sourceType: EntityType;
+  targetCanonical: string;
+  targetType: EntityType;
+  confidence: number;
+  evidence: string;
 }
 
 interface RawSpan {
@@ -407,5 +419,200 @@ export class EntityExtractor {
       }
     }
     return Array.from(seen.values());
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RelationDetector
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface TriggerPattern {
+  regex: RegExp;
+  relationType: RelationType;
+  passive: boolean;
+}
+
+/** Trigger phrases that signal a specific relation between entities. */
+const TRIGGER_PATTERNS: TriggerPattern[] = [
+  { regex: /\b(?:implements|built|created|develops)\s+/gi, relationType: 'implements', passive: false },
+  { regex: /\b(?:depends\s+on|requires|uses|needs)\s+/gi, relationType: 'depends_on', passive: false },
+  { regex: /\bblocks\s+/gi, relationType: 'blocks', passive: false },
+  { regex: /\bblocked\s+by\s+/gi, relationType: 'blocks', passive: true },
+  { regex: /\b(?:authored|written|built|created|fixed)\s+by\s+/gi, relationType: 'authored_by', passive: true },
+];
+
+/** Number of characters before a trigger match to scan for negation. */
+const NEGATION_WINDOW = 10;
+
+/** Patterns that negate a relation when found within the negation window. */
+const NEGATION_PATTERNS = /\b(?:not|no|don't|doesn't|does\s+not|do\s+not|never|without|isn't|aren't|won't)\b/i;
+
+/**
+ * Detects semantic relations between entities found in text.
+ *
+ * For each trigger phrase matched, finds the nearest subject entity before the
+ * trigger and the nearest object entity after. Handles negation (skips negated
+ * triggers) and passive voice (swaps source/target direction).
+ *
+ * Every entity also gets a default "mentions" relation.
+ */
+export class RelationDetector {
+  /**
+   * Detect relations between entities in the given text.
+   *
+   * @param text - The source text to analyze
+   * @param entities - Entities previously extracted from the text
+   * @returns Array of detected relations
+   */
+  detectRelations(text: string, entities: ExtractedEntity[]): ExtractedRelation[] {
+    const relations: ExtractedRelation[] = [];
+
+    // 1. Default "mentions" relation for every entity
+    for (const entity of entities) {
+      relations.push({
+        relationType: 'mentions',
+        sourceCanonical: entity.canonicalName,
+        sourceType: entity.type,
+        targetCanonical: entity.canonicalName,
+        targetType: entity.type,
+        confidence: 0.5,
+        evidence: entity.context,
+      });
+    }
+
+    // 2. Scan for trigger patterns
+    for (const pattern of TRIGGER_PATTERNS) {
+      pattern.regex.lastIndex = 0;
+      let match: RegExpExecArray | null;
+
+      while ((match = pattern.regex.exec(text)) !== null) {
+        const matchStart = match.index;
+        const matchEnd = match.index + match[0].length;
+
+        // 3. Check negation window before the match
+        const windowStart = Math.max(0, matchStart - NEGATION_WINDOW);
+        const windowText = text.slice(windowStart, matchStart);
+        if (NEGATION_PATTERNS.test(windowText)) {
+          continue; // Skip negated relation
+        }
+
+        // 4. Find nearest entity BEFORE trigger (within 80 chars)
+        const subject = this.findNearestEntityBefore(entities, matchStart, 80);
+
+        // 5. Find nearest entity AFTER trigger (within 60 chars)
+        const object = this.findNearestEntityAfter(entities, matchEnd, 60);
+
+        if (!subject && !object) {
+          continue; // Need at least one entity
+        }
+
+        // When one side is missing, infer from surrounding text
+        const subjectResolved = subject ?? this.inferEntityFromContext(text, matchStart, 'before');
+        const objectResolved = object ?? this.inferEntityFromContext(text, matchEnd, 'after');
+
+        // 6. If passive: swap source and target
+        let source: { canonicalName: string; type: EntityType };
+        let target: { canonicalName: string; type: EntityType };
+        if (pattern.passive) {
+          source = objectResolved;
+          target = subjectResolved;
+        } else {
+          source = subjectResolved;
+          target = objectResolved;
+        }
+
+        // 7. Emit relation with confidence 0.85 (0.7 if one side was inferred)
+        const confidence = (subject && object) ? 0.85 : 0.7;
+        relations.push({
+          relationType: pattern.relationType,
+          sourceCanonical: source.canonicalName,
+          sourceType: source.type,
+          targetCanonical: target.canonicalName,
+          targetType: target.type,
+          confidence,
+          evidence: text.slice(
+            Math.max(0, matchStart - 30),
+            Math.min(text.length, matchEnd + 30),
+          ),
+        });
+      }
+    }
+
+    return relations;
+  }
+
+  /**
+   * Infer a lightweight entity from surrounding text when no extracted entity
+   * is found on one side of a trigger phrase.
+   *
+   * Extracts the nearest word(s) as a concept-typed stand-in.
+   */
+  private inferEntityFromContext(
+    text: string,
+    position: number,
+    direction: 'before' | 'after',
+  ): { canonicalName: string; type: EntityType } {
+    if (direction === 'before') {
+      const fragment = text.slice(Math.max(0, position - 60), position).trim();
+      const words = fragment.split(/\s+/);
+      // Take the last meaningful word(s) before the trigger
+      const word = words[words.length - 1] || 'unknown';
+      return { canonicalName: word.toLowerCase().replace(/[^a-z0-9_-]/g, ''), type: 'concept' };
+    } else {
+      const fragment = text.slice(position, Math.min(text.length, position + 60)).trim();
+      const words = fragment.split(/\s+/);
+      const word = words[0] || 'unknown';
+      return { canonicalName: word.toLowerCase().replace(/[^a-z0-9_-]/g, ''), type: 'concept' };
+    }
+  }
+
+  /**
+   * Find the nearest entity whose span ends before the given position,
+   * within the specified character window.
+   */
+  private findNearestEntityBefore(
+    entities: ExtractedEntity[],
+    position: number,
+    window: number,
+  ): ExtractedEntity | null {
+    let best: ExtractedEntity | null = null;
+    let bestDistance = Infinity;
+
+    for (const entity of entities) {
+      if (entity.end <= position && position - entity.end <= window) {
+        const distance = position - entity.end;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = entity;
+        }
+      }
+    }
+
+    return best;
+  }
+
+  /**
+   * Find the nearest entity whose span starts at or after the given position,
+   * within the specified character window.
+   */
+  private findNearestEntityAfter(
+    entities: ExtractedEntity[],
+    position: number,
+    window: number,
+  ): ExtractedEntity | null {
+    let best: ExtractedEntity | null = null;
+    let bestDistance = Infinity;
+
+    for (const entity of entities) {
+      if (entity.start >= position && entity.start - position <= window) {
+        const distance = entity.start - position;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = entity;
+        }
+      }
+    }
+
+    return best;
   }
 }

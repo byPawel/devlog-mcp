@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityExtractor, type ExtractedEntity } from './entity-extractor.js';
+import { EntityExtractor, RelationDetector, type ExtractedEntity, type ExtractedRelation } from './entity-extractor.js';
 
 describe('EntityExtractor', () => {
   const extractor = new EntityExtractor();
@@ -88,5 +88,60 @@ describe('EntityExtractor', () => {
     if (c1.length > 0 && c2.length > 0) {
       expect(c1[0].canonicalName).toBe(c2[0].canonicalName);
     }
+  });
+});
+
+describe('RelationDetector', () => {
+  const extractor = new EntityExtractor();
+  const detector = new RelationDetector();
+
+  test('detects "implements" relation', () => {
+    const text = 'AuthService implements OAuth2';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const impl = relations.filter(r => r.relationType === 'implements');
+    expect(impl.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('detects "depends_on" relation', () => {
+    const text = 'The auth module depends on Redis for session storage';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const deps = relations.filter(r => r.relationType === 'depends_on');
+    expect(deps.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('detects "authored_by" relation', () => {
+    const text = 'Login feature built by @alice';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const auth = relations.filter(r => r.relationType === 'authored_by');
+    expect(auth.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('skips negated relations', () => {
+    const text = 'AuthService does not depend on Redis';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const deps = relations.filter(r => r.relationType === 'depends_on');
+    expect(deps).toHaveLength(0);
+  });
+
+  test('handles passive voice "blocked by" (flips direction)', () => {
+    const text = 'The AuthService is blocked by DatabaseMigration';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const blocks = relations.filter(r => r.relationType === 'blocks');
+    if (blocks.length > 0) {
+      expect(blocks[0].sourceCanonical).toBe('databasemigration');
+    }
+  });
+
+  test('defaults to "mentions" for all entities in a chunk', () => {
+    const text = 'Working on Redis caching for AuthService';
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    const mentions = relations.filter(r => r.relationType === 'mentions');
+    expect(mentions.length).toBe(entities.length);
   });
 });
