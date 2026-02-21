@@ -185,9 +185,9 @@ export class EntityExtractor {
     }
 
     // "by/from/with Name Name" pattern
-    const namedRe = /\b(?:by|from|with)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/dg;
+    const namedRe = /\b(?:by|from|with)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/g;
     while ((match = namedRe.exec(text)) !== null) {
-      const nameStart = match.indices![1][0];
+      const nameStart = match.index + match[0].length - match[1].length;
       spans.push({
         type: 'person',
         name: match[1],
@@ -217,9 +217,9 @@ export class EntityExtractor {
     }
 
     // import/require relative paths
-    const importRe = /(?:from|require\()\s*['"](\.[^'"]+)['"]/dg;
+    const importRe = /(?:from|require\()\s*['"](\.[^'"]+)['"]/g;
     while ((match = importRe.exec(text)) !== null) {
-      const pathStart = match.indices![1][0];
+      const pathStart = match.index + match[0].lastIndexOf(match[1]);
       spans.push({
         type: 'file',
         name: match[1],
@@ -273,9 +273,9 @@ export class EntityExtractor {
     }
 
     // URL patterns (extract hostname as service hint)
-    const urlRe = /https?:\/\/([\w.-]+)/dg;
+    const urlRe = /https?:\/\/([\w.-]+)/g;
     while ((match = urlRe.exec(text)) !== null) {
-      const hostStart = match.indices![1][0];
+      const hostStart = match.index + match[0].lastIndexOf(match[1]);
       spans.push({
         type: 'service',
         name: match[1],
@@ -326,9 +326,9 @@ export class EntityExtractor {
     }
 
     // "implements/about/regarding <word>" pattern
-    const keywordRe = /\b(?:implements|about|regarding)\s+([a-zA-Z][\w-]*)\b/dgi;
+    const keywordRe = /\b(?:implements|about|regarding)\s+([a-zA-Z][\w-]*)\b/gi;
     while ((match = keywordRe.exec(text)) !== null) {
-      const wordStart = match.indices![1][0];
+      const wordStart = match.index + match[0].length - match[1].length;
       spans.push({
         type: 'concept',
         name: match[1],
@@ -406,6 +406,6 @@ export class EntityExtractor {
         seen.set(key, span);
       }
     }
-    return [...seen.values()];
+    return Array.from(seen.values());
   }
 }
