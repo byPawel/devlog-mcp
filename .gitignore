@@ -136,6 +136,17 @@ out
 .DS_Store
 dist/
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+*.lance
+.lancedb/
+
+# Drizzle
+drizzle/meta/
+
 # MCP-specific
 .mcp-current
 devlog.log
