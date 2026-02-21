@@ -13,7 +13,7 @@ import { CallToolResult } from '../types.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
 
-const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
+import { DEVLOG_PATH } from '../shared/devlog-utils.js';
 
 interface CurrentWorkspaceParams {
   includeDays?: number;

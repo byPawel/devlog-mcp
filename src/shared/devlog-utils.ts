@@ -3,10 +3,19 @@
  */
 
 import path from 'path';
-import { promises as fs } from 'fs';
+import { promises as fs, existsSync } from 'fs';
 
 // Get devlog path from environment or use default
-export const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
+// Prevents devlog/devlog doubling when cwd is already the devlog directory
+export const DEVLOG_PATH = process.env.DEVLOG_PATH || (() => {
+  const cwd = process.cwd();
+  const withDevlog = path.join(cwd, 'devlog');
+  // If cwd is already named 'devlog' and there's no nested devlog/ subfolder, use cwd directly
+  if (path.basename(cwd) === 'devlog' && !existsSync(withDevlog)) {
+    return cwd;
+  }
+  return withDevlog;
+})();
 
 // Shared date formatting functions
 export function formatDate(date: Date = new Date()): string {

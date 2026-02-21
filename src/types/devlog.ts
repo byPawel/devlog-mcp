@@ -66,4 +66,5 @@ export interface ResearchSource {
 }
 
 // Environment configuration
-export const DEVLOG_PATH = process.env.DEVLOG_PATH || process.cwd() + '/devlog';
+// Re-export from shared utils to ensure single source of truth for path resolution
+export { DEVLOG_PATH } from '../shared/devlog-utils.js';

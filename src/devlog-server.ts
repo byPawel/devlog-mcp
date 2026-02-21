@@ -8,7 +8,7 @@ import { StdioServerTransport } from './server/stdio.js';
 import { CallToolResult, GetPromptResult, ReadResourceResult } from './types.js';
 
 // Get devlog path from environment or use default
-const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
+import { DEVLOG_PATH } from './shared/devlog-utils.js';
 
 // Initialize the MCP server
 const server = new McpServer({

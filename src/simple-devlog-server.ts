@@ -29,7 +29,7 @@ import { backupRecoveryTools } from './tools/backup-recovery-tools.js';
 import { withToolTracking } from './utils/tool-tracker.js';
 
 // Get devlog path from environment or use default
-const DEVLOG_PATH = process.env.DEVLOG_PATH || path.join(process.cwd(), 'devlog');
+import { DEVLOG_PATH } from './shared/devlog-utils.js';
 
 // Type definitions for productivity metrics
 interface ProductivityMetrics {
