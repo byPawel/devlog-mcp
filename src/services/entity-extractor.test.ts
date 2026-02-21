@@ -237,3 +237,153 @@ describe('EntityPersistence', () => {
     expect(entityCount).toBeGreaterThan(0);
   });
 });
+
+describe('Integration: Full Pipeline', () => {
+  const extractor = new EntityExtractor();
+  const detector = new RelationDetector();
+
+  function createTestDb(): Database.Database {
+    const db = new Database(':memory:');
+    db.exec(`
+      CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT);
+      CREATE TABLE entities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL, name TEXT NOT NULL,
+        canonical_name TEXT, description TEXT, metadata_json TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(type, canonical_name)
+      );
+      CREATE TABLE doc_entities (
+        doc_id TEXT NOT NULL, entity_id INTEGER NOT NULL,
+        relation_type TEXT NOT NULL, context TEXT,
+        confidence REAL DEFAULT 1.0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (doc_id, entity_id, relation_type)
+      );
+      CREATE TABLE entity_relations (
+        source_id INTEGER NOT NULL, target_id INTEGER NOT NULL,
+        relation_type TEXT NOT NULL, weight REAL DEFAULT 1.0,
+        metadata_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (source_id, target_id, relation_type)
+      );
+    `);
+    return db;
+  }
+
+  test('end-to-end: doc with multiple entity types produces correct graph', () => {
+    const db = createTestDb();
+    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Rich Doc')");
+    const persistence = new EntityPersistence(db);
+
+    const text = [
+      'Reviewed by @alice in src/config/auth.ts for the anthropics/claude-code project.',
+      'Uses Redis for session caching. The AuthService handles #authentication and #security.',
+    ].join(' ');
+
+    const entities = extractor.extractEntities(text);
+    const relations = detector.detectRelations(text, entities);
+    persistence.persistForDocument('doc1', entities, relations);
+
+    const entityCount = (db.prepare('SELECT COUNT(*) as c FROM entities').get() as { c: number }).c;
+    expect(entityCount).toBeGreaterThanOrEqual(4);
+
+    const types = db.prepare('SELECT DISTINCT type FROM entities').all() as { type: string }[];
+    const typeSet = new Set(types.map(t => t.type));
+    expect(typeSet.has('person')).toBe(true);
+
+    const docEntityCount = (db.prepare('SELECT COUNT(*) as c FROM doc_entities WHERE doc_id = ?').get('doc1') as { c: number }).c;
+    expect(docEntityCount).toBeGreaterThan(0);
+
+    db.close();
+  });
+
+  test('cross-document entity sharing: same entity referenced in two docs', () => {
+    const db = createTestDb();
+    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')");
+    db.exec("INSERT INTO docs (id, title) VALUES ('doc2', 'Doc Two')");
+
+    const persistence = new EntityPersistence(db);
+
+    const text1 = 'AuthService depends on Redis for caching';
+    const ent1 = extractor.extractEntities(text1);
+    const rel1 = detector.detectRelations(text1, ent1);
+    persistence.persistForDocument('doc1', ent1, rel1);
+
+    const text2 = 'UserService uses Redis for sessions';
+    const ent2 = extractor.extractEntities(text2);
+    const rel2 = detector.detectRelations(text2, ent2);
+    persistence.persistForDocument('doc2', ent2, rel2);
+
+    // Redis entity should exist exactly once
+    const redisRows = db.prepare(
+      "SELECT * FROM entities WHERE type = 'service' AND canonical_name = 'redis'"
+    ).all();
+    expect(redisRows).toHaveLength(1);
+
+    // But doc_entities should link Redis from both docs
+    const redisId = (redisRows[0] as { id: number }).id;
+    const links = db.prepare(
+      'SELECT DISTINCT doc_id FROM doc_entities WHERE entity_id = ?'
+    ).all(redisId) as { doc_id: string }[];
+    const linkedDocs = links.map(l => l.doc_id).sort();
+    expect(linkedDocs).toContain('doc1');
+    expect(linkedDocs).toContain('doc2');
+
+    db.close();
+  });
+
+  test('re-indexing cleans old links but keeps shared entities', () => {
+    const db = createTestDb();
+    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')");
+
+    const persistence = new EntityPersistence(db);
+
+    // First pass: doc1 mentions Redis
+    const text1 = 'Uses Redis for caching';
+    const ent1 = extractor.extractEntities(text1);
+    const rel1 = detector.detectRelations(text1, ent1);
+    persistence.persistForDocument('doc1', ent1, rel1);
+
+    // Verify Redis is linked to doc1
+    const redisRow = db.prepare(
+      "SELECT id FROM entities WHERE type = 'service' AND canonical_name = 'redis'"
+    ).get() as { id: number } | undefined;
+    expect(redisRow).toBeDefined();
+    const redisId = redisRow!.id;
+    const linksBefore = db.prepare(
+      'SELECT COUNT(*) as c FROM doc_entities WHERE doc_id = ? AND entity_id = ?'
+    ).get('doc1', redisId) as { c: number };
+    expect(linksBefore.c).toBeGreaterThan(0);
+
+    // Second pass: doc1 now mentions Postgres instead
+    const text2 = 'Uses Postgres for storage';
+    const ent2 = extractor.extractEntities(text2);
+    const rel2 = detector.detectRelations(text2, ent2);
+    persistence.persistForDocument('doc1', ent2, rel2);
+
+    // Redis doc_entity link for doc1 should be gone
+    const redisLinksAfter = (db.prepare(
+      'SELECT COUNT(*) as c FROM doc_entities WHERE doc_id = ? AND entity_id = ?'
+    ).get('doc1', redisId) as { c: number }).c;
+    expect(redisLinksAfter).toBe(0);
+
+    // Postgres should now be linked to doc1
+    const postgresRow = db.prepare(
+      "SELECT id FROM entities WHERE type = 'service' AND canonical_name = 'postgres'"
+    ).get() as { id: number } | undefined;
+    expect(postgresRow).toBeDefined();
+    const postgresLinks = (db.prepare(
+      'SELECT COUNT(*) as c FROM doc_entities WHERE doc_id = ? AND entity_id = ?'
+    ).get('doc1', postgresRow!.id) as { c: number }).c;
+    expect(postgresLinks).toBeGreaterThan(0);
+
+    // Redis entity itself should still exist in the entities table (not deleted)
+    const redisStillExists = db.prepare(
+      "SELECT COUNT(*) as c FROM entities WHERE type = 'service' AND canonical_name = 'redis'"
+    ).get() as { c: number };
+    expect(redisStillExists.c).toBe(1);
+
+    db.close();
+  });
+});
