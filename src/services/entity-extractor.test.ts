@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityExtractor, RelationDetector, EntityPersistence, type ExtractedEntity, type ExtractedRelation } from './entity-extractor.js';
+import { EntityExtractor, RelationDetector, EntityPersistence } from './entity-extractor.js';
 import Database from 'better-sqlite3';
 
 describe('EntityExtractor', () => {
@@ -83,12 +82,14 @@ describe('EntityExtractor', () => {
 
   test('canonical normalization is consistent', () => {
     const r1 = extractor.extractEntities('UserAuth component');
-    const r2 = extractor.extractEntities('userAuth component');
     const c1 = r1.filter(e => e.type === 'component');
-    const c2 = r2.filter(e => e.type === 'component');
-    if (c1.length > 0 && c2.length > 0) {
-      expect(c1[0].canonicalName).toBe(c2[0].canonicalName);
-    }
+    expect(c1.length).toBeGreaterThan(0);
+    expect(c1[0].canonicalName).toBe('userauth');
+    // Verify canonicalize directly for consistency
+    expect(extractor.canonicalize('UserAuth', 'component')).toBe('userauth');
+    expect(extractor.canonicalize('@alice', 'person')).toBe('alice');
+    expect(extractor.canonicalize('#security', 'concept')).toBe('security');
+    expect(extractor.canonicalize('./src/auth.ts', 'file')).toBe('src/auth.ts');
   });
 });
 
