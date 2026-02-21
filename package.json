@@ -70,7 +70,9 @@
     "server:core": "node bin/devlog-core.js",
     "server:search": "node bin/devlog-search.js",
     "server:planning": "node bin/devlog-planning.js",
-    "server:analytics": "node bin/devlog-analytics.js"
+    "server:analytics": "node bin/devlog-analytics.js",
+    "server:unified": "node dist/esm/servers/unified-server.js",
+    "serve": "tsx src/servers/unified-server.ts"
   },
   "dependencies": {
     "@lancedb/lancedb": "^0.23.0",
