@@ -38,9 +38,17 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
+  "bin": {
+    "devlog": "./bin/devlog.js"
+  },
   "scripts": {
+    "devlog": "tsx src/devlog-cli.ts",
+    "devlog:init": "tsx src/devlog-cli.ts init",
+    "devlog:migrate": "tsx src/devlog-cli.ts migrate",
+    "devlog:cleanup": "tsx scripts/cleanup.ts",
     "fetch:spec-types": "curl -o spec.types.ts https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/refs/heads/main/schema/draft/schema.ts",
     "build": "npm run build:esm && npm run build:servers",
     "build:esm": "mkdir -p dist/esm && echo '{\"type\": \"module\"}' > dist/esm/package.json && tsc -p tsconfig.prod.json",
@@ -65,11 +73,15 @@
     "server:analytics": "node bin/devlog-analytics.js"
   },
   "dependencies": {
+    "@lancedb/lancedb": "^0.23.0",
     "ajv": "^6.12.6",
+    "apache-arrow": "^18.1.0",
+    "better-sqlite3": "^12.6.2",
     "chalk": "^5.6.2",
     "content-type": "^1.0.5",
     "cors": "^2.8.5",
     "cross-spawn": "^7.0.5",
+    "drizzle-orm": "^0.45.1",
     "eventsource": "^3.0.2",
     "eventsource-parser": "^3.0.0",
     "express": "^5.0.1",
@@ -88,6 +100,7 @@
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@jest-mock/express": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/content-type": "^1.1.8",
     "@types/cors": "^2.8.17",
     "@types/cross-spawn": "^6.0.6",
@@ -97,8 +110,10 @@
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.15.32",
+    "@types/react": "^19.0.0",
     "@types/supertest": "^6.0.2",
     "@types/ws": "^8.5.12",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.8.0",
     "jest": "^29.7.0",
     "supertest": "^7.0.0",
