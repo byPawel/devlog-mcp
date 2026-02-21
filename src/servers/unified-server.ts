@@ -15,6 +15,7 @@ import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
 import { contextTools } from '../tools/context-tools.js';
 import { basicTools } from '../tools/basic-tools.js';
+import { entityTools } from '../tools/entity-tools.js';
 import type { ToolDefinition } from '../tools/registry.js';
 
 async function main() {
@@ -27,6 +28,7 @@ async function main() {
     ...contextTools,
     devlogInitTool,
     ...basicTools,
+    ...entityTools,
   ];
 
   // Optional: LanceDB tools (requires Ollama)
