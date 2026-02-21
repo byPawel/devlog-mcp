@@ -60,6 +60,11 @@ const COMPONENT_STOPLIST = new Set([
   'for', 'while', 'do', 'break', 'continue', 'with', 'yield',
 ]);
 
+const COMMON_DIR_PREFIXES = new Set([
+  'src', 'lib', 'dist', 'test', 'tests', 'config', 'scripts',
+  'docs', 'bin', 'build', 'public', 'assets', 'node_modules', 'packages',
+]);
+
 const SERVICE_GAZETTEER = new Set([
   'redis', 'postgres', 'postgresql', 'mysql', 'mongodb', 'mongo',
   'elasticsearch', 'kafka', 'rabbitmq', 'nginx', 'docker', 'kubernetes', 'k8s',
@@ -180,9 +185,9 @@ export class EntityExtractor {
     }
 
     // "by/from/with Name Name" pattern
-    const namedRe = /\b(?:by|from|with)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/g;
+    const namedRe = /\b(?:by|from|with)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/dg;
     while ((match = namedRe.exec(text)) !== null) {
-      const nameStart = match.index + match[0].indexOf(match[1]);
+      const nameStart = match.indices![1][0];
       spans.push({
         type: 'person',
         name: match[1],
@@ -212,9 +217,9 @@ export class EntityExtractor {
     }
 
     // import/require relative paths
-    const importRe = /(?:from|require\()\s*['"](\.[^'"]+)['"]/g;
+    const importRe = /(?:from|require\()\s*['"](\.[^'"]+)['"]/dg;
     while ((match = importRe.exec(text)) !== null) {
-      const pathStart = match.index + match[0].indexOf(match[1]);
+      const pathStart = match.indices![1][0];
       spans.push({
         type: 'file',
         name: match[1],
@@ -237,6 +242,7 @@ export class EntityExtractor {
       const segments = value.split('/');
       if (segments.length !== 2) continue;
       if (/\.\w+$/.test(segments[1])) continue;
+      if (COMMON_DIR_PREFIXES.has(segments[0].toLowerCase())) continue;
       spans.push({
         type: 'project',
         name: value,
@@ -267,9 +273,9 @@ export class EntityExtractor {
     }
 
     // URL patterns (extract hostname as service hint)
-    const urlRe = /https?:\/\/([\w.-]+)/g;
+    const urlRe = /https?:\/\/([\w.-]+)/dg;
     while ((match = urlRe.exec(text)) !== null) {
-      const hostStart = match.index + match[0].indexOf(match[1]);
+      const hostStart = match.indices![1][0];
       spans.push({
         type: 'service',
         name: match[1],
@@ -320,9 +326,9 @@ export class EntityExtractor {
     }
 
     // "implements/about/regarding <word>" pattern
-    const keywordRe = /\b(?:implements|about|regarding)\s+([a-zA-Z][\w-]*)\b/gi;
+    const keywordRe = /\b(?:implements|about|regarding)\s+([a-zA-Z][\w-]*)\b/dgi;
     while ((match = keywordRe.exec(text)) !== null) {
-      const wordStart = match.index + match[0].indexOf(match[1]);
+      const wordStart = match.indices![1][0];
       spans.push({
         type: 'concept',
         name: match[1],

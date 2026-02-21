@@ -1,4 +1,5 @@
-import { EntityExtractor } from './entity-extractor.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { EntityExtractor, type ExtractedEntity } from './entity-extractor.js';
 
 describe('EntityExtractor', () => {
   const extractor = new EntityExtractor();
