@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use lancedb-tools.ts instead. This file uses Python subprocess
+ * calls to ChromaDB and is replaced by pure TypeScript LanceDB implementation.
+ * Retained for backward compatibility; will be removed in a future release.
+ */
+
 import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
@@ -83,7 +89,8 @@ async function runChromaCommand(args: string[]): Promise<{ success: boolean; res
   });
 }
 
-export const chromadbTools: ToolDefinition[] = [
+/** @deprecated Use lancedbTools from lancedb-tools.ts */
+export const chromadbToolsLegacy: ToolDefinition[] = [
   {
     name: 'search_universal',
     title: 'Universal Search',
@@ -227,3 +234,6 @@ export const chromadbTools: ToolDefinition[] = [
     }
   }
 ];
+
+/** @deprecated Alias for backward compatibility */
+export const chromadbTools = chromadbToolsLegacy;

@@ -1,29 +1,50 @@
 #!/usr/bin/env node
 /**
- * Search DevLog Server - ChromaDB powered search
- * Provides vector-based semantic search as default
+ * Search DevLog Server - LanceDB powered semantic search
+ * Provides hybrid vector + FTS5 search with Ollama embeddings
  */
 
 import { createDevlogServer, startServer } from './base-server.js';
-import { chromadbTools } from '../tools/chromadb-tools.js';
+import { lancedbTools } from '../tools/lancedb-tools.js';
 import { basicTools } from '../tools/basic-tools.js';
+import { getSqliteDb } from '../db/index.js';
+import { startBackgroundIndexer } from '../services/background-indexer.js';
+import { DEVLOG_PATH } from '../shared/devlog-utils.js';
+import * as path from 'node:path';
+import type { ToolDefinition } from '../tools/registry.js';
 
-// Get ChromaDB search and optionally file-based search as fallback
-const searchTools = [
-  // Primary: ChromaDB vector search (DEFAULT)
-  chromadbTools.find(t => t.name === 'search_universal')!,
-  
-  // Secondary: Code-specific search (if needed)
-  basicTools.find(t => t.name === 'search_devlogs')!
-].filter(Boolean);
+async function main() {
+  // All LanceDB tools + grep-based fallback
+  const allTools: ToolDefinition[] = [
+    ...lancedbTools,
+    basicTools.find(t => t.name === 'search_devlogs')!,
+  ].filter(Boolean);
 
-const config = {
-  name: 'devlog-search',
-  version: '1.0.0',
-  description: 'ChromaDB-powered search for DevLog entries'
-};
+  // Conditionally load tachibot bridge tools (dynamic import = zero cost when disabled)
+  if (process.env.DEVLOG_ENABLE_TACHIBOT_BRIDGE === 'true') {
+    const { bridgeTools } = await import('../tools/bridge-tools.js');
+    allTools.push(...bridgeTools);
+    console.error(`[SearchServer] Tachibot bridge: ${bridgeTools.length} tools loaded`);
+  }
 
-const server = createDevlogServer(config);
+  const config = {
+    name: 'devlog-search',
+    version: '2.0.0',
+    description: 'LanceDB-powered hybrid semantic search for DevLog entries',
+  };
 
-// Start the server
-startServer(server, searchTools, config).catch(console.error);
+  const server = createDevlogServer(config);
+
+  // Start the server, then kick off background indexing
+  await startServer(server, allTools, config);
+
+  try {
+    const projectPath = path.dirname(DEVLOG_PATH);
+    const sqlite = getSqliteDb({ projectPath, devlogFolder: path.basename(DEVLOG_PATH) });
+    startBackgroundIndexer(sqlite, path.join(projectPath, path.basename(DEVLOG_PATH)));
+  } catch (err) {
+    console.error('[SearchServer] Background indexer failed to start:', err);
+  }
+}
+
+main().catch(console.error);
