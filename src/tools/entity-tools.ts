@@ -165,7 +165,7 @@ function handleEntityGraph(
     .prepare(
       `WITH RECURSIVE graph(entity_id, depth) AS (
         SELECT ?, 0
-        UNION ALL
+        UNION
         SELECT
           CASE WHEN er.source_id = g.entity_id THEN er.target_id ELSE er.source_id END,
           g.depth + 1
