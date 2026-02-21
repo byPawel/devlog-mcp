@@ -147,6 +147,9 @@ dist/
 # Drizzle
 drizzle/meta/
 
+# Claude Code local settings
+.claude/
+
 # MCP-specific
 .mcp-current
 devlog.log
