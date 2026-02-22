@@ -11,6 +11,7 @@ import { devlogInitTool } from '../tools/devlog-init-tool.js';
 import { questionTools } from '../tools/question-tools.js';
 import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
+import { entityTools } from '../tools/entity-tools.js';
 
 // Select only the core tools
 const coreTools = [
@@ -31,6 +32,9 @@ const coreTools = [
 
   // Plan tracking with timestamps
   ...planTools,
+
+  // Entity knowledge graph
+  ...entityTools,
 
   // Initialization
   devlogInitTool
