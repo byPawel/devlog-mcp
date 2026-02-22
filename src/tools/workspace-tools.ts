@@ -5,6 +5,7 @@ import { ToolDefinition } from './registry.js';
 import { getCurrentWorkspace, generateAgentId, parseAgentFromContent } from '../utils/workspace.js';
 import { CallToolResult } from '../types.js';
 import { DEVLOG_PATH } from '../types/devlog.js';
+import { getSqliteDb } from '../db/index.js';
 import { acquireLock, releaseLock, checkLock } from '../utils/lock-manager.js';
 import {
   createInitialMetadata,
@@ -476,7 +477,23 @@ export const workspaceTools: ToolDefinition[] = [
         
         // Save session log
         await fs.writeFile(sessionFile, sessionContent);
-        
+
+        // Register in docs table so entity_extract_deep can find it
+        try {
+          const projectPath = path.dirname(DEVLOG_PATH);
+          const db = getSqliteDb({ projectPath, devlogFolder: path.basename(DEVLOG_PATH) });
+          const docId = path.basename(filename, '.md');
+          const relPath = path.relative(DEVLOG_PATH, sessionFile);
+          const now_iso = new Date().toISOString();
+          db.prepare(`
+            INSERT OR REPLACE INTO docs (id, filepath, title, content, doc_type, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(docId, relPath, `Session: ${task}`, sessionContent, docType, status, now_iso, now_iso);
+        } catch (dbErr) {
+          // DB registration is best-effort — file is already saved
+          console.error('[workspace-dump] docs table registration failed:', dbErr);
+        }
+
         // Handle workspace based on keepActive
         if (!keepActive) {
           // Release lock and clear workspace
