@@ -21,7 +21,6 @@ import {
   getDoc,
   addTagsToDoc,
   addSectionTag,
-  closeDb,
   type DevlogDbConfig,
   type DocCreateInput,
 } from "./index.js";

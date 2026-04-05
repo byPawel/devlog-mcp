@@ -101,6 +101,7 @@ export class EmbeddingService {
   async embed(text: string): Promise<EmbeddingResult> {
     const cleanText = text
       .replace(/\0/g, '')
+      // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
       .trim();
 

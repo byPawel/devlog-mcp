@@ -13,13 +13,11 @@ import {
   createDoc,
   updateDoc,
   getDoc,
-  deleteDoc,
   searchDocs,
   addTagsToDoc,
   removeTagsFromDoc,
   getDocTags,
   getAllTags,
-  addSectionTag,
   findSectionsByTag,
   startSession,
   endSession,
@@ -27,7 +25,6 @@ import {
   startTimeEntry,
   endTimeEntry,
   getActiveTimeEntries,
-  closeAllDbs,
   type DevlogDbConfig,
   type SearchOptions,
 } from "../db/index.js";
@@ -123,7 +120,7 @@ const devlogInitTool: ToolDefinition = {
       }
 
       // Initialize database (this creates the schema)
-      const db = getDb(config);
+      getDb(config);
 
       // Create config file
       const configPath = path.join(devlogPath, ".devlog", "config.json");

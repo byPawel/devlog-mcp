@@ -53,6 +53,7 @@ type MakeUnknownsNotOptional<T> =
 type StripEnvelope<T> = Omit<T, 'jsonrpc' | 'id'>;
 
 // Distributive StripEnvelope for union types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StripEnvelopeUnion<T> = T extends any ? StripEnvelope<T> : never;
 
 function checkCancelledNotification(

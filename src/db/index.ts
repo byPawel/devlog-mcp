@@ -248,7 +248,7 @@ export function closeDb(config: DevlogDbConfig): void {
  * Close all database connections
  */
 export function closeAllDbs(): void {
-  for (const [_, conn] of dbConnections) {
+  for (const [, conn] of dbConnections) {
     conn.sqlite.close();
   }
   dbConnections.clear();

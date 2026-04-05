@@ -151,8 +151,6 @@ function parseArgs(args: string[]): { command: string; positional: string[]; fla
 async function cmdInit(): Promise<void> {
   const config = getConfig();
   const devlogPath = path.join(config.projectPath, config.devlogFolder!);
-  const dbPath = path.join(devlogPath, ".devlog", "db");
-
   console.log("Initializing devlog...\n");
 
   // Create folders
@@ -542,7 +540,7 @@ async function main(): Promise<void> {
         await cmdTime(positional[0] || "status", positional.slice(1), flags);
         break;
 
-      case "cleanup":
+      case "cleanup": {
         // Import and run cleanup dynamically
         const { execSync } = await import("node:child_process");
         const config = getConfig();
@@ -550,6 +548,7 @@ async function main(): Promise<void> {
         const cmd = `npx tsx scripts/cleanup.ts --devlog ${path.join(config.projectPath, config.devlogFolder!)} ${cleanupArgs}`;
         execSync(cmd, { stdio: "inherit", cwd: path.dirname(import.meta.url.replace("file://", "")) });
         break;
+      }
 
       default:
         console.error(`Unknown command: ${command}`);
