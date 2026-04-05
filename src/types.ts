@@ -190,7 +190,7 @@ export const CancelledNotificationSchema = NotificationSchema.extend({
      *
      * This MUST correspond to the ID of a request previously issued in the same direction.
      */
-    requestId: RequestIdSchema,
+    requestId: RequestIdSchema.optional(),
 
     /**
      * An optional string describing the reason for the cancellation. This MAY be logged or presented to the user.

@@ -230,10 +230,12 @@ export abstract class Protocol<
 
   constructor(private _options?: ProtocolOptions) {
     this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
-      const controller = this._requestHandlerAbortControllers.get(
-        notification.params.requestId,
-      );
-      controller?.abort(notification.params.reason);
+      if (notification.params.requestId !== undefined) {
+        const controller = this._requestHandlerAbortControllers.get(
+          notification.params.requestId,
+        );
+        controller?.abort(notification.params.reason);
+      }
     });
 
     this.setNotificationHandler(ProgressNotificationSchema, (notification) => {
