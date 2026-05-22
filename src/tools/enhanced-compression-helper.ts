@@ -28,7 +28,6 @@ interface SessionData {
   title?: string;
 }
 
-// Import the existing analysis functions from simple-devlog-server
 // These would normally be imported, but we'll define the interface
 interface VelocityMetrics {
   totalFiles: number;
