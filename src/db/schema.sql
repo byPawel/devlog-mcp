@@ -394,6 +394,24 @@ CREATE TABLE IF NOT EXISTS sync_queue (
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- AFFECTIVE MEMORY (agent feedback / success-failure history)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS agent_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_id TEXT NOT NULL,                  -- model id, e.g. 'claude-opus-4-7'
+  tool_name TEXT NOT NULL,                 -- MCP tool name, e.g. 'devlog_entity_extract_deep'
+  outcome TEXT NOT NULL,                   -- 'success' | 'failure' | 'partial'
+  confidence REAL DEFAULT 1.0,             -- calibration score (0-1)
+  latency_ms INTEGER,                      -- wall-clock latency of the tool call
+  error_message TEXT,                      -- error detail on failure
+  doc_id TEXT REFERENCES docs(id) ON DELETE SET NULL,
+  session_id TEXT REFERENCES sessions(id) ON DELETE SET NULL,
+  metadata_json TEXT,                      -- extra structured data
+  recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- INDEXES (optimized for common queries)
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -464,6 +482,13 @@ CREATE INDEX IF NOT EXISTS idx_relevance_score ON context_relevance(score DESC);
 -- Sync queue
 CREATE INDEX IF NOT EXISTS idx_sync_status ON sync_queue(status);
 CREATE INDEX IF NOT EXISTS idx_sync_service ON sync_queue(target_service);
+
+-- Agent feedback (affective memory)
+CREATE INDEX IF NOT EXISTS idx_feedback_tool ON agent_feedback(tool_name);
+CREATE INDEX IF NOT EXISTS idx_feedback_agent ON agent_feedback(agent_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_outcome ON agent_feedback(outcome);
+CREATE INDEX IF NOT EXISTS idx_feedback_session ON agent_feedback(session_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_recorded ON agent_feedback(recorded_at);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- VIEWS (common queries as views for convenience)

@@ -509,3 +509,31 @@ export const entitiesRelations = relations(entities, ({ many }) => ({
   relationsAsSource: many(entityRelations, { relationName: "source" }),
   relationsAsTarget: many(entityRelations, { relationName: "target" }),
 }));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AFFECTIVE MEMORY (agent feedback / success-failure history)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const agentFeedback = sqliteTable(
+  "agent_feedback",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    agentId: text("agent_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    outcome: text("outcome").notNull(),
+    confidence: real("confidence").default(1.0),
+    latencyMs: integer("latency_ms"),
+    errorMessage: text("error_message"),
+    docId: text("doc_id").references(() => docs.id, { onDelete: "set null" }),
+    sessionId: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
+    metadataJson: text("metadata_json"),
+    recordedAt: text("recorded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_feedback_tool").on(table.toolName),
+    index("idx_feedback_agent").on(table.agentId),
+    index("idx_feedback_outcome").on(table.outcome),
+    index("idx_feedback_session").on(table.sessionId),
+    index("idx_feedback_recorded").on(table.recordedAt),
+  ]
+);

@@ -13,6 +13,9 @@ import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as schema from "./schema.js";
+import { ensureAgentFeedbackTable } from "./agent-feedback.js";
+
+export { ensureAgentFeedbackTable };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,6 +132,9 @@ export function getDb(config: DevlogDbConfig): DevlogDB {
 
   // Ensure entity graph tables exist
   ensureEntityTables(sqlite);
+
+  // Ensure agent feedback table exists (affective memory layer)
+  ensureAgentFeedbackTable(sqlite);
 
   // Cache connection
   dbConnections.set(dbPath, { db, sqlite });
