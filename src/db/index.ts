@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import * as schema from "./schema.js";
 import { ensureAgentFeedbackTable } from "./agent-feedback.js";
 import { ensureEntityTables } from "./entity-tables.js";
+import { dropDeadTables } from "./drop-dead-tables.js";
 
 export { ensureAgentFeedbackTable };
 export { ensureEntityTables };
@@ -137,6 +138,10 @@ export function getDb(config: DevlogDbConfig): DevlogDB {
 
   // Ensure agent feedback table exists (affective memory layer)
   ensureAgentFeedbackTable(sqlite);
+
+  // Drop tables that were defined in the original schema but never used in
+  // production code. Idempotent — safe to run on every startup.
+  dropDeadTables(sqlite);
 
   // Cache connection
   dbConnections.set(dbPath, { db, sqlite });
