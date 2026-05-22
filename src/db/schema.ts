@@ -321,11 +321,18 @@ export const entityRelations = sqliteTable(
     relationType: text("relation_type").notNull(),
     weight: real("weight").default(1.0),
     metadataJson: text("metadata_json"),
+    // Bi-temporal validity (Zep/Graphiti-style). NULL valid_to = open fact.
+    // NOTE: PK is (source_id, target_id, relation_type) — only one open fact
+    // per tuple at a time. Closing a fact (UPDATE valid_to = now) preserves
+    // the row but prevents re-opening the same tuple without first deleting.
+    validFrom: text("valid_from").notNull().default(sql`CURRENT_TIMESTAMP`),
+    validTo: text("valid_to"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_entity_rel_source").on(table.sourceId),
     index("idx_entity_rel_target").on(table.targetId),
+    index("idx_entity_rel_valid_to").on(table.validTo),
   ]
 );
 

@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import type Database from 'better-sqlite3';
 import { ToolDefinition } from './registry.js';
 import { CallToolResult } from '../types.js';
 import { getSqliteDb } from '../db/index.js';
@@ -14,7 +15,11 @@ import { LlmEntityExtractor } from '../services/llm-entity-extractor.js';
 import { EntityPersistence } from '../services/entity-extractor.js';
 import * as path from 'node:path';
 
-function getSqlite() {
+function getSqlite(): Database.Database {
+  // Tests inject a Database handle via globalThis.__TEST_DB__ so handlers can be
+  // exercised without going through the per-project filesystem layout.
+  const existing = (globalThis as Record<string, unknown>).__TEST_DB__ as Database.Database | undefined;
+  if (existing) return existing;
   const projectPath = path.dirname(DEVLOG_PATH);
   return getSqliteDb({ projectPath, devlogFolder: path.basename(DEVLOG_PATH) });
 }
@@ -95,6 +100,11 @@ export const entityTools: ToolDefinition[] = [
         .default(20)
         .optional()
         .describe('Max results (1-100, default 20)'),
+      as_of: z
+        .string()
+        .datetime()
+        .optional()
+        .describe('ISO timestamp — traverse facts valid at this point in time. Defaults to now (currently-valid facts: valid_from <= now AND valid_to IS NULL).'),
     },
     handler: async (args: {
       query?: string;
@@ -102,8 +112,10 @@ export const entityTools: ToolDefinition[] = [
       entityId?: number;
       depth?: number;
       limit?: number;
+      as_of?: string;
     }): Promise<CallToolResult> => {
       const { query, type, entityId, depth = 2, limit = 20 } = args;
+      const asOf = (args.as_of as string | undefined) ?? null;
 
       let db;
       try {
@@ -126,7 +138,7 @@ export const entityTools: ToolDefinition[] = [
 
         // Mode 1: Get entity by ID and traverse graph
         if (entityId !== undefined) {
-          return handleEntityGraph(db, entityId, safeDepth);
+          return handleEntityGraph(db, entityId, safeDepth, asOf);
         }
 
         // Mode 2: Search entities
@@ -271,7 +283,8 @@ export const entityTools: ToolDefinition[] = [
 function handleEntityGraph(
   db: ReturnType<typeof getSqlite>,
   entityId: number,
-  depth: number
+  depth: number,
+  asOf: string | null
 ): CallToolResult {
   // Get the root entity
   const entity = db
@@ -290,7 +303,16 @@ function handleEntityGraph(
     };
   }
 
-  // Recursive CTE to find connected entities
+  // Default: facts that are currently valid (valid_from <= now AND valid_to IS NULL).
+  // With as_of: facts valid at that point in time
+  // (valid_from <= as_of AND (valid_to IS NULL OR valid_to > as_of)).
+  // Normalising asOf to the current timestamp when omitted means a single SQL
+  // fragment handles both cases — and importantly, future-opened facts (valid_from
+  // in the future) are excluded from the default view.
+  const effectiveAsOf: string = asOf ?? new Date().toISOString();
+  const validityFilter = `AND er.valid_from <= ? AND (er.valid_to IS NULL OR er.valid_to > ?)`;
+
+  // Recursive CTE to find connected entities (bi-temporal: only traverse valid edges)
   const relations = db
     .prepare(
       `WITH RECURSIVE graph(entity_id, depth) AS (
@@ -300,7 +322,8 @@ function handleEntityGraph(
           CASE WHEN er.source_id = g.entity_id THEN er.target_id ELSE er.source_id END,
           g.depth + 1
         FROM graph g
-        JOIN entity_relations er ON er.source_id = g.entity_id OR er.target_id = g.entity_id
+        JOIN entity_relations er ON (er.source_id = g.entity_id OR er.target_id = g.entity_id)
+        ${validityFilter}
         WHERE g.depth < ?
       )
       SELECT DISTINCT er.*, es.name as source_name, et.name as target_name
@@ -308,9 +331,10 @@ function handleEntityGraph(
       JOIN graph g ON er.source_id = g.entity_id OR er.target_id = g.entity_id
       JOIN entities es ON er.source_id = es.id
       JOIN entities et ON er.target_id = et.id
+      WHERE er.valid_from <= ? AND (er.valid_to IS NULL OR er.valid_to > ?)
       LIMIT 50`
     )
-    .all(entityId, depth) as RelationRow[];
+    .all(entityId, effectiveAsOf, effectiveAsOf, depth, effectiveAsOf, effectiveAsOf) as RelationRow[];
 
   // Get linked documents
   const docLinks = db

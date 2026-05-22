@@ -275,12 +275,16 @@ CREATE TABLE IF NOT EXISTS doc_entities (
 );
 
 -- Entity-to-entity relations (for knowledge graph)
+-- Bi-temporal: valid_from/valid_to allow invalidating facts without deleting rows
+-- (Zep/Graphiti pattern: set valid_to = now() instead of DELETE when a fact ends)
 CREATE TABLE IF NOT EXISTS entity_relations (
   source_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
   target_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
   relation_type TEXT NOT NULL,            -- depends_on|uses|implements|extends|related_to
   weight REAL DEFAULT 1.0,                -- Relation strength
   metadata_json TEXT,
+  valid_from TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, -- when the fact became true
+  valid_to TEXT,                          -- when the fact stopped being true (NULL = still true)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (source_id, target_id, relation_type)
 );
@@ -456,6 +460,7 @@ CREATE INDEX IF NOT EXISTS idx_doc_entity_doc ON doc_entities(doc_id);
 CREATE INDEX IF NOT EXISTS idx_doc_entity_entity ON doc_entities(entity_id);
 CREATE INDEX IF NOT EXISTS idx_entity_rel_source ON entity_relations(source_id);
 CREATE INDEX IF NOT EXISTS idx_entity_rel_target ON entity_relations(target_id);
+CREATE INDEX IF NOT EXISTS idx_entity_rel_valid_to ON entity_relations(valid_to);
 
 -- Sessions
 CREATE INDEX IF NOT EXISTS idx_session_user ON sessions(user_id);
