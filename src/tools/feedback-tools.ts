@@ -102,7 +102,8 @@ export const feedbackTools: ToolDefinition[] = [
     inputSchema: {
       tool_name: z.string().optional(),
       agent_id: z.string().optional(),
-      since: z.string().optional(),
+      since: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional()
+        .describe('ISO date lower bound (YYYY-MM-DD prefix); recorded_at >= this value'),
       limit: z.number().int().positive().max(500).optional(),
     },
     handler: async (args) => {

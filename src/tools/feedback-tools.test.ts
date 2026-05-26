@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { jest } from '@jest/globals';
+import { z } from 'zod';
 import { ensureAgentFeedbackTable } from '../db/agent-feedback.js';
 
 // Mock '../db/index.js' so importing feedback-tools doesn't trigger evaluation
@@ -72,5 +73,49 @@ describe('feedback-tools', () => {
     expect(text).toMatch(/success.*1/i);
     expect(text).toMatch(/failure.*1/i);
     expect(text).toMatch(/success_rate.*0\.5/i);
+  });
+
+  describe('devlog_feedback_query since param validation (BUG-18)', () => {
+    it('rejects a malformed since value ("last week")', () => {
+      const q = findTool('devlog_feedback_query');
+      const schema = z.object(q.inputSchema);
+      const result = schema.safeParse({ since: 'last week' });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects an ISO datetime with trailing Z (no date-only prefix)', () => {
+      const q = findTool('devlog_feedback_query');
+      const schema = z.object(q.inputSchema);
+      // Strings not starting with YYYY-MM-DD should fail
+      const result = schema.safeParse({ since: 'T14:30:00Z' });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts a valid ISO date prefix (YYYY-MM-DD)', () => {
+      const q = findTool('devlog_feedback_query');
+      const schema = z.object(q.inputSchema);
+      expect(schema.safeParse({ since: '2026-05-01' }).success).toBe(true);
+    });
+
+    it('accepts ISO datetime with YYYY-MM-DD prefix', () => {
+      const q = findTool('devlog_feedback_query');
+      const schema = z.object(q.inputSchema);
+      expect(schema.safeParse({ since: '2026-05-01T00:00:00Z' }).success).toBe(true);
+    });
+
+    it('valid since filters results correctly', async () => {
+      // Insert one old row and one recent row
+      db.prepare(`
+        INSERT INTO agent_feedback (agent_id, tool_name, outcome, recorded_at)
+        VALUES ('a', 'tool_old', 'success', '2020-01-01 00:00:00'),
+               ('a', 'tool_new', 'success', '2026-05-01 00:00:00')
+      `).run();
+
+      const q = findTool('devlog_feedback_query');
+      const res = await q.handler({ since: '2026-01-01' });
+      const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
+      expect(text).toMatch(/tool_new/);
+      expect(text).not.toMatch(/tool_old/);
+    });
   });
 });
