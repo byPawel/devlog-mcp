@@ -13,6 +13,12 @@ import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as schema from "./schema.js";
+import { ensureAgentFeedbackTable } from "./agent-feedback.js";
+import { ensureEntityTables } from "./entity-tables.js";
+import { dropDeadTables } from "./drop-dead-tables.js";
+
+export { ensureAgentFeedbackTable };
+export { ensureEntityTables };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,6 +136,13 @@ export function getDb(config: DevlogDbConfig): DevlogDB {
   // Ensure entity graph tables exist
   ensureEntityTables(sqlite);
 
+  // Ensure agent feedback table exists (affective memory layer)
+  ensureAgentFeedbackTable(sqlite);
+
+  // Drop tables that were defined in the original schema but never used in
+  // production code. Idempotent — safe to run on every startup.
+  dropDeadTables(sqlite);
+
   // Cache connection
   dbConnections.set(dbPath, { db, sqlite });
 
@@ -179,56 +192,6 @@ export function ensureVectorTables(sqlite: Database.Database): void {
       FOREIGN KEY (doc_id) REFERENCES docs(id) ON DELETE CASCADE
     );
   `);
-}
-
-/**
- * Ensure entity graph tables exist (idempotent migration)
- */
-export function ensureEntityTables(sqlite: Database.Database): void {
-  sqlite.prepare(`
-    CREATE TABLE IF NOT EXISTS entities (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT NOT NULL,
-      name TEXT NOT NULL,
-      canonical_name TEXT,
-      description TEXT,
-      metadata_json TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(type, canonical_name)
-    )
-  `).run();
-
-  sqlite.prepare(`
-    CREATE TABLE IF NOT EXISTS doc_entities (
-      doc_id TEXT NOT NULL,
-      entity_id INTEGER NOT NULL,
-      relation_type TEXT NOT NULL,
-      context TEXT,
-      confidence REAL DEFAULT 1.0,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (doc_id, entity_id, relation_type)
-    )
-  `).run();
-
-  sqlite.prepare(`
-    CREATE TABLE IF NOT EXISTS entity_relations (
-      source_id INTEGER NOT NULL,
-      target_id INTEGER NOT NULL,
-      relation_type TEXT NOT NULL,
-      weight REAL DEFAULT 1.0,
-      metadata_json TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (source_id, target_id, relation_type)
-    )
-  `).run();
-
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_entity_type ON entities(type)').run();
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_entity_canonical ON entities(canonical_name)').run();
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_doc_entity_doc ON doc_entities(doc_id)').run();
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_doc_entity_entity ON doc_entities(entity_id)').run();
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_entity_rel_source ON entity_relations(source_id)').run();
-  sqlite.prepare('CREATE INDEX IF NOT EXISTS idx_entity_rel_target ON entity_relations(target_id)').run();
 }
 
 /**

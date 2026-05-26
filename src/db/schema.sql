@@ -102,18 +102,6 @@ INSERT OR IGNORE INTO users (name, display_name, type) VALUES ('llm:gpt', 'GPT',
 INSERT OR IGNORE INTO users (name, display_name, type) VALUES ('system', 'System', 'system');
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- DOCUMENT ASSIGNMENTS (ownership, assignees, reviewers)
--- ═══════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS doc_assignments (
-  doc_id TEXT NOT NULL REFERENCES docs(id) ON DELETE CASCADE,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'assignee', -- creator|assignee|reviewer|contributor
-  assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (doc_id, user_id, role)
-);
-
--- ═══════════════════════════════════════════════════════════════════════════
 -- TAGS (normalized for efficient queries)
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -214,40 +202,6 @@ CREATE TABLE IF NOT EXISTS time_entries (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS daily_timeline (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date DATE NOT NULL,
-  user_id INTEGER REFERENCES users(id),
-  planned_json TEXT,                      -- [{doc_id, slot, start, end}]
-  actual_json TEXT,                       -- What really happened
-  utilization_pct INTEGER,                -- Productive time / total time
-  total_planned_min INTEGER,
-  total_actual_min INTEGER,
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(date, user_id)
-);
-
--- ═══════════════════════════════════════════════════════════════════════════
--- MODIFICATION HISTORY (who changed what - Claude vs User tracking)
--- ═══════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS modifications (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  doc_id TEXT NOT NULL REFERENCES docs(id) ON DELETE CASCADE,
-  user_id INTEGER REFERENCES users(id),   -- user|claude|llm:qwen
-  commit_sha TEXT,                        -- Git commit if available
-  section TEXT,                           -- problem|requirements|approach|full
-  change_type TEXT NOT NULL,              -- create|add|edit|delete|accept_suggestion|reject_suggestion
-  diff_preview TEXT,                      -- First 500 chars of change
-  old_content TEXT,                       -- Previous content (for undo)
-  new_content TEXT,                       -- New content
-  ai_suggested BOOLEAN DEFAULT FALSE,     -- Was this an AI suggestion?
-  accepted BOOLEAN,                       -- Did user accept? (null if manual edit)
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-  session_id TEXT                         -- Links to devlog session
-);
-
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ENTITY GRAPH (GraphRAG - knowledge graph for project)
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -275,12 +229,16 @@ CREATE TABLE IF NOT EXISTS doc_entities (
 );
 
 -- Entity-to-entity relations (for knowledge graph)
+-- Bi-temporal: valid_from/valid_to allow invalidating facts without deleting rows
+-- (Zep/Graphiti pattern: set valid_to = now() instead of DELETE when a fact ends)
 CREATE TABLE IF NOT EXISTS entity_relations (
   source_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
   target_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
   relation_type TEXT NOT NULL,            -- depends_on|uses|implements|extends|related_to
   weight REAL DEFAULT 1.0,                -- Relation strength
   metadata_json TEXT,
+  valid_from TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, -- when the fact became true
+  valid_to TEXT,                          -- when the fact stopped being true (NULL = still true)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (source_id, target_id, relation_type)
 );
@@ -322,43 +280,6 @@ CREATE TABLE IF NOT EXISTS conversation_summaries (
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- CROSS-SESSION CONTEXT (auto-load relevant context)
--- ═══════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS session_context (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-  context_type TEXT NOT NULL,             -- doc|conversation|entity|file|decision
-  context_id TEXT NOT NULL,               -- Reference to the context item
-  relevance_score REAL DEFAULT 1.0,       -- How relevant (0-1), used for auto-loading
-  loaded_at DATETIME,                     -- When this context was loaded into session
-  used BOOLEAN DEFAULT FALSE,             -- Whether context was actually used
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(session_id, context_type, context_id)
-);
-
--- ═══════════════════════════════════════════════════════════════════════════
--- KNOWLEDGE LINKS (enhanced entity linking: files <-> PRDs <-> decisions)
--- ═══════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS knowledge_links (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_type TEXT NOT NULL,              -- doc|file|entity|conversation
-  source_id TEXT NOT NULL,
-  target_type TEXT NOT NULL,
-  target_id TEXT NOT NULL,
-  link_type TEXT NOT NULL,                -- implements|references|decides|blocks|supersedes
-  bidirectional BOOLEAN DEFAULT FALSE,    -- Is this a two-way link?
-  strength REAL DEFAULT 1.0,              -- Link strength for ranking
-  created_by INTEGER REFERENCES users(id),
-  auto_detected BOOLEAN DEFAULT FALSE,    -- Was this link auto-detected by AI?
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(source_type, source_id, target_type, target_id, link_type)
-);
-
--- ═══════════════════════════════════════════════════════════════════════════
 -- CONTEXT RELEVANCE (for smart context loading)
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -376,21 +297,21 @@ CREATE TABLE IF NOT EXISTS context_relevance (
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- OFFLINE SYNC QUEUE (for GitHub/external service sync)
+-- AFFECTIVE MEMORY (agent feedback / success-failure history)
 -- ═══════════════════════════════════════════════════════════════════════════
 
-CREATE TABLE IF NOT EXISTS sync_queue (
+CREATE TABLE IF NOT EXISTS agent_feedback (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  action TEXT NOT NULL,                   -- create_issue|close_issue|update_issue|create_pr|comment
-  target_service TEXT NOT NULL,           -- github|jira|notion|etc
-  payload_json TEXT NOT NULL,             -- Action-specific data
-  status TEXT NOT NULL DEFAULT 'pending', -- pending|processing|completed|failed
-  retry_count INTEGER DEFAULT 0,
-  max_retries INTEGER DEFAULT 3,
-  error_message TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  processed_at DATETIME,
-  completed_at DATETIME
+  agent_id TEXT NOT NULL,                  -- model id, e.g. 'claude-opus-4-7'
+  tool_name TEXT NOT NULL,                 -- MCP tool name, e.g. 'devlog_entity_extract_deep'
+  outcome TEXT NOT NULL,                   -- 'success' | 'failure' | 'partial'
+  confidence REAL DEFAULT 1.0,             -- calibration score (0-1)
+  latency_ms INTEGER,                      -- wall-clock latency of the tool call
+  error_message TEXT,                      -- error detail on failure
+  doc_id TEXT REFERENCES docs(id) ON DELETE SET NULL,
+  session_id TEXT REFERENCES sessions(id) ON DELETE SET NULL,
+  metadata_json TEXT,                      -- extra structured data
+  recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -408,11 +329,6 @@ CREATE INDEX IF NOT EXISTS idx_docs_slot ON docs(parallel_slot) WHERE parallel_s
 CREATE INDEX IF NOT EXISTS idx_docs_gh ON docs(gh_issue) WHERE gh_issue IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_docs_content_hash ON docs(content_hash);
 
--- Assignments: filter by user
-CREATE INDEX IF NOT EXISTS idx_assign_user ON doc_assignments(user_id);
-CREATE INDEX IF NOT EXISTS idx_assign_role ON doc_assignments(role);
-CREATE INDEX IF NOT EXISTS idx_assign_doc ON doc_assignments(doc_id);
-
 -- Tags: fast tag lookups
 CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
 CREATE INDEX IF NOT EXISTS idx_doc_tags_tag ON doc_tags(tag_id);
@@ -425,12 +341,6 @@ CREATE INDEX IF NOT EXISTS idx_time_user ON time_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_time_slot ON time_entries(terminal_slot);
 CREATE INDEX IF NOT EXISTS idx_time_status ON time_entries(status);
 
--- Modifications: history queries
-CREATE INDEX IF NOT EXISTS idx_mod_doc ON modifications(doc_id);
-CREATE INDEX IF NOT EXISTS idx_mod_user ON modifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_mod_date ON modifications(timestamp);
-CREATE INDEX IF NOT EXISTS idx_mod_session ON modifications(session_id);
-
 -- Entities: graph queries
 CREATE INDEX IF NOT EXISTS idx_entity_type ON entities(type);
 CREATE INDEX IF NOT EXISTS idx_entity_canonical ON entities(canonical_name);
@@ -438,6 +348,7 @@ CREATE INDEX IF NOT EXISTS idx_doc_entity_doc ON doc_entities(doc_id);
 CREATE INDEX IF NOT EXISTS idx_doc_entity_entity ON doc_entities(entity_id);
 CREATE INDEX IF NOT EXISTS idx_entity_rel_source ON entity_relations(source_id);
 CREATE INDEX IF NOT EXISTS idx_entity_rel_target ON entity_relations(target_id);
+CREATE INDEX IF NOT EXISTS idx_entity_rel_valid_to ON entity_relations(valid_to);
 
 -- Sessions
 CREATE INDEX IF NOT EXISTS idx_session_user ON sessions(user_id);
@@ -449,21 +360,16 @@ CREATE INDEX IF NOT EXISTS idx_conv_session ON conversation_summaries(session_id
 CREATE INDEX IF NOT EXISTS idx_conv_model ON conversation_summaries(ai_model);
 CREATE INDEX IF NOT EXISTS idx_conv_dates ON conversation_summaries(started_at, ended_at);
 
--- Session context
-CREATE INDEX IF NOT EXISTS idx_ctx_session ON session_context(session_id);
-CREATE INDEX IF NOT EXISTS idx_ctx_relevance ON session_context(relevance_score DESC);
-
--- Knowledge links
-CREATE INDEX IF NOT EXISTS idx_klink_source ON knowledge_links(source_type, source_id);
-CREATE INDEX IF NOT EXISTS idx_klink_target ON knowledge_links(target_type, target_id);
-
 -- Context relevance
 CREATE INDEX IF NOT EXISTS idx_relevance_doc ON context_relevance(doc_id);
 CREATE INDEX IF NOT EXISTS idx_relevance_score ON context_relevance(score DESC);
 
--- Sync queue
-CREATE INDEX IF NOT EXISTS idx_sync_status ON sync_queue(status);
-CREATE INDEX IF NOT EXISTS idx_sync_service ON sync_queue(target_service);
+-- Agent feedback (affective memory)
+CREATE INDEX IF NOT EXISTS idx_feedback_tool ON agent_feedback(tool_name);
+CREATE INDEX IF NOT EXISTS idx_feedback_agent ON agent_feedback(agent_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_outcome ON agent_feedback(outcome);
+CREATE INDEX IF NOT EXISTS idx_feedback_session ON agent_feedback(session_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_recorded ON agent_feedback(recorded_at);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- VIEWS (common queries as views for convenience)
@@ -495,32 +401,6 @@ JOIN docs d ON te.doc_id = d.id
 LEFT JOIN users u ON te.user_id = u.id
 WHERE date(te.started_at) = date('now')
 ORDER BY te.started_at;
-
--- Recent modifications (for history view)
-CREATE VIEW IF NOT EXISTS v_recent_modifications AS
-SELECT
-  m.*,
-  d.title as doc_title,
-  u.name as user_name,
-  u.type as user_type
-FROM modifications m
-JOIN docs d ON m.doc_id = d.id
-LEFT JOIN users u ON m.user_id = u.id
-ORDER BY m.timestamp DESC
-LIMIT 100;
-
--- AI contribution stats
-CREATE VIEW IF NOT EXISTS v_ai_stats AS
-SELECT
-  u.name,
-  u.type,
-  COUNT(*) as total_changes,
-  SUM(CASE WHEN m.ai_suggested THEN 1 ELSE 0 END) as ai_suggestions,
-  SUM(CASE WHEN m.accepted = 1 THEN 1 ELSE 0 END) as accepted,
-  SUM(CASE WHEN m.accepted = 0 THEN 1 ELSE 0 END) as rejected
-FROM modifications m
-JOIN users u ON m.user_id = u.id
-GROUP BY u.id;
 
 -- PRD workflow status
 CREATE VIEW IF NOT EXISTS v_prd_status AS

@@ -12,6 +12,7 @@ import { questionTools } from '../tools/question-tools.js';
 import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
 import { entityTools } from '../tools/entity-tools.js';
+import { feedbackTools } from '../tools/feedback-tools.js';
 
 // Select only the core tools
 const coreTools = [
@@ -20,6 +21,7 @@ const coreTools = [
   workspaceTools.find(t => t.name === 'devlog_workspace_claim')!,
   workspaceTools.find(t => t.name === 'devlog_workspace_dump')!,
   workspaceTools.find(t => t.name === 'devlog_session_log')!,
+  workspaceTools.find(t => t.name === 'devlog_session_recall')!,
 
   // Current.md management
   currentWorkspaceTools.find(t => t.name === 'devlog_current_update')!,
@@ -35,6 +37,9 @@ const coreTools = [
 
   // Entity knowledge graph
   ...entityTools,
+
+  // Affective memory (agent feedback)
+  ...feedbackTools,
 
   // Initialization
   devlogInitTool

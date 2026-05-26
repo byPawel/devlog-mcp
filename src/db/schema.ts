@@ -108,28 +108,6 @@ export const users = sqliteTable(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DOCUMENT ASSIGNMENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const docAssignments = sqliteTable(
-  "doc_assignments",
-  {
-    docId: text("doc_id")
-      .notNull()
-      .references(() => docs.id, { onDelete: "cascade" }),
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: text("role").notNull().default("assignee"), // creator|assignee|reviewer|contributor
-    assignedAt: text("assigned_at").default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table) => [
-    index("idx_assign_user").on(table.userId),
-    index("idx_assign_doc").on(table.docId),
-  ]
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
 // TAGS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -219,54 +197,6 @@ export const timeEntries = sqliteTable(
   ]
 );
 
-export const dailyTimeline = sqliteTable(
-  "daily_timeline",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    date: text("date").notNull(),
-    userId: integer("user_id").references(() => users.id),
-    plannedJson: text("planned_json"),
-    actualJson: text("actual_json"),
-    utilizationPct: integer("utilization_pct"),
-    totalPlannedMin: integer("total_planned_min"),
-    totalActualMin: integer("total_actual_min"),
-    notes: text("notes"),
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table) => [uniqueIndex("idx_timeline_date_user").on(table.date, table.userId)]
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MODIFICATION HISTORY
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const modifications = sqliteTable(
-  "modifications",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    docId: text("doc_id")
-      .notNull()
-      .references(() => docs.id, { onDelete: "cascade" }),
-    userId: integer("user_id").references(() => users.id),
-    commitSha: text("commit_sha"),
-    section: text("section"), // problem|requirements|approach|full
-    changeType: text("change_type").notNull(), // create|add|edit|delete|accept_suggestion|reject_suggestion
-    diffPreview: text("diff_preview"),
-    oldContent: text("old_content"),
-    newContent: text("new_content"),
-    aiSuggested: integer("ai_suggested", { mode: "boolean" }).default(false),
-    accepted: integer("accepted", { mode: "boolean" }),
-    timestamp: text("timestamp").default(sql`CURRENT_TIMESTAMP`),
-    sessionId: text("session_id"),
-  },
-  (table) => [
-    index("idx_mod_doc").on(table.docId),
-    index("idx_mod_user").on(table.userId),
-    index("idx_mod_date").on(table.timestamp),
-    index("idx_mod_session").on(table.sessionId),
-  ]
-);
-
 // ═══════════════════════════════════════════════════════════════════════════
 // ENTITY GRAPH (GraphRAG)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -321,11 +251,18 @@ export const entityRelations = sqliteTable(
     relationType: text("relation_type").notNull(),
     weight: real("weight").default(1.0),
     metadataJson: text("metadata_json"),
+    // Bi-temporal validity (Zep/Graphiti-style). NULL valid_to = open fact.
+    // NOTE: PK is (source_id, target_id, relation_type) — only one open fact
+    // per tuple at a time. Closing a fact (UPDATE valid_to = now) preserves
+    // the row but prevents re-opening the same tuple without first deleting.
+    validFrom: text("valid_from").notNull().default(sql`CURRENT_TIMESTAMP`),
+    validTo: text("valid_to"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_entity_rel_source").on(table.sourceId),
     index("idx_entity_rel_target").on(table.targetId),
+    index("idx_entity_rel_valid_to").on(table.validTo),
   ]
 );
 
@@ -382,103 +319,18 @@ export const conversationSummaries = sqliteTable(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SESSION CONTEXT
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const sessionContext = sqliteTable(
-  "session_context",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    sessionId: text("session_id")
-      .notNull()
-      .references(() => sessions.id, { onDelete: "cascade" }),
-    contextType: text("context_type").notNull(), // doc|conversation|entity|file|decision
-    contextId: text("context_id").notNull(),
-    relevanceScore: real("relevance_score").default(1.0),
-    loadedAt: text("loaded_at"),
-    used: integer("used", { mode: "boolean" }).default(false),
-    notes: text("notes"),
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table) => [
-    uniqueIndex("idx_ctx_unique").on(table.sessionId, table.contextType, table.contextId),
-    index("idx_ctx_session").on(table.sessionId),
-    index("idx_ctx_relevance").on(table.relevanceScore),
-  ]
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
-// KNOWLEDGE LINKS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const knowledgeLinks = sqliteTable(
-  "knowledge_links",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    sourceType: text("source_type").notNull(),
-    sourceId: text("source_id").notNull(),
-    targetType: text("target_type").notNull(),
-    targetId: text("target_id").notNull(),
-    linkType: text("link_type").notNull(), // implements|references|decides|blocks|supersedes
-    bidirectional: integer("bidirectional", { mode: "boolean" }).default(false),
-    strength: real("strength").default(1.0),
-    createdBy: integer("created_by").references(() => users.id),
-    autoDetected: integer("auto_detected", { mode: "boolean" }).default(false),
-    notes: text("notes"),
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table) => [
-    uniqueIndex("idx_klink_unique").on(
-      table.sourceType,
-      table.sourceId,
-      table.targetType,
-      table.targetId,
-      table.linkType
-    ),
-    index("idx_klink_source").on(table.sourceType, table.sourceId),
-    index("idx_klink_target").on(table.targetType, table.targetId),
-  ]
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SYNC QUEUE
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const syncQueue = sqliteTable(
-  "sync_queue",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    action: text("action").notNull(),
-    targetService: text("target_service").notNull(),
-    payloadJson: text("payload_json").notNull(),
-    status: text("status").notNull().default("pending"),
-    retryCount: integer("retry_count").default(0),
-    maxRetries: integer("max_retries").default(3),
-    errorMessage: text("error_message"),
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-    processedAt: text("processed_at"),
-    completedAt: text("completed_at"),
-  },
-  (table) => [index("idx_sync_status").on(table.status), index("idx_sync_service").on(table.targetService)]
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
 // RELATIONS (for Drizzle query builder)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const docsRelations = relations(docs, ({ many }) => ({
   tags: many(docTags),
-  assignments: many(docAssignments),
   timeEntries: many(timeEntries),
-  modifications: many(modifications),
   entities: many(docEntities),
   sectionTags: many(sectionTags),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
-  assignments: many(docAssignments),
   timeEntries: many(timeEntries),
-  modifications: many(modifications),
   sessions: many(sessions),
 }));
 
@@ -500,7 +352,6 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
     fields: [sessions.focusDocId],
     references: [docs.id],
   }),
-  contexts: many(sessionContext),
   conversations: many(conversationSummaries),
 }));
 
@@ -509,3 +360,31 @@ export const entitiesRelations = relations(entities, ({ many }) => ({
   relationsAsSource: many(entityRelations, { relationName: "source" }),
   relationsAsTarget: many(entityRelations, { relationName: "target" }),
 }));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AFFECTIVE MEMORY (agent feedback / success-failure history)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const agentFeedback = sqliteTable(
+  "agent_feedback",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    agentId: text("agent_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    outcome: text("outcome").notNull(),
+    confidence: real("confidence").default(1.0),
+    latencyMs: integer("latency_ms"),
+    errorMessage: text("error_message"),
+    docId: text("doc_id").references(() => docs.id, { onDelete: "set null" }),
+    sessionId: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
+    metadataJson: text("metadata_json"),
+    recordedAt: text("recorded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_feedback_tool").on(table.toolName),
+    index("idx_feedback_agent").on(table.agentId),
+    index("idx_feedback_outcome").on(table.outcome),
+    index("idx_feedback_session").on(table.sessionId),
+    index("idx_feedback_recorded").on(table.recordedAt),
+  ]
+);

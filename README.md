@@ -1,35 +1,37 @@
-# DevLog MCP - Developer Logging & Workspace Management
+# devlog-mcp — Agent Memory for Claude Code & friends
 
-A modular MCP (Model Context Protocol) server for developer logging, workspace management, and AI-assisted development workflows. Built with TypeScript and designed for seamless integration with Claude.
+A multi-layer **agent memory** MCP server. Persists what your agent does, what it knows, and how well it works — across sessions, models, and projects.
 
-> **Built on**: This project extends the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) by Anthropic with specialized tools for developer workflows.
+> Built on Anthropic's MCP TypeScript SDK. Storage: SQLite (Drizzle ORM) + LanceDB vectors + a small file-backed workspace.
 
-## Features
+## Why this exists
 
-### 🎯 Core Modules
+LLM agents forget every session. Most "memory" plugins are one undifferentiated vector store. `devlog-mcp` instead separates memory by **function** — borrowing the CoALA-inspired taxonomy used by Letta, Zep, Mem0, and Cognee — so the agent can ask the right layer the right question.
 
-- **Core Server** - Essential workspace management and time tracking
-- **Analytics Server** - Development metrics and insights
-- **Planning Server** - Task planning and project management
-- **Search Server** - Semantic search across development logs
+## The five memory layers
 
-### 🛠️ Key Capabilities
+| Layer | What it remembers | Where it lives | MCP tools |
+|---|---|---|---|
+| **Working** | Current task, locks, open questions | `.devlog/.mcp/current-workspace.md` + `sessions(status='active')` + `questions.json` | `devlog_workspace_claim`, `devlog_workspace_dump`, `devlog_workspace_status`, `devlog_session_log`, `devlog_question_*` |
+| **Episodic** | Past sessions, time entries, conversation summaries | `sessions`, `time_entries`, `conversation_summaries` | `devlog_session_recall`, `devlog_session_log` |
+| **Semantic** | Facts, entities, relations, tags, doc vectors | `entities`, `entity_relations` (bi-temporal), `doc_entities`, `tags`, `doc_tags`, `docs`, LanceDB `doc_vectors` + `chunks` | `devlog_entity_graph`, `devlog_entity_extract_deep` |
+| **Procedural** | Plans, workflows, checklists | `docs(doc_type='plan')` + plan JSON files | `devlog_plan_create`, `devlog_plan_check`, `devlog_plan_validate`, `devlog_plan_status`, `devlog_plan_list`, `devlog_plan_blocker` |
+| **Affective** | Per-tool/per-agent success, failure, latency, confidence | `agent_feedback` | `devlog_feedback_record`, `devlog_feedback_query` |
 
-- **Multi-Agent Support** - Handle concurrent development sessions
-- **Smart Workspace Management** - Project-aware context switching
-- **Time Tracking** - Automatic session duration tracking
-- **AI-Powered Analysis** - Optional LLM integration for insights
-- **Semantic Search** - ChromaDB integration for intelligent search
-- **Conflict Resolution** - Built-in tools for merge conflicts
-- **Visual Diagrams** - Mermaid diagram generation for analytics and insights
+### What's special
 
-## Quick Start
+- **Bi-temporal facts** (Zep/Graphiti-style): every `entity_relations` row has `valid_from` / `valid_to`. Contradictions don't overwrite — they close a window. Query the graph "as of" any timestamp via the `as_of` param on `devlog_entity_graph`.
+- **Hybrid search**: SQLite FTS5 + LanceDB vectors merged via Reciprocal Rank Fusion.
+- **Affective layer**: among popular OSS memory libs (Mem0, Letta, Zep, Cognee, LangMem), `devlog-mcp` is the only one that natively tracks per-tool success/failure history (`agent_feedback`). Use it to bias model routing.
+- **Optional, local LLM**: Ollama (`nomic-embed-text` + `llama3.2`) for embeddings and deep entity extraction. Server works without it — falls back to regex extraction.
+
+## Quick start
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/devlog-mcp
+   git clone https://github.com/pavveu/devlog-mcp
    cd devlog-mcp
    ```
 
@@ -58,230 +60,104 @@ A modular MCP (Model Context Protocol) server for developer logging, workspace m
    claude mcp add devlog-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/dist/servers/core-server.js"
    ```
 
-### Using the Management Script
+### Ollama setup (optional — enables embeddings and deep entity extraction)
 
-For easier setup, use the included management script:
-
-```bash
-# Initialize configuration
-../mcp-manager.sh init
-
-# Add all DevLog servers
-../mcp-manager.sh add-all
-
-# Test your configuration
-../mcp-manager.sh test
-```
-
-## Available Servers
-
-### Core Server
-Essential workspace management tools:
-- `devlog_workspace_status` - Check workspace status
-- `devlog_workspace_claim` - Claim workspace with lock
-- `devlog_workspace_dump` - Export workspace data
-- `devlog_session_log` - Log development sessions
-- `devlog_current_update` - Update current.md file
-- `devlog_compress_week` - Compress daily sessions into weekly retrospectives
-
-### Analytics Server
-Development metrics and insights:
-- `devlog_analytics_summary` - Get development analytics
-- `devlog_analytics_patterns` - Analyze work patterns
-- `devlog_analytics_report` - Generate detailed reports
-
-### Planning Server
-Project planning and management:
-- `devlog_plan_create` - Create development plans
-- `devlog_plan_update` - Update existing plans
-- `devlog_task_add` - Add new tasks
-- `devlog_task_update` - Update task status
-
-### Search Server
-Semantic search capabilities:
-- `devlog_search` - Search across all logs
-- `devlog_search_semantic` - AI-powered semantic search
-- `devlog_search_by_date` - Search within date ranges
-- `devlog_search_by_tag` - Search by tags
-
-## Visual Analytics with Mermaid
-
-DevLog MCP includes built-in Mermaid diagram generation for visualizing development patterns and progress:
-
-### Diagram Types
-
-- **Overview Flowchart** - Week-at-a-glance with productivity metrics
-- **Task Distribution Pie Chart** - Breakdown of work by category (features, bugs, research, planning)
-- **Timeline Gantt Chart** - Daily task progression visualization
-- **Decision Flow Diagram** - Architecture and implementation decision tracking
-- **Productivity Flow** - Time analysis and output metrics
-- **Architecture Overview** - System design and development focus areas
-
-### Usage in Compression
-
-When using `devlog_compress_week`, the tool automatically generates Mermaid diagrams for:
-- Task distribution analysis
-- Decision flow visualization
-- Weekly productivity overview
-
-These diagrams are embedded directly in the weekly summary markdown files, providing visual insights alongside textual summaries.
-
-### Example Output
-
-```mermaid
-pie title Task Distribution - Week 1
-    "Features" : 45
-    "Bug Fixes" : 20
-    "Research" : 20
-    "Planning" : 10
-    "Other" : 5
-```
-
-## Retrospectives & Weekly Reviews
-
-DevLog MCP automatically organizes your development history into retrospective summaries for better long-term tracking and analysis.
-
-### Weekly Retrospectives
-
-The `devlog_compress_week` tool consolidates daily sessions into comprehensive weekly summaries stored in `devlog/retrospective/weekly/`:
-
-- **Automatic Metrics** - Sessions count, estimated hours, completed tasks
-- **Key Decisions** - Architectural and implementation choices tracked
-- **Insights & Learnings** - Important discoveries and knowledge gained
-- **Visual Analytics** - Embedded Mermaid diagrams for data visualization
-- **Daily Breakdown** - Preserves daily progress context
-
-### Monthly Retrospectives
-
-Monthly summaries are stored in `devlog/retrospective/monthly/` for quarterly reviews and long-term pattern analysis.
-
-### Directory Structure
-
-```
-devlog/
-├── daily/          # Active daily sessions
-├── retrospective/  # Consolidated reviews
-│   ├── weekly/     # Weekly summaries (e.g., 2025-W01-consolidated.md)
-│   └── monthly/    # Monthly reviews
-└── archive/        # Compressed daily files
-```
-
-### Benefits
-
-- **Searchable History** - Weekly summaries become primary search targets
-- **Pattern Recognition** - Identify productivity trends over time
-- **Decision Tracking** - Review past architectural choices
-- **Knowledge Base** - Build institutional memory of learnings
-
-## Configuration
-
-### Environment Variables
-
-```bash
-# Optional LLM API Keys (for AI features)
-OPENAI_API_KEY=your-key-here
-GEMINI_API_KEY=your-key-here
-
-# DevLog Settings
-DEVLOG_WORKSPACE_ID=my-project
-DEVLOG_LOG_LEVEL=info
-DEVLOG_SESSION_TIMEOUT=3600
-
-# Enable/Disable Features
-DEVLOG_ENABLE_AI_PLANNING=false
-DEVLOG_ENABLE_AI_ANALYSIS=false
-```
-
-### Per-Project Configuration
-
-Create a `.env.project` file in your project root:
-
-```bash
-DEVLOG_WORKSPACE_ID=project-name
-DEVLOG_TAGS=backend,api,typescript
-```
-
-## Usage Examples
-
-### Basic Workflow
-
-```typescript
-// 1. Check workspace status
-const status = await devlog_workspace_status();
-
-// 2. Claim workspace for development
-const claim = await devlog_workspace_claim({
-  task: "Implement user authentication",
-  tags: { feature: "auth", priority: "high" }
-});
-
-// 3. Log your session
-const log = await devlog_session_log({
-  entries: ["Added login endpoint", "Implemented JWT tokens"],
-  tags: { completed: true }
-});
-
-// 4. Update current.md
-const update = await devlog_current_update({
-  content: "## Today's Progress\n- Completed auth implementation"
-});
-```
-
-### Advanced Features
-
-```typescript
-// Semantic search across logs
-const results = await devlog_search({
-  query: "authentication implementation",
-  useEmbeddings: true,
-  limit: 10
-});
-
-// Generate analytics report
-const report = await devlog_analytics_report({
-  startDate: "2024-01-01",
-  endDate: "2024-01-31",
-  groupBy: "tag"
-});
-
-// AI-powered planning (requires API keys)
-const plan = await devlog_plan_create({
-  goal: "Implement OAuth2 integration",
-  context: "Existing JWT auth in place",
-  useAI: true
-});
-```
-
-## Multi-Project Setup
-
-### Using Different Environments
-
-1. Create environment files:
+1. **Install Ollama**: https://ollama.com
+2. **Pull the required models**:
    ```bash
-   # .env.personal
-   OPENAI_API_KEY=personal-key
-   DEVLOG_WORKSPACE_ID=personal-projects
-   
-   # .env.work
-   OPENAI_API_KEY=work-key
-   DEVLOG_WORKSPACE_ID=company-project
+   ollama pull nomic-embed-text
+   ollama pull llama3.2
+   ```
+3. **Start Ollama** (it runs as a background service automatically on most platforms):
+   ```bash
+   ollama serve
    ```
 
-2. Add servers with specific environments:
-   ```bash
-   # Personal projects
-   claude mcp add devlog-personal "../mcp-wrapper.sh" ".env.personal" "node" "dist/servers/core-server.js"
-   
-   # Work projects
-   claude mcp add devlog-work "../mcp-wrapper.sh" ".env.work" "node" "dist/servers/core-server.js"
-   ```
+Ollama is only needed for `devlog_entity_extract_deep` and LanceDB vector indexing. All other tools work without it.
 
-3. Switch between environments:
-   ```bash
-   ../mcp-manager.sh switch personal
-   # or
-   ../mcp-manager.sh switch work
-   ```
+## Architecture at a glance
+
+```
++------------ working -------------+    +--------- affective -----------+
+| workspace.md | sessions(active)  |    | agent_feedback                |
++----------------------------------+    +-------------------------------+
++---- episodic ----+  +------ semantic ------+  +---- procedural ----+
+| sessions | time_ |  | entities | relations |  | docs(plan)         |
+| entries  | conv_ |  | doc_vectors (Lance)  |  | plans/*.json       |
+| summaries|       |  | tags | doc_entities  |  |                    |
++------------------+  +----------------------+  +--------------------+
+                            |
+                       Drizzle / SQLite
+```
+
+## Tools
+
+Tools are organised by which memory layer they read/write.
+
+### Working memory (current task)
+| Tool | Description |
+|------|-------------|
+| `devlog_workspace_status` | Check workspace status and active sessions |
+| `devlog_workspace_claim` | Claim workspace with file-based lock |
+| `devlog_workspace_dump` | Export workspace data (registers docs in SQLite) |
+| `devlog_session_log` | Log development session entries with tags |
+| `devlog_question_add` | Log a question during development |
+| `devlog_question_answer` | Answer a previously logged question |
+| `devlog_question_list` | List all tracked questions |
+| `devlog_question_check` | Check status of open questions |
+
+### Episodic memory (past sessions)
+| Tool | Description |
+|------|-------------|
+| `devlog_session_recall` | Read past session summaries (filter by query, session_id, since timestamp) |
+| `devlog_compress_week` | Generate a compressed weekly summary (sessions, decisions, mermaid charts) |
+
+### Semantic memory (facts and the knowledge graph)
+| Tool | Description |
+|------|-------------|
+| `devlog_entity_graph` | Query the entity graph — search by name/type or traverse from a specific entity. Accepts `as_of` ISO timestamp for point-in-time queries against bi-temporal `entity_relations`. |
+| `devlog_entity_extract_deep` | Run LLM-powered deep extraction on a document via Ollama (requires `llama3.2`) |
+
+### Procedural memory (plans and workflows)
+| Tool | Description |
+|------|-------------|
+| `devlog_plan_create` | Create a development plan with tasks |
+| `devlog_plan_check` | Check progress on a plan's tasks |
+| `devlog_plan_blocker` | Report a blocker on a plan task |
+| `devlog_plan_validate` | Validate plan completion criteria |
+| `devlog_plan_status` | Get overall plan status summary |
+| `devlog_plan_list` | List all plans |
+
+### Affective memory (agent feedback)
+| Tool | Description |
+|------|-------------|
+| `devlog_feedback_record` | Record the outcome of a tool call (success / failure / partial / rejected / timeout) with confidence and latency |
+| `devlog_feedback_query` | Per-tool success rates, recent failures, agent-specific stats |
+
+### Other
+| Tool | Description |
+|------|-------------|
+| `devlog_init` | Initialize devlog workspace and database |
+| `devlog_save_image` | Save an image asset (base64 or URL) |
+| `devlog_save_file` | Save a file asset |
+| `devlog_list_assets` | List saved assets |
+
+> Tools above are exposed by the **core server** (`dist/esm/servers/core-server.js`). The optional **analytics server** (`dist/esm/servers/analytics-server.js`) adds `devlog_compress_week`. Other modular servers (search, planning, tracking) expose additional tools that are not yet wired into core — see `src/servers/*.ts` for the current registrations.
+
+## Integration with `tachibot-mcp`
+
+`devlog-mcp` is the memory backend for `tachibot-mcp` (multi-model orchestrator). Bridge tools (`bridge_index_research`, `bridge_import_plan`, `bridge_get_context`) connect tachibot's reasoning outputs into devlog's semantic layer. See `docs/superpowers/plans/2026-05-22-tachibot-as-orchestrator.md` for the full integration design.
+
+## Comparison with neighbouring projects
+
+| Project | Architecture | Native temporal | Native affective |
+|---|---|---|---|
+| **devlog-mcp** | SQLite + LanceDB + entity graph | yes (bi-temporal relations) | yes (`agent_feedback`) |
+| Mem0 | Vector + optional graph | no | no |
+| Letta (MemGPT) | Tiered OS-like, self-editing | via metadata | via metadata |
+| Zep / Graphiti | Temporal knowledge graph | yes (bi-temporal) | no |
+| Cognee | Graph + vector poly-store | partial | no |
+| LangMem | Modular over LangGraph | no | no |
 
 ## Development
 
@@ -318,45 +194,6 @@ devlog-mcp/
 └── tests/                # Test files
 ```
 
-## API Documentation
-
-See [docs/tools.md](docs/tools.md) for detailed API documentation of all available tools.
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-### Development Guidelines
-
-1. Follow TypeScript best practices
-2. Add tests for new features
-3. Update documentation
-4. Use conventional commits
-5. Ensure all tests pass before submitting PR
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"API key not found" error**
-   - Ensure your `.env.local` file exists and contains valid keys
-   - Check that the wrapper script path is correct
-
-2. **"Cannot find module" error**
-   - Run `npm run build` to compile TypeScript files
-   - Verify the dist/ directory exists
-
-3. **"Workspace locked" error**
-   - Another agent may have the lock
-   - Use `force: true` parameter or wait for timeout
-
-### Debug Mode
-
-Enable debug logging:
-```bash
-DEVLOG_LOG_LEVEL=debug node dist/servers/core-server.js
-```
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
@@ -366,13 +203,3 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Built on top of the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) by Anthropic
 - Original SDK Copyright (c) 2024 Anthropic, PBC - MIT License
 - Thanks to the Anthropic team for creating the Model Context Protocol
-
-## Support
-
-- 📖 [Documentation](docs/)
-- 🐛 [Issue Tracker](https://github.com/yourusername/devlog-mcp/issues)
-- 💬 [Discussions](https://github.com/yourusername/devlog-mcp/discussions)
-
----
-
-Made with ❤️ for developers who love organized workflows
