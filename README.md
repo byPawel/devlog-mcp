@@ -297,6 +297,37 @@ ollama serve            # runs as a background service on most platforms
 
 ---
 
+## Pairing with tachibot-mcp — memory for multi-model agents
+
+[`tachibot-mcp`](https://github.com/byPawel/tachibot-mcp) is a multi-model orchestrator: it lets an agent reason, research, and plan across many models (Claude, GPT, Gemini, Grok, Perplexity, Qwen, Kimi…). The catch with multi-model work is that each call is stateless — the research one model did, or the plan another drafted, evaporates when the turn ends.
+
+`devlog-mcp` is tachibot's **memory backend**: tachibot does the thinking, devlog remembers it. Three opt-in **bridge tools** (enable with `DEVLOG_ENABLE_TACHIBOT_BRIDGE=true`) connect the two, so reasoning outputs land in the right memory layer and flow back into the next decision:
+
+| Bridge tool | Direction | What it does |
+|---|---|---|
+| `bridge_index_research` | tachibot → **semantic** | Indexes research output (perplexity / grok / openai / gemini) into LanceDB. Deterministic IDs mean re-indexing the same `source`+`query` replaces the old entry — no duplicates. |
+| `bridge_import_plan` | tachibot → **procedural** | Imports `planner_maker` phases into devlog plans, so they work with `devlog_plan_check` / `_validate` / `_status`. |
+| `bridge_get_context` | **devlog → tachibot** | Pulls relevant prior research + plans as a compact, paste-ready context block to seed the next reasoning call. |
+
+### The agentic loop it enables
+
+```
+        ┌─────────────────────────────────────────────────────────────┐
+        ▼                                                             │
+ tachibot reasons / researches / plans  (multi-model)                │
+        │                                                             │
+        ├─ bridge_index_research ─▶ devlog semantic memory (LanceDB)  │
+        ├─ bridge_import_plan ────▶ devlog procedural memory (plans)  │
+        │                                                             │
+ next task: bridge_get_context ◀── devlog recalls what's relevant ───┘
+```
+
+The agent stops re-researching what it already looked up and stops re-planning what it already scoped. Each model's output compounds into shared, queryable memory — and because devlog also tracks the affective layer (per-tool/per-agent success rates), the agent can even learn *which model* to route a given kind of task to.
+
+> Bridge tools are exposed by the **search server** (and the unified server) only when `DEVLOG_ENABLE_TACHIBOT_BRIDGE=true`; they're off by default so a plain devlog install stays focused.
+
+---
+
 ## How it compares
 
 | Project | Architecture | Native temporal | Native affective |
