@@ -34,10 +34,10 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
     ensureEntityTables(db);
 
     // Three entities: alice (1), phoenix (2), titan (3), atlas (4)
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (1, 'person', 'alice')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (2, 'project', 'phoenix')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (3, 'project', 'titan')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (4, 'project', 'atlas')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (1, 'person', 'alice', 'alice')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (2, 'project', 'phoenix', 'phoenix')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (3, 'project', 'titan', 'titan')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (4, 'project', 'atlas', 'atlas')`).run();
 
     // Three relations from alice (1), each exercising a different validity window:
     //   alice -[works_on]-> phoenix  : OPEN now (valid_from 2025-01-01, valid_to NULL)
@@ -114,9 +114,9 @@ describe('devlog_entity_graph cycle traversal (BUG-14)', () => {
     ensureEntityTables(db);
 
     // Four entities: A(1), B(2), C(3)
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (1, 'concept', 'A')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (2, 'concept', 'B')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (3, 'concept', 'C')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (1, 'concept', 'A', 'a')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (2, 'concept', 'B', 'b')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (3, 'concept', 'C', 'c')`).run();
 
     // Cycle: A→B, B→C, C→A — all open (valid_from past, valid_to NULL)
     const insert = db.prepare(`

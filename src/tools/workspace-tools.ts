@@ -301,12 +301,12 @@ export const workspaceTools: ToolDefinition[] = [
       };
       const logIcon = iconMap[type];
 
-      // Append to workspace
+      // Append to workspace atomically — fs.appendFile is safe for concurrent
+      // writers since the OS performs the seek+write atomically (BUG-25).
       const logEntry = `\n${logIcon} [${timestamp}] ${entry}\n`;
-      const updatedContent = workspace.content + logEntry;
 
       try {
-        await fs.writeFile(workspace.path, updatedContent);
+        await fs.appendFile(workspace.path, logEntry);
 
         return {
           content: [
@@ -498,8 +498,15 @@ export const workspaceTools: ToolDefinition[] = [
           const relPath = path.relative(DEVLOG_PATH, sessionFile);
           const now_iso = new Date().toISOString();
           db.prepare(`
-            INSERT OR REPLACE INTO docs (id, filepath, title, content, doc_type, status, created_at, updated_at)
+            INSERT INTO docs (id, filepath, title, content, doc_type, status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              filepath    = excluded.filepath,
+              title       = excluded.title,
+              content     = excluded.content,
+              doc_type    = excluded.doc_type,
+              status      = excluded.status,
+              updated_at  = excluded.updated_at
           `).run(docId, relPath, `Session: ${task}`, sessionContent, docType, status, now_iso, now_iso);
         } catch (dbErr) {
           // DB registration is best-effort — file is already saved

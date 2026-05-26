@@ -68,7 +68,7 @@ Most memory servers stop at "store text, retrieve by similarity." Two capabiliti
 
 ### ❤️ Affective memory — the agent learns which tools to trust
 
-Every tool outcome is recorded (outcome, confidence, latency) — automatically for wrapped tool calls, or explicitly via `devlog_feedback_record`. The agent then asks `devlog_feedback_route` for a **ranked** track record and biases itself accordingly — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
+Every tool outcome is recorded — **outcome and latency are captured automatically** for wrapped tool calls; **confidence is recorded when provided** via an explicit `devlog_feedback_record` call. The agent then asks `devlog_feedback_route` for a **ranked** track record and biases itself accordingly — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
 
 ```jsonc
 // MCP tools/call — ranked routing scores for this agent
@@ -104,7 +104,7 @@ Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-sty
 - auth/session.ts --[uses]--> jwt-stateless-tokens
 ```
 
-> Once that fact's window is closed, the default "now" view stops returning it — it only surfaces when you ask "as of" a date inside its validity window; the history is never deleted. Window-closing on supersession is automatic for **single-valued** relations (e.g. a status that can hold one value); genuinely **many-valued** relations like `depends_on` or `imports` accumulate concurrent open facts instead of evicting each other.
+> Once that fact's window is closed, the default "now" view stops returning it — it only surfaces when you ask "as of" a date inside its validity window; the history is never deleted. Window-closing on supersession is active for **single-valued** relations (the set is empty by default — add types to `FUNCTIONAL_RELATION_TYPES` in `entity-extractor.ts` to enable it); genuinely **many-valued** relations like `depends_on` or `implements` accumulate concurrent open facts instead of evicting each other.
 
 Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusion) and an **optional local LLM** (Ollama) for embeddings and deep entity extraction — the server runs fine without it, falling back to regex.
 
@@ -122,7 +122,7 @@ Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusio
  2. ORIENT      entity_graph · plan_status             (read semantic + procedural)
  3. ACT         workspace_claim · session_log          (write working)
  4. REFLECT     feedback_record                        (write affective)
- 5. ROUTE       feedback_query                         (read affective)  ──┐
+ 5. ROUTE       feedback_route                         (read affective)  ──┐
  6. PERSIST     workspace_dump                          (write → episodic) │
    │                                                                       │
    └───────────────────────────────────────────────────────────────────◄─┘
@@ -344,9 +344,9 @@ The agent stops re-researching what it already looked up and stops re-planning w
 ## Development
 
 ```bash
-npm install      # install dependencies
-npm run dev      # run in development mode
-npm run build    # build for production
+npm install        # install dependencies
+npm run dev:core   # run the core server in watch mode
+npm run build      # build for production
 npm test         # run tests
 npm run lint     # lint code
 ```

@@ -279,22 +279,6 @@ CREATE TABLE IF NOT EXISTS conversation_summaries (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- ═══════════════════════════════════════════════════════════════════════════
--- CONTEXT RELEVANCE (for smart context loading)
--- ═══════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS context_relevance (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  doc_id TEXT NOT NULL REFERENCES docs(id) ON DELETE CASCADE,
-  related_doc_id TEXT REFERENCES docs(id) ON DELETE CASCADE,
-  related_entity_id INTEGER REFERENCES entities(id) ON DELETE CASCADE,
-  relevance_type TEXT NOT NULL,           -- semantic|temporal|structural|explicit
-  score REAL NOT NULL,                    -- 0-1 relevance score
-  computed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  expires_at DATETIME,                    -- When to recompute
-  UNIQUE(doc_id, related_doc_id, relevance_type),
-  UNIQUE(doc_id, related_entity_id, relevance_type)
-);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- AFFECTIVE MEMORY (agent feedback / success-failure history)
@@ -360,9 +344,6 @@ CREATE INDEX IF NOT EXISTS idx_conv_session ON conversation_summaries(session_id
 CREATE INDEX IF NOT EXISTS idx_conv_model ON conversation_summaries(ai_model);
 CREATE INDEX IF NOT EXISTS idx_conv_dates ON conversation_summaries(started_at, ended_at);
 
--- Context relevance
-CREATE INDEX IF NOT EXISTS idx_relevance_doc ON context_relevance(doc_id);
-CREATE INDEX IF NOT EXISTS idx_relevance_score ON context_relevance(score DESC);
 
 -- Agent feedback (affective memory)
 CREATE INDEX IF NOT EXISTS idx_feedback_tool ON agent_feedback(tool_name);

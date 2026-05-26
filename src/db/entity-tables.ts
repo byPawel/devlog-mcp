@@ -9,12 +9,18 @@ import type Database from 'better-sqlite3';
  * became true) and valid_to (when it stopped being true, NULL = still true).
  */
 export function ensureEntityTables(sqlite: Database.Database): void {
+  // canonical_name is NOT NULL (BUG-25 dedup fix): SQLite treats each NULL as
+  // distinct, so a nullable canonical_name allows unlimited duplicate entities
+  // to bypass the UNIQUE(type, canonical_name) constraint.  The extractor always
+  // supplies canonical_name.  Fresh databases created by this function enforce
+  // NOT NULL directly; existing databases with the old nullable column have
+  // their NULLs backfilled to lower(name) via migration v6.
   sqlite.prepare(`
     CREATE TABLE IF NOT EXISTS entities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       name TEXT NOT NULL,
-      canonical_name TEXT,
+      canonical_name TEXT NOT NULL,
       description TEXT,
       metadata_json TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,

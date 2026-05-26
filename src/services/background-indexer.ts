@@ -25,7 +25,7 @@ interface DocRow {
 function ensureEntityHashTable(sqliteDb: Database.Database): void {
   sqliteDb.prepare(`
     CREATE TABLE IF NOT EXISTS entity_content_hashes (
-      doc_id TEXT PRIMARY KEY,
+      doc_id TEXT PRIMARY KEY REFERENCES docs(id) ON DELETE CASCADE,
       content_hash TEXT NOT NULL,
       last_extracted TEXT DEFAULT CURRENT_TIMESTAMP
     )

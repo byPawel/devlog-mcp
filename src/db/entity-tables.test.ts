@@ -6,7 +6,7 @@ describe('entity_relations schema (bi-temporal)', () => {
   beforeEach(() => {
     db = new Database(':memory:');
     ensureEntityTables(db);
-    db.prepare(`INSERT INTO entities (id,type,name) VALUES (1,'file','a'),(2,'file','b')`).run();
+    db.prepare(`INSERT INTO entities (id,type,name,canonical_name) VALUES (1,'file','a','a'),(2,'file','b','b')`).run();
   });
   afterEach(() => db.close());
 
