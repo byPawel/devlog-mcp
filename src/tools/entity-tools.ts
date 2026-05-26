@@ -309,7 +309,8 @@ function handleEntityGraph(
   // Normalising asOf to the current timestamp when omitted means a single SQL
   // fragment handles both cases — and importantly, future-opened facts (valid_from
   // in the future) are excluded from the default view.
-  const effectiveAsOf: string = asOf ?? new Date().toISOString();
+  const normalizeIso = (s: string): string => new Date(s).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const effectiveAsOf: string = normalizeIso(asOf ?? new Date().toISOString());
   const validityFilter = `AND er.valid_from <= ? AND (er.valid_to IS NULL OR er.valid_to > ?)`;
 
   // Recursive CTE to find connected entities (bi-temporal: only traverse valid edges)
@@ -317,7 +318,7 @@ function handleEntityGraph(
     .prepare(
       `WITH RECURSIVE graph(entity_id, depth) AS (
         SELECT ?, 0
-        UNION
+        UNION ALL
         SELECT
           CASE WHEN er.source_id = g.entity_id THEN er.target_id ELSE er.source_id END,
           g.depth + 1

@@ -89,4 +89,63 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
     expect(text).not.toMatch(/worked_on/);
     expect(text).not.toMatch(/will_work_on/);
   });
+
+  // BUG-6: as_of with milliseconds should be normalized and still match stored Z timestamps
+  it('BUG-6: as_of WITH milliseconds normalizes correctly and returns the open relation', async () => {
+    const tool = findTool('devlog_entity_graph');
+    // Pass as_of with explicit milliseconds — before the fix this could mis-sort
+    // against the millisecond-free stored values like '2025-01-01T00:00:00Z'.
+    const res = await tool.handler({ entityId: 1, depth: 2, as_of: '2026-06-01T00:00:00.000Z' });
+    expect(res.isError).toBeFalsy();
+    const text = extractText(res);
+    // The open relation (works_on, valid_from 2025-01-01Z) must be visible
+    expect(text).toMatch(/works_on/);
+    // Historical and future relations must NOT appear
+    expect(text).not.toMatch(/worked_on/);
+    expect(text).not.toMatch(/will_work_on/);
+  });
+});
+
+describe('devlog_entity_graph cycle traversal (BUG-14)', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = new Database(':memory:');
+    ensureEntityTables(db);
+
+    // Four entities: A(1), B(2), C(3)
+    db.prepare(`INSERT INTO entities (id, type, name) VALUES (1, 'concept', 'A')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name) VALUES (2, 'concept', 'B')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name) VALUES (3, 'concept', 'C')`).run();
+
+    // Cycle: A→B, B→C, C→A — all open (valid_from past, valid_to NULL)
+    const insert = db.prepare(`
+      INSERT INTO entity_relations
+        (source_id, target_id, relation_type, weight, valid_from, valid_to)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    insert.run(1, 2, 'a_to_b', 1.0, '2025-01-01T00:00:00Z', null);
+    insert.run(2, 3, 'b_to_c', 1.0, '2025-01-01T00:00:00Z', null);
+    insert.run(3, 1, 'c_to_a', 1.0, '2025-01-01T00:00:00Z', null);
+
+    (globalThis as Record<string, unknown>).__TEST_DB__ = db;
+  });
+
+  afterEach(() => {
+    db.close();
+    delete (globalThis as Record<string, unknown>).__TEST_DB__;
+  });
+
+  // BUG-14: UNION ALL allows traversal through cyclic graphs up to depth limit;
+  // the old UNION deduplication could prune valid deeper paths.
+  it('BUG-14: depth-3 traversal through a cycle A→B→C→A returns all three relations', async () => {
+    const tool = findTool('devlog_entity_graph');
+    const res = await tool.handler({ entityId: 1, depth: 3 });
+    expect(res.isError).toBeFalsy();
+    const text = extractText(res);
+    // All three edges in the cycle must be reachable from A at depth 3
+    expect(text).toMatch(/a_to_b/);
+    expect(text).toMatch(/b_to_c/);
+    expect(text).toMatch(/c_to_a/);
+  });
 });
