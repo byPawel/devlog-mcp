@@ -49,24 +49,15 @@ Claude ▸ [calls devlog_session_log] Logged: root cause = race in session refre
 
 ```
 You    ▸ Pick up the login bug from earlier this week.
-Claude ▸ [calls devlog_session_recall { query: "login bug", since: "7d" }]
-         Found a session from Mon May 19:
-           • Root cause: race in session refresh
-           • Partial fix: auth/session.ts
-           • TODO: add regression test for concurrent logins
-         Resuming there — writing the regression test now.
+Claude ▸ [calls devlog_session_recall { query: "login", since: "2026-05-12" }]
+         Resuming from Monday's session — writing the regression test now.
 ```
 
-That `devlog_session_recall` call returns structured episodic memory the agent acts on directly:
+`devlog_session_recall` returns the matching episodic summaries (filtered by `query` substring and an ISO `since` bound) as compact text the agent reads directly:
 
-```json
-{
-  "session_id": "2026-05-19-login-bug",
-  "summary": "Fixed race in session refresh; partial fix in auth/session.ts",
-  "linked_entities": ["auth/session.ts", "SessionManager", "concurrent-login-test"],
-  "open_questions": ["Add regression test for concurrent logins"],
-  "occurred_at": "2026-05-19T14:32:00Z"
-}
+```
+[2026-05-19T14:32:00Z] session=2026-05-19-login model=claude-opus-4-7 msgs=42
+  Fixed race in session refresh; partial fix in auth/session.ts; TODO: regression test
 ```
 
 ---
@@ -77,56 +68,43 @@ Most memory servers stop at "store text, retrieve by similarity." Two capabiliti
 
 ### ❤️ Affective memory — the agent learns which tools to trust
 
-Every tool outcome is recorded (`devlog_feedback_record`). Later, the agent asks for a tool's track record and **routes itself accordingly** — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
+Every tool outcome is recorded with `devlog_feedback_record` (outcome, confidence, latency). Later, the agent asks for a tool's track record and **routes itself accordingly** — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
 
 ```jsonc
-// MCP tools/call
+// MCP tools/call — per-tool stats for this agent
 {
   "name": "devlog_feedback_query",
-  "arguments": { "tool_name": "devlog_entity_extract_deep", "agent": "claude-code" }
+  "arguments": { "agent_id": "claude-code" }
 }
 ```
-```json
-{
-  "tool_name": "devlog_entity_extract_deep",
-  "calls": 142,
-  "success_rate": 0.88,
-  "avg_latency_ms": 1840,
-  "recent_failures": 2,
-  "routing_hint": "reliable — prefer over regex fallback for prose docs"
-}
+```
+devlog_entity_extract_deep: total=142 success=125 failure=2 success_rate=0.88 avg_confidence=0.91
+devlog_session_recall:      total=89  success=89  failure=0 success_rate=1.0  avg_confidence=0.97
 ```
 
-> The agent reads `success_rate` and `routing_hint` and biases its next decision toward what has actually worked — turning past outcomes into a routing policy.
+> The agent reads `success_rate` per tool and biases its next decision toward what has actually worked — turning past outcomes into a routing signal. Filter by `tool_name`, `agent_id`, or `since`.
 
 ### 🕒 Bi-temporal facts — query the graph "as of" any point in time
 
-Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-style). Contradictions don't overwrite — they **close a window**. Pass `as_of` to see what was true at a past moment:
+Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-style). Contradictions don't overwrite — they **close a window**. Pass `as_of` and the graph traversal returns only the relations that were valid at that moment:
 
 ```jsonc
-// MCP tools/call
+// MCP tools/call — what did this module relate to as of April 2026?
 {
   "name": "devlog_entity_graph",
-  "arguments": { "entity": "auth/session.ts", "as_of": "2026-04-01T00:00:00Z" }
+  "arguments": { "entityId": 7, "as_of": "2026-04-01T00:00:00Z" }
 }
 ```
-```json
-{
-  "entity": "auth/session.ts",
-  "relations": [
-    {
-      "predicate": "uses",
-      "object": "jwt-stateless-tokens",
-      "valid_from": "2026-01-10T00:00:00Z",
-      "valid_to": "2026-05-01T00:00:00Z",
-      "superseded_by": "oauth2-sessions"
-    }
-  ],
-  "note": "As of 2026-04-01 the module still used JWT; migration to OAuth2 landed May 1."
-}
+```
+## Entity: auth/session.ts
+- **Type:** file
+- **ID:** 7
+
+### Relations (depth 2, 1 found)
+- auth/session.ts --[uses]--> jwt-stateless-tokens
 ```
 
-> Ask "what did we believe last quarter?" and get the answer that was current *then*, not the latest overwrite.
+> Drop `as_of` (the default "now" view) and the superseded edge falls out of the result — you'd instead see `auth/session.ts --[uses]--> oauth2-sessions`. The historical fact isn't deleted; its validity window simply closed, so it only surfaces when you ask "as of" a date inside that window.
 
 Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusion) and an **optional local LLM** (Ollama) for embeddings and deep entity extraction — the server runs fine without it, falling back to regex.
 
