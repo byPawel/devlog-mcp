@@ -6,8 +6,8 @@ describe('bi-temporal entity_relations', () => {
   beforeEach(() => {
     db = new Database(':memory:');
     ensureEntityTables(db);
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (1, 'person', 'alice')`).run();
-    db.prepare(`INSERT INTO entities (id, type, name) VALUES (2, 'project', 'phoenix')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (1, 'person', 'alice', 'alice')`).run();
+    db.prepare(`INSERT INTO entities (id, type, name, canonical_name) VALUES (2, 'project', 'phoenix', 'phoenix')`).run();
   });
   afterEach(() => db.close());
 

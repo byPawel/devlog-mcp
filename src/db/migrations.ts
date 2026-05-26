@@ -78,6 +78,29 @@ export const MIGRATIONS: Migration[] = [
   { version: 5, description: 'drop unused context_relevance table (BUG-24)', up: (db) => {
     db.prepare(`DROP TABLE IF EXISTS context_relevance`).run();
   } },
+  // Backfill entities.canonical_name NULLs → lower(name) so that the
+  // UNIQUE(type, canonical_name) dedup constraint is effective on all rows
+  // (BUG-25).  SQLite treats each NULL as a distinct value, which allows
+  // unlimited duplicates to bypass the constraint.
+  //
+  // A full table-rebuild to enforce NOT NULL on the column itself is heavy
+  // and risky on existing production DBs.  The minimal safe approach is:
+  //   1. Backfill any NULL canonical_name to lower(name) — idempotent.
+  //   2. The updated CREATE TABLE (ensureEntityTables) uses NOT NULL DEFAULT
+  //      (lower(name)) for all new databases going forward.
+  // Existing databases with the old nullable column definition continue to
+  // work; the app always sets canonical_name explicitly, so NULLs can only
+  // accumulate from very old inserts.  The backfill closes that hole.
+  { version: 6, description: 'backfill entities.canonical_name NULLs to lower(name) (BUG-25)', up: (db) => {
+    // Only backfill if the table exists
+    const tableRow = db.prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='entities'`
+    ).get() as { name: string } | undefined;
+    if (!tableRow) return;
+    for (const s of [
+      `UPDATE entities SET canonical_name = lower(name) WHERE canonical_name IS NULL`,
+    ]) db.prepare(s).run();
+  } },
 ];
 
 export function runMigrations(db: Database.Database): void {

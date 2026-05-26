@@ -141,6 +141,47 @@ describe('runMigrations', () => {
     expect(row?.content_hash).toBe('xyz');
   });
 
+  it('migration v6 backfills NULL canonical_name to lower(name) on existing rows', () => {
+    // Simulate an old DB: entities table with nullable canonical_name
+    db.prepare(`
+      CREATE TABLE entities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        canonical_name TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(type, canonical_name)
+      )
+    `).run();
+    // Insert rows: one with NULL canonical_name, one already set
+    db.prepare(`INSERT INTO entities (type, name, canonical_name) VALUES ('file', 'Auth.ts', NULL)`).run();
+    db.prepare(`INSERT INTO entities (type, name, canonical_name) VALUES ('concept', 'JWT', 'jwt')`).run();
+
+    runMigrations(db);
+
+    const rows = db.prepare(
+      `SELECT name, canonical_name FROM entities ORDER BY name`
+    ).all() as Array<{ name: string; canonical_name: string | null }>;
+
+    // NULL row should be backfilled to lower(name)
+    const authRow = rows.find((r) => r.name === 'Auth.ts');
+    expect(authRow?.canonical_name).toBe('auth.ts');
+
+    // Already-set row must be unchanged
+    const jwtRow = rows.find((r) => r.name === 'JWT');
+    expect(jwtRow?.canonical_name).toBe('jwt');
+  });
+
+  it('migration v6 is a no-op when entities table does not exist', () => {
+    // Remove entities table if it was created (shouldn't be on a bare db)
+    // Just verify that running migrations on a DB without entities doesn't throw.
+    // We set schema_version manually to skip migrations 1-5 which create entities.
+    db.prepare(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, description TEXT, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    db.prepare(`INSERT INTO schema_version (version, description) VALUES (5, 'simulated-past')`).run();
+    expect(() => runMigrations(db)).not.toThrow();
+  });
+
   it('rolls back a failing migration: no version row is recorded', () => {
     runMigrations(db); // apply existing migrations first
     const failingVersion = MIGRATIONS[MIGRATIONS.length - 1].version + 1;

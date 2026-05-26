@@ -7,7 +7,7 @@
 
 import Database from "better-sqlite3";
 import { drizzle, BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { sql, eq, and, like, desc, asc, or, inArray } from "drizzle-orm";
+import { sql, eq, and, desc, asc, or, inArray } from "drizzle-orm";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
