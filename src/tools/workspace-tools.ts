@@ -498,8 +498,15 @@ export const workspaceTools: ToolDefinition[] = [
           const relPath = path.relative(DEVLOG_PATH, sessionFile);
           const now_iso = new Date().toISOString();
           db.prepare(`
-            INSERT OR REPLACE INTO docs (id, filepath, title, content, doc_type, status, created_at, updated_at)
+            INSERT INTO docs (id, filepath, title, content, doc_type, status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              filepath    = excluded.filepath,
+              title       = excluded.title,
+              content     = excluded.content,
+              doc_type    = excluded.doc_type,
+              status      = excluded.status,
+              updated_at  = excluded.updated_at
           `).run(docId, relPath, `Session: ${task}`, sessionContent, docType, status, now_iso, now_iso);
         } catch (dbErr) {
           // DB registration is best-effort — file is already saved
