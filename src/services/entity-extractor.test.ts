@@ -1,4 +1,5 @@
 import { EntityExtractor, RelationDetector, EntityPersistence } from './entity-extractor.js';
+import { ensureEntityTables } from '../db/entity-tables.js';
 import Database from 'better-sqlite3';
 
 describe('EntityExtractor', () => {
@@ -156,31 +157,9 @@ describe('EntityPersistence', () => {
 
   beforeEach(() => {
     db = new Database(':memory:');
-    db.exec(`
-      CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT);
-      CREATE TABLE entities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL, name TEXT NOT NULL,
-        canonical_name TEXT, description TEXT, metadata_json TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(type, canonical_name)
-      );
-      CREATE TABLE doc_entities (
-        doc_id TEXT NOT NULL, entity_id INTEGER NOT NULL,
-        relation_type TEXT NOT NULL, context TEXT,
-        confidence REAL DEFAULT 1.0,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (doc_id, entity_id, relation_type)
-      );
-      CREATE TABLE entity_relations (
-        source_id INTEGER NOT NULL, target_id INTEGER NOT NULL,
-        relation_type TEXT NOT NULL, weight REAL DEFAULT 1.0,
-        metadata_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (source_id, target_id, relation_type)
-      );
-    `);
-    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Test Doc')");
+    db.prepare('CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT)').run();
+    ensureEntityTables(db);
+    db.prepare("INSERT INTO docs (id, title) VALUES ('doc1', 'Test Doc')").run();
     persistence = new EntityPersistence(db);
   });
 
@@ -245,36 +224,14 @@ describe('Integration: Full Pipeline', () => {
 
   function createTestDb(): Database.Database {
     const db = new Database(':memory:');
-    db.exec(`
-      CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT);
-      CREATE TABLE entities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL, name TEXT NOT NULL,
-        canonical_name TEXT, description TEXT, metadata_json TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(type, canonical_name)
-      );
-      CREATE TABLE doc_entities (
-        doc_id TEXT NOT NULL, entity_id INTEGER NOT NULL,
-        relation_type TEXT NOT NULL, context TEXT,
-        confidence REAL DEFAULT 1.0,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (doc_id, entity_id, relation_type)
-      );
-      CREATE TABLE entity_relations (
-        source_id INTEGER NOT NULL, target_id INTEGER NOT NULL,
-        relation_type TEXT NOT NULL, weight REAL DEFAULT 1.0,
-        metadata_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (source_id, target_id, relation_type)
-      );
-    `);
+    db.prepare('CREATE TABLE docs (id TEXT PRIMARY KEY, title TEXT, content TEXT)').run();
+    ensureEntityTables(db);
     return db;
   }
 
   test('end-to-end: doc with multiple entity types produces correct graph', () => {
     const db = createTestDb();
-    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Rich Doc')");
+    db.prepare("INSERT INTO docs (id, title) VALUES ('doc1', 'Rich Doc')").run();
     const persistence = new EntityPersistence(db);
 
     const text = [
@@ -301,8 +258,8 @@ describe('Integration: Full Pipeline', () => {
 
   test('cross-document entity sharing: same entity referenced in two docs', () => {
     const db = createTestDb();
-    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')");
-    db.exec("INSERT INTO docs (id, title) VALUES ('doc2', 'Doc Two')");
+    db.prepare("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')").run();
+    db.prepare("INSERT INTO docs (id, title) VALUES ('doc2', 'Doc Two')").run();
 
     const persistence = new EntityPersistence(db);
 
@@ -336,7 +293,7 @@ describe('Integration: Full Pipeline', () => {
 
   test('re-indexing cleans old links but keeps shared entities', () => {
     const db = createTestDb();
-    db.exec("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')");
+    db.prepare("INSERT INTO docs (id, title) VALUES ('doc1', 'Doc One')").run();
 
     const persistence = new EntityPersistence(db);
 

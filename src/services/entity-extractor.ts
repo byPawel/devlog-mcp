@@ -640,7 +640,9 @@ export class EntityPersistence {
   private stmtGetEntityId: Database.Statement;
   private stmtDeleteDocEntities: Database.Statement;
   private stmtInsertDocEntity: Database.Statement;
-  private stmtUpsertEntityRelation: Database.Statement;
+  private stmtFindOpenSameTuple: Database.Statement;
+  private stmtCloseOpenForSourceType: Database.Statement;
+  private stmtInsertRelation: Database.Statement;
 
   constructor(db: Database.Database) {
     this.db = db;
@@ -663,9 +665,39 @@ export class EntityPersistence {
     this.stmtInsertDocEntity = db.prepare(
       'INSERT OR IGNORE INTO doc_entities (doc_id, entity_id, relation_type, context, confidence) VALUES (?, ?, ?, ?, ?)'
     );
-    this.stmtUpsertEntityRelation = db.prepare(
-      'INSERT OR IGNORE INTO entity_relations (source_id, target_id, relation_type, weight) VALUES (?, ?, ?, ?)'
+    // Bi-temporal relation write path (BUG-2, BUG-7):
+    // 1. Check if the exact same open tuple already exists (idempotent re-assert).
+    this.stmtFindOpenSameTuple = db.prepare(
+      'SELECT id FROM entity_relations WHERE source_id=? AND target_id=? AND relation_type=? AND valid_to IS NULL'
     );
+    // 2. Close any currently-open row for the same (source, relation_type) where
+    //    the target differs — this is the "contradiction closes a window" step.
+    this.stmtCloseOpenForSourceType = db.prepare(
+      'UPDATE entity_relations SET valid_to=? WHERE source_id=? AND relation_type=? AND valid_to IS NULL AND target_id<>?'
+    );
+    // 3. Insert the new open fact.
+    this.stmtInsertRelation = db.prepare(
+      'INSERT INTO entity_relations (source_id, target_id, relation_type, weight, valid_from, valid_to) VALUES (?,?,?,?,?,NULL)'
+    );
+  }
+
+  /**
+   * Upsert a single entity relation with bi-temporal semantics:
+   * - If the same open (source, target, relation_type) already exists, no-op.
+   * - Otherwise close any open row for the same (source, relation_type) with a
+   *   different target (contradiction), then insert a new open row.
+   */
+  upsertRelation(
+    sourceId: number,
+    targetId: number,
+    relationType: string,
+    weight: number,
+    validFrom?: string,
+  ): void {
+    const now = validFrom ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    if (this.stmtFindOpenSameTuple.get(sourceId, targetId, relationType)) return; // already open — idempotent
+    this.stmtCloseOpenForSourceType.run(now, sourceId, relationType, targetId);
+    this.stmtInsertRelation.run(sourceId, targetId, relationType, weight, now);
   }
 
   /**
@@ -701,7 +733,7 @@ export class EntityPersistence {
         this.stmtInsertDocEntity.run(docId, entityId, relation.relationType, relation.evidence, relation.confidence);
       }
 
-      // 4. Insert entity-to-entity relations (skip "mentions")
+      // 4. Insert entity-to-entity relations (skip "mentions") using bi-temporal upsert
       for (const relation of relations) {
         if (relation.relationType === 'mentions') continue;
         const sourceKey = `${relation.sourceType}:${relation.sourceCanonical}`;
@@ -709,7 +741,7 @@ export class EntityPersistence {
         const sourceId = entityIdMap.get(sourceKey);
         const targetId = entityIdMap.get(targetKey);
         if (sourceId && targetId && sourceId !== targetId) {
-          this.stmtUpsertEntityRelation.run(sourceId, targetId, relation.relationType, relation.confidence);
+          this.upsertRelation(sourceId, targetId, relation.relationType, relation.confidence ?? 1.0);
         }
       }
     });
