@@ -42,6 +42,42 @@ export const MIGRATIONS: Migration[] = [
     ];
     for (const s of statements) db.prepare(s).run();
   } },
+  // Add ON DELETE CASCADE FK to entity_content_hashes so stale hashes are pruned
+  // when their parent doc is deleted (BUG-23).  For existing DBs the table is
+  // rebuilt (rename → create-with-FK → copy → drop).  Guard: skip if the FK is
+  // already present (i.e. table was created by the updated ensureEntityHashTable).
+  { version: 4, description: 'entity_content_hashes ON DELETE CASCADE FK (BUG-23)', up: (db) => {
+    // Check whether entity_content_hashes even exists yet.  If not, the updated
+    // ensureEntityHashTable() will create it correctly on first run, so nothing
+    // to do here.
+    const tableRow = db.prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='entity_content_hashes'`
+    ).get() as { name: string } | undefined;
+    if (!tableRow) return;
+
+    // Check if a FK already references docs(id).
+    const fkRows = db.prepare(`PRAGMA foreign_key_list(entity_content_hashes)`).all() as Array<{ table: string }>;
+    const hasFk = fkRows.some((r) => r.table === 'docs');
+    if (hasFk) return; // already correct shape
+
+    const statements = [
+      `ALTER TABLE entity_content_hashes RENAME TO entity_content_hashes_old`,
+      `CREATE TABLE entity_content_hashes (
+        doc_id TEXT PRIMARY KEY REFERENCES docs(id) ON DELETE CASCADE,
+        content_hash TEXT NOT NULL,
+        last_extracted TEXT DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `INSERT INTO entity_content_hashes (doc_id, content_hash, last_extracted)
+        SELECT doc_id, content_hash, last_extracted FROM entity_content_hashes_old`,
+      `DROP TABLE entity_content_hashes_old`,
+    ];
+    for (const s of statements) db.prepare(s).run();
+  } },
+  // Drop the unused context_relevance table that was defined in schema.sql but
+  // never read or written by any production code (BUG-24).
+  { version: 5, description: 'drop unused context_relevance table (BUG-24)', up: (db) => {
+    db.prepare(`DROP TABLE IF EXISTS context_relevance`).run();
+  } },
 ];
 
 export function runMigrations(db: Database.Database): void {
