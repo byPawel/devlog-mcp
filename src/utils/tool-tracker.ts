@@ -7,6 +7,9 @@ import { getCurrentWorkspace } from './workspace.js';
 import { extractMetadata, updateMetadata, classifyToolActivity } from './session-metadata.js';
 import { updateLockHeartbeat } from './lock-manager.js';
 import { notifyActivity } from './heartbeat-manager.js';
+import { getSqliteDb } from '../db/index.js';
+import { DEVLOG_PATH } from '../shared/devlog-utils.js';
+import * as path from 'node:path';
 
 interface ToolContext {
   toolName: string;
@@ -115,6 +118,40 @@ async function processPendingUpdates(): Promise<void> {
   }
 }
 
+/**
+ * Get a SQLite handle for auto-feedback recording.
+ * In tests, `globalThis.__TEST_DB__` is used; in production the project DB is used.
+ */
+function getAutoFeedbackDb(): import('better-sqlite3').Database | null {
+  try {
+    const testDb = (globalThis as Record<string, unknown>).__TEST_DB__ as import('better-sqlite3').Database | undefined;
+    if (testDb) return testDb;
+    const projectPath = path.dirname(DEVLOG_PATH);
+    return getSqliteDb({ projectPath, devlogFolder: path.basename(DEVLOG_PATH) });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Record a tool outcome into agent_feedback.
+ * Failures are swallowed silently — this must never impact the tool's own error propagation.
+ */
+function recordAutoFeedback(toolName: string, outcome: 'success' | 'failure', latencyMs: number): void {
+  if (process.env.DEVLOG_AUTO_FEEDBACK === 'false') return;
+  try {
+    const db = getAutoFeedbackDb();
+    if (!db) return;
+    const agentId = process.env.DEVLOG_AGENT_ID ?? 'unknown';
+    db.prepare(`
+      INSERT INTO agent_feedback (agent_id, tool_name, outcome, latency_ms, recorded_at)
+      VALUES (?, ?, ?, ?, datetime('now'))
+    `).run(agentId, toolName, outcome, latencyMs);
+  } catch {
+    // Silently ignore — auto-feedback must never break tool execution
+  }
+}
+
 // Wrapper for MCP tool handlers to add tracking
 export function withToolTracking<T extends (...args: unknown[]) => Promise<unknown>>(
   toolName: string,
@@ -123,9 +160,16 @@ export function withToolTracking<T extends (...args: unknown[]) => Promise<unkno
   return (async (...args: unknown[]) => {
     // Track tool usage
     await trackToolUsage(toolName, args[0] as {taskId?: string} | undefined);
-    
-    // Execute original handler
-    return handler(...args);
+
+    const t0 = Date.now();
+    try {
+      const result = await handler(...args);
+      recordAutoFeedback(toolName, 'success', Date.now() - t0);
+      return result;
+    } catch (err) {
+      recordAutoFeedback(toolName, 'failure', Date.now() - t0);
+      throw err; // re-throw — must not swallow handler errors
+    }
   }) as T;
 }
 
