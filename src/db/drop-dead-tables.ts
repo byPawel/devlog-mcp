@@ -16,6 +16,7 @@ const DEAD_TABLES = [
   'daily_timeline',
   'modifications',
   'doc_assignments',
+  'context_relevance',
 ] as const;
 
 /**
