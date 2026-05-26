@@ -23,6 +23,19 @@ interface Question {
 // Questions file path
 const QUESTIONS_FILE = path.join(DEVLOG_PATH, '.mcp', 'questions.json');
 
+// In-process async mutex for questions.json — serialises concurrent
+// read-modify-write calls so no writes are lost (BUG-20).
+let _questionsChain: Promise<void> = Promise.resolve();
+function withQuestionsLock<T>(fn: () => Promise<T>): Promise<T> {
+  const next = _questionsChain.then(fn, fn);
+  // Keep the chain moving even if fn throws; callers get the real error.
+  _questionsChain = next.then(
+    () => undefined,
+    () => undefined,
+  );
+  return next;
+}
+
 // Load questions from file
 async function loadQuestions(): Promise<Question[]> {
   try {
@@ -57,19 +70,26 @@ export const questionTools: ToolDefinition[] = [
         .describe('Priority level - blocker means work cannot continue'),
     },
     handler: async ({ question, context, priority = 'medium' }): Promise<CallToolResult> => {
-      const questions = await loadQuestions();
-
-      const newQuestion: Question = {
-        id: generateId(),
-        question,
-        context,
-        created_at: new Date().toISOString(),
-        status: 'open',
-        priority,
-      };
-
-      questions.push(newQuestion);
-      await saveQuestions(questions);
+      // Serialise the read-modify-write through the in-process mutex so that
+      // concurrent calls don't clobber each other (BUG-20).
+      const { newQuestion, openCount, blockerCount } = await withQuestionsLock(async () => {
+        const questions = await loadQuestions();
+        const q: Question = {
+          id: generateId(),
+          question,
+          context,
+          created_at: new Date().toISOString(),
+          status: 'open',
+          priority,
+        };
+        questions.push(q);
+        await saveQuestions(questions);
+        return {
+          newQuestion: q,
+          openCount: questions.filter(qq => qq.status === 'open').length,
+          blockerCount: questions.filter(qq => qq.status === 'open' && qq.priority === 'blocker').length,
+        };
+      });
 
       // Also log to current workspace if active
       const workspace = await getCurrentWorkspace();
@@ -77,11 +97,8 @@ export const questionTools: ToolDefinition[] = [
         const timestamp = new Date().toISOString().slice(11, 19);
         const priorityIcon = priority === 'blocker' ? '🚨' : priority === 'high' ? '❗' : '❓';
         const logEntry = `\n${priorityIcon} [${timestamp}] QUESTION: ${question}${context ? ` (Context: ${context})` : ''}\n`;
-        await fs.writeFile(workspace.path, workspace.content + logEntry);
+        await fs.appendFile(workspace.path, logEntry);
       }
-
-      const openCount = questions.filter(q => q.status === 'open').length;
-      const blockerCount = questions.filter(q => q.status === 'open' && q.priority === 'blocker').length;
 
       return {
         content: [
@@ -115,18 +132,39 @@ export const questionTools: ToolDefinition[] = [
       answer: z.string().describe('The answer or resolution'),
     },
     handler: async ({ id, answer }): Promise<CallToolResult> => {
-      const questions = await loadQuestions();
+      // Serialise through the same mutex used by devlog_question_add (BUG-20).
+      const result = await withQuestionsLock(async () => {
+        const questions = await loadQuestions();
 
-      // Find question by ID or get latest open question
-      let question: Question | undefined;
-      if (id) {
-        question = questions.find(q => q.id === id);
-      } else {
-        // Get latest open question
-        question = questions.filter(q => q.status === 'open').pop();
-      }
+        // Find question by ID or get latest open question
+        let question: Question | undefined;
+        if (id) {
+          question = questions.find(q => q.id === id);
+        } else {
+          // Get latest open question
+          question = questions.filter(q => q.status === 'open').pop();
+        }
 
-      if (!question) {
+        if (!question) {
+          return { found: false as const, questionText: '', id };
+        }
+
+        // Update question
+        question.status = 'answered';
+        question.answered_at = new Date().toISOString();
+        question.answer = answer;
+
+        await saveQuestions(questions);
+
+        return {
+          found: true as const,
+          questionText: question.question,
+          questionCreatedAt: question.created_at,
+          remainingOpen: questions.filter(q => q.status === 'open').length,
+        };
+      });
+
+      if (!result.found) {
         return {
           content: [
             {
@@ -144,22 +182,15 @@ export const questionTools: ToolDefinition[] = [
         };
       }
 
-      // Update question
-      question.status = 'answered';
-      question.answered_at = new Date().toISOString();
-      question.answer = answer;
-
-      await saveQuestions(questions);
-
-      // Log to workspace
+      // Log to workspace (outside mutex — file append is safe)
       const workspace = await getCurrentWorkspace();
       if (workspace.exists && workspace.content) {
         const timestamp = new Date().toISOString().slice(11, 19);
-        const logEntry = `\n${icon('completed')} [${timestamp}] ANSWERED: ${question.question}\n   → ${answer}\n`;
-        await fs.writeFile(workspace.path, workspace.content + logEntry);
+        const logEntry = `\n${icon('completed')} [${timestamp}] ANSWERED: ${result.questionText}\n   → ${answer}\n`;
+        await fs.appendFile(workspace.path, logEntry);
       }
 
-      const remainingOpen = questions.filter(q => q.status === 'open').length;
+      const remainingOpen = result.remainingOpen;
 
       return {
         content: [
@@ -170,10 +201,10 @@ export const questionTools: ToolDefinition[] = [
               data: {
                 title: 'Question Answered',
                 status: 'success',
-                message: question.question,
+                message: result.questionText,
                 details: {
                   'Answer': answer,
-                  'Was open for': formatTimeSince(question.created_at),
+                  'Was open for': formatTimeSince(result.questionCreatedAt),
                   'Remaining open': `${remainingOpen} questions`,
                 },
               },

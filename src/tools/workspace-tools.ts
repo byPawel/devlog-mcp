@@ -301,12 +301,12 @@ export const workspaceTools: ToolDefinition[] = [
       };
       const logIcon = iconMap[type];
 
-      // Append to workspace
+      // Append to workspace atomically — fs.appendFile is safe for concurrent
+      // writers since the OS performs the seek+write atomically (BUG-25).
       const logEntry = `\n${logIcon} [${timestamp}] ${entry}\n`;
-      const updatedContent = workspace.content + logEntry;
 
       try {
-        await fs.writeFile(workspace.path, updatedContent);
+        await fs.appendFile(workspace.path, logEntry);
 
         return {
           content: [
