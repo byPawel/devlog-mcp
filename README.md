@@ -53,7 +53,7 @@ Claude ▸ [calls devlog_session_recall { query: "login", since: "2026-05-12" }]
          Resuming from Monday's session — writing the regression test now.
 ```
 
-`devlog_session_recall` returns the matching episodic summaries (filtered by `query` substring and an ISO `since` bound) as compact text the agent reads directly:
+Summaries are written at session end with `devlog_session_summary_add` (and tool outcomes are auto-captured along the way). `devlog_session_recall` then returns the matching episodic summaries (filtered by `query` substring and an ISO `since` bound) as compact text the agent reads directly:
 
 ```
 [2026-05-19T14:32:00Z] session=2026-05-19-login model=claude-opus-4-7 msgs=42
@@ -68,25 +68,25 @@ Most memory servers stop at "store text, retrieve by similarity." Two capabiliti
 
 ### ❤️ Affective memory — the agent learns which tools to trust
 
-Every tool outcome is recorded with `devlog_feedback_record` (outcome, confidence, latency). Later, the agent asks for a tool's track record and **routes itself accordingly** — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
+Every tool outcome is recorded (outcome, confidence, latency) — automatically for wrapped tool calls, or explicitly via `devlog_feedback_record`. The agent then asks `devlog_feedback_route` for a **ranked** track record and biases itself accordingly — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
 
 ```jsonc
-// MCP tools/call — per-tool stats for this agent
+// MCP tools/call — ranked routing scores for this agent
 {
-  "name": "devlog_feedback_query",
-  "arguments": { "agent_id": "claude-code" }
+  "name": "devlog_feedback_route",
+  "arguments": { "agent_id": "claude-code", "half_life_days": 14 }
 }
 ```
 ```
-devlog_entity_extract_deep: total=142 success=125 failure=2 success_rate=0.88 avg_confidence=0.91
-devlog_session_recall:      total=89  success=89  failure=0 success_rate=1.0  avg_confidence=0.97
+devlog_session_recall:      n=89  success=89 fail=0 partial=0  wilson_lower=0.96  decayed_rate=1.00  confident=true
+devlog_entity_extract_deep: n=142 success=125 fail=2 timeout=15 wilson_lower=0.82 decayed_rate=0.86  confident=true
 ```
 
-> The agent reads `success_rate` per tool and biases its next decision toward what has actually worked — turning past outcomes into a routing signal. Filter by `tool_name`, `agent_id`, or `since`.
+> Ranking is a **Wilson lower bound** (so a single lucky success can't outrank a long track record) with **recency decay** (`half_life_days`, so stale failures fade) and a `confident` flag once a tool clears the minimum sample size. The agent prefers the higher `wilson_lower` — turning past outcomes into a routing policy. Raw aggregates remain available via `devlog_feedback_query`.
 
 ### 🕒 Bi-temporal facts — query the graph "as of" any point in time
 
-Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-style). Contradictions don't overwrite — they **close a window**. Pass `as_of` and the graph traversal returns only the relations that were valid at that moment:
+Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-style), so facts are never destructively overwritten — a superseded fact has its window **closed** (`valid_to` set) and a new slice opens. Pass `as_of` and the graph traversal returns only the relations that were valid at that moment — point-in-time time-travel over the knowledge graph:
 
 ```jsonc
 // MCP tools/call — what did this module relate to as of April 2026?
@@ -104,7 +104,7 @@ Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-sty
 - auth/session.ts --[uses]--> jwt-stateless-tokens
 ```
 
-> Drop `as_of` (the default "now" view) and the superseded edge falls out of the result — you'd instead see `auth/session.ts --[uses]--> oauth2-sessions`. The historical fact isn't deleted; its validity window simply closed, so it only surfaces when you ask "as of" a date inside that window.
+> Once that fact's window is closed, the default "now" view stops returning it — it only surfaces when you ask "as of" a date inside its validity window; the history is never deleted. Window-closing on supersession is automatic for **single-valued** relations (e.g. a status that can hold one value); genuinely **many-valued** relations like `depends_on` or `imports` accumulate concurrent open facts instead of evicting each other.
 
 Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusion) and an **optional local LLM** (Ollama) for embeddings and deep entity extraction — the server runs fine without it, falling back to regex.
 
