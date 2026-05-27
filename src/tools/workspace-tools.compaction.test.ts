@@ -82,6 +82,16 @@ describe('session_summary_add auto-compaction', () => {
     expect(session.summary).toContain('chunk 2');
   });
 
+  it('embeds the compacted row so it ranks semantically (issue #14)', async () => {
+    for (const i of [1, 2]) {
+      await summaryAdd.handler({ session_id: 's1', ai_model: 'opus', summary: `chunk ${i}`, token_count: 25000 });
+    }
+    const row = db
+      .prepare(`SELECT summary_embedding FROM conversation_summaries WHERE session_id='s1' AND compacted=1`)
+      .get() as { summary_embedding: Buffer | null };
+    expect(row.summary_embedding).not.toBeNull(); // embedded, not left NULL -> won't sort last
+  });
+
   it('session_recall surfaces compacted history', async () => {
     const recall = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall')!;
     for (const i of [1, 2]) {
