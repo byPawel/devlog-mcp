@@ -15,7 +15,7 @@ import Database from 'better-sqlite3';
 
 export type EntityType = 'person' | 'project' | 'file' | 'service' | 'component' | 'concept';
 
-export type RelationType = 'mentions' | 'implements' | 'depends_on' | 'blocks' | 'authored_by';
+export type RelationType = 'mentions' | 'implements' | 'depends_on' | 'blocks' | 'authored_by' | 'superseded_by';
 
 export interface ExtractedEntity {
   type: EntityType;
@@ -444,6 +444,11 @@ const TRIGGER_PATTERNS: TriggerPattern[] = [
   { regex: /\bblocks\s+/gi, relationType: 'blocks', passive: false },
   { regex: /\bblocked\s+by\s+/gi, relationType: 'blocks', passive: true },
   { regex: /\b(?:authored|written|built|created|fixed)\s+by\s+/gi, relationType: 'authored_by', passive: true },
+  // "X replaced by Y" => X superseded_by Y. The relation name is already the
+  // passive ("_by") form, so the subject before the trigger is the source that
+  // was superseded — do NOT swap (passive: false). Swapping would store the
+  // inverse (Y superseded_by X) and close the wrong entity's window.
+  { regex: /\b(?:replaced\s+by|superseded\s+by|deprecated\s+in\s+favor\s+of|renamed\s+to)\s+/gi, relationType: 'superseded_by', passive: false },
 ];
 
 /** Number of characters before a trigger match to scan for negation. */
@@ -629,10 +634,11 @@ export class RelationDetector {
 
 // Relations where a source has at most ONE valid target at a time. Only these
 // evict prior open windows on contradiction. The currently-extracted types
-// (implements, depends_on, blocks, authored_by) are all many-valued, so this is
-// empty by default — preventing false invalidation. Add genuinely single-valued
-// relations (e.g. a future 'current_status') here to enable window-closing for them.
-export const FUNCTIONAL_RELATION_TYPES = new Set<string>([]);
+// (implements, depends_on, blocks, authored_by) are all many-valued, so they are
+// deliberately excluded — preventing false invalidation. 'superseded_by' is
+// single-valued (an entity has at most one current successor: "X replaced by Y"),
+// so a newer successor closes the prior open window.
+export const FUNCTIONAL_RELATION_TYPES = new Set<string>(['superseded_by']);
 
 /**
  * Persists extracted entities and relations to SQLite.

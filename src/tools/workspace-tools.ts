@@ -28,6 +28,10 @@ import {
   calculateDuration
 } from '../utils/session-metadata.js';
 import { enableToolTracking, disableToolTracking, flushToolTracking } from '../utils/tool-tracker.js';
+import { CompactionService } from '../services/compaction-service.js';
+import { EmbeddingService } from '../services/vector-service.js';
+import { floatArrayToBlob, blobToFloatArray, cosineSimilarity } from '../utils/vector-math.js';
+import { ensureEpisodicEmbeddingColumn } from '../db/episodic-tables.js';
 import { startHeartbeat, stopHeartbeat } from '../utils/heartbeat-manager.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
@@ -600,9 +604,18 @@ export const workspaceTools: ToolDefinition[] = [
           message_count?: number;
           token_count?: number;
         };
+        // Embed the summary for semantic recall. Soft-fail (store null) when
+        // Ollama is unavailable so recall falls back to substring + recency.
+        ensureEpisodicEmbeddingColumn(db());
+        let embeddingBlob: Buffer | null = null;
+        try {
+          const { embedding } = await new EmbeddingService().embed(a.summary);
+          if (embedding && embedding.length) embeddingBlob = floatArrayToBlob(embedding);
+        } catch { /* offline -> null embedding */ }
+
         db().prepare(`INSERT INTO conversation_summaries
-          (session_id, ai_model, summary, key_decisions_json, key_topics_json, message_count, token_count, started_at)
-          VALUES (?,?,?,?,?,?,?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`).run(
+          (session_id, ai_model, summary, key_decisions_json, key_topics_json, message_count, token_count, started_at, summary_embedding)
+          VALUES (?,?,?,?,?,?,?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), ?)`).run(
           a.session_id,
           a.ai_model,
           a.summary,
@@ -610,8 +623,18 @@ export const workspaceTools: ToolDefinition[] = [
           a.key_topics ? JSON.stringify(a.key_topics) : null,
           a.message_count ?? null,
           a.token_count ?? null,
+          embeddingBlob,
         );
-        return { content: [{ type: 'text' as const, text: `summary recorded for session ${a.session_id}` }] };
+
+        // Episodic compaction: once cumulative summary tokens exceed the
+        // threshold, merge this session's summaries into sessions.summary.
+        const compactor = new CompactionService(db());
+        let note = '';
+        if (compactor.needsCompaction(a.session_id)) {
+          const res = await compactor.compact(a.session_id);
+          note = ` (compacted ${res.compactedSummaries} summaries, ~${res.compactedTokens} tokens)`;
+        }
+        return { content: [{ type: 'text' as const, text: `summary recorded for session ${a.session_id}${note}` }] };
       } catch (e) {
         return {
           isError: true,
@@ -641,15 +664,43 @@ export const workspaceTools: ToolDefinition[] = [
         if (a.since)      { where.push('started_at >= ?'); params.push(a.since); }
         const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
+        ensureEpisodicEmbeddingColumn(db());
+        const userLimit = a.limit ?? 10;
+        // With a query we semantically re-rank, so the recency LIMIT must NOT
+        // truncate candidates first — otherwise a relevant older summary outside
+        // the recency window is lost. Pull a bounded wider pool, rank, then slice.
+        const RANK_CANDIDATE_CAP = 500;
+        const fetchLimit = a.query ? Math.max(userLimit, RANK_CANDIDATE_CAP) : userLimit;
         const rows = db().prepare(`
-          SELECT session_id, ai_model, summary, message_count, token_count, started_at, ended_at
+          SELECT session_id, ai_model, summary, message_count, token_count, started_at, ended_at, summary_embedding
           FROM conversation_summaries
           ${whereSql}
           ORDER BY started_at DESC
           LIMIT ?
-        `).all(...params, a.limit ?? 10) as Array<Record<string, unknown>>;
+        `).all(...params, fetchLimit) as Array<Record<string, unknown>>;
 
-        const text = rows.map((r) =>
+        // Semantic re-rank when a query is provided and embeds successfully;
+        // otherwise keep the recency order from the SQL above.
+        let ordered = rows;
+        if (a.query) {
+          try {
+            const { embedding } = await new EmbeddingService().embed(a.query);
+            if (embedding && embedding.length) {
+              ordered = [...rows]
+                .map((r) => {
+                  const blob = r['summary_embedding'] as Buffer | null;
+                  const sim = blob ? cosineSimilarity(embedding, blobToFloatArray(blob)) : -1;
+                  return { r, sim };
+                })
+                .sort((x, y) => y.sim - x.sim)
+                .map((x) => x.r);
+            }
+          } catch { /* keep recency order on embed failure */ }
+        }
+        // Apply the user-facing limit AFTER ranking (recency path already capped).
+        ordered = ordered.slice(0, userLimit);
+
+        const text = ordered.map((r) =>
           `[${r['started_at']}] session=${r['session_id']} model=${r['ai_model']} msgs=${r['message_count']}\n  ${r['summary']}`
         ).join('\n\n') || '(no past sessions)';
         return { content: [{ type: 'text' as const, text }] };

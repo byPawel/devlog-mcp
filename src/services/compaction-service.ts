@@ -73,6 +73,20 @@ export class CompactionService {
       started_at: string;
     }[];
 
+    // No source rows (e.g. recovery of a stale compactionPending flag after the
+    // rows were already removed): clear the pending marker but never overwrite a
+    // previously-written sessions.summary with an empty string.
+    if (summaries.length === 0) {
+      const existing = this.db.prepare(
+        'SELECT metadata_json FROM sessions WHERE id = ?'
+      ).get(sessionId) as { metadata_json: string | null } | undefined;
+      const meta = existing?.metadata_json ? JSON.parse(existing.metadata_json) : {};
+      delete meta.compactionPending;
+      this.db.prepare('UPDATE sessions SET metadata_json = ? WHERE id = ?')
+        .run(JSON.stringify(meta), sessionId);
+      return { compactedSummaries: 0, compactedTokens: 0, newSummary: '' };
+    }
+
     const totalTokens = summaries.reduce((sum, s) => sum + (s.token_count || 0), 0);
 
     const compacted = summaries.map((s, i) =>
@@ -132,5 +146,24 @@ export class CompactionService {
       WHERE json_extract(metadata_json, '$.compactionPending') = 1
     `).all() as { id: string }[];
     return pending.map(p => p.id);
+  }
+
+  /**
+   * Re-compact every session that was mid-compaction at last exit.
+   * Returns the list of session ids that were recovered.
+   */
+  async recoverAll(): Promise<string[]> {
+    const pending = this.recoverPending();
+    const recovered: string[] = [];
+    for (const sessionId of pending) {
+      // Isolate failures: one bad session must not abort recovery of the rest.
+      try {
+        await this.compact(sessionId);
+        recovered.push(sessionId);
+      } catch (e) {
+        console.error(`[Compaction] recovery failed for session ${sessionId}:`, (e as Error).message);
+      }
+    }
+    return recovered;
   }
 }
