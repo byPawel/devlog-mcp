@@ -31,7 +31,8 @@ export class CompactionService {
   needsCompaction(sessionId: string): boolean {
     const row = this.db.prepare(`
       SELECT COALESCE(SUM(token_count), 0) as total_tokens
-      FROM conversation_summaries WHERE session_id = ?
+      FROM conversation_summaries
+      WHERE session_id = ? AND COALESCE(compacted, 0) = 0
     `).get(sessionId) as { total_tokens: number };
     return row.total_tokens > this.tokenThreshold;
   }

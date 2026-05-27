@@ -45,6 +45,16 @@ describe('CompactionService', () => {
     expect(service.needsCompaction('s1')).toBe(true);
   });
 
+  test('needsCompaction ignores already-compacted rows (no self-retrigger)', () => {
+    db.prepare('INSERT INTO sessions (id, status) VALUES (?, ?)').run('s1', 'active');
+    // A single compacted row larger than the threshold must NOT trigger.
+    db.prepare(`
+      INSERT INTO conversation_summaries (session_id, ai_model, summary, token_count, started_at, compacted)
+      VALUES (?, ?, ?, ?, ?, 1)
+    `).run('s1', 'compaction', 'merged history', 99999, new Date().toISOString());
+    expect(service.needsCompaction('s1')).toBe(false);
+  });
+
   test('preFlush writes pending state before compaction', () => {
     db.prepare('INSERT INTO sessions (id, status) VALUES (?, ?)').run('s1', 'active');
     service.preFlush('s1');
