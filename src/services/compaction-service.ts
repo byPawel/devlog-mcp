@@ -5,6 +5,7 @@
  * Uses pre-flush durability writes to prevent data loss on crash.
  */
 import Database from 'better-sqlite3';
+import { ensureCompactedColumn } from '../db/episodic-tables.js';
 
 const DEFAULT_TOKEN_THRESHOLD = 40000;
 
@@ -21,6 +22,7 @@ export class CompactionService {
   constructor(db: Database.Database, tokenThreshold = DEFAULT_TOKEN_THRESHOLD) {
     this.db = db;
     this.tokenThreshold = tokenThreshold;
+    ensureCompactedColumn(db);
   }
 
   /**
