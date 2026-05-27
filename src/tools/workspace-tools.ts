@@ -633,6 +633,20 @@ export const workspaceTools: ToolDefinition[] = [
         if (compactor.needsCompaction(a.session_id)) {
           const res = await compactor.compact(a.session_id);
           note = ` (compacted ${res.compactedSummaries} summaries, ~${res.compactedTokens} tokens)`;
+
+          // Embed the retained compacted row so it participates in semantic
+          // recall instead of sorting last (issue #14). The merged blob can
+          // exceed the embedding context window, so embed a bounded prefix.
+          // Soft-fail to NULL when Ollama is offline (recall falls back).
+          try {
+            const EMBED_INPUT_CAP = 8000; // chars; keeps within nomic-embed-text context
+            const { embedding } = await new EmbeddingService().embed(res.newSummary.slice(0, EMBED_INPUT_CAP));
+            if (embedding && embedding.length) {
+              db().prepare(
+                `UPDATE conversation_summaries SET summary_embedding = ? WHERE session_id = ? AND compacted = 1`,
+              ).run(floatArrayToBlob(embedding), a.session_id);
+            }
+          } catch { /* offline -> leave NULL, recall falls back to substring/recency */ }
         }
         return { content: [{ type: 'text' as const, text: `summary recorded for session ${a.session_id}${note}` }] };
       } catch (e) {
