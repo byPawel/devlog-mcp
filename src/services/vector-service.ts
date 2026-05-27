@@ -127,30 +127,41 @@ export class EmbeddingService {
   }
 
   private async callOllama(cleanText: string): Promise<EmbeddingResult> {
-    const response = await fetch(`${this.ollamaUrl}/api/embed`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.model,
-        input: cleanText,
-      }),
-    });
+    // Fast-fail if Ollama is unreachable (a dropped connection would otherwise
+    // hang the request path indefinitely — see #19). Callers catch and fall back.
+    const timeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS) || 5000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
+    try {
+      const response = await fetch(`${this.ollamaUrl}/api/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: this.model,
+          input: cleanText,
+        }),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Embedding] Ollama error: ${response.status} - ${errorText.slice(0, 200)}`);
-      throw new Error(`Ollama embedding failed: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Embedding] Ollama error: ${response.status} - ${errorText.slice(0, 200)}`);
+        throw new Error(`Ollama embedding failed: ${response.statusText}`);
+      }
+
+      const data = await response.json() as { embeddings: number[][] };
+      const embedding = data.embeddings[0];
+
+      if (!embedding || embedding.length === 0) {
+        throw new Error('No embedding returned from Ollama');
+      }
+
+      const tokenCount = Math.ceil(cleanText.length / APPROX_CHARS_PER_TOKEN);
+      return { embedding, tokenCount };
+    } finally {
+      clearTimeout(timer);
     }
-
-    const data = await response.json() as { embeddings: number[][] };
-    const embedding = data.embeddings[0];
-
-    if (!embedding || embedding.length === 0) {
-      throw new Error('No embedding returned from Ollama');
-    }
-
-    const tokenCount = Math.ceil(cleanText.length / APPROX_CHARS_PER_TOKEN);
-    return { embedding, tokenCount };
   }
 
   async embedBatch(texts: string[]): Promise<EmbeddingResult[]> {
@@ -163,14 +174,20 @@ export class EmbeddingService {
   }
 
   async healthCheck(): Promise<boolean> {
+    const timeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS) || 5000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
     try {
-      const response = await fetch(`${this.ollamaUrl}/api/tags`);
+      const response = await fetch(`${this.ollamaUrl}/api/tags`, { signal: controller.signal });
       if (!response.ok) return false;
 
       const data = await response.json() as { models: { name: string }[] };
       return data.models.some(m => m.name.includes(this.model));
     } catch {
       return false;
+    } finally {
+      clearTimeout(timer);
     }
   }
 }
