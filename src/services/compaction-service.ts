@@ -127,6 +127,17 @@ export class CompactionService {
           `DELETE FROM conversation_summaries WHERE id IN (${placeholders})`
         ).run(...sourceIds);
       }
+
+      // Retain the consolidated history as ONE compacted row so it stays in the
+      // recall corpus (devlog_session_recall reads conversation_summaries).
+      // compacted=1 keeps it out of needsCompaction's trigger, so it never
+      // self-retriggers; a later batch of summaries folds this row back in.
+      const latestStartedAt = summaries[summaries.length - 1].started_at;
+      this.db.prepare(`
+        INSERT INTO conversation_summaries
+          (session_id, ai_model, summary, token_count, started_at, compacted)
+        VALUES (?, 'compaction', ?, ?, ?, 1)
+      `).run(sessionId, compacted, totalTokens, latestStartedAt);
     });
 
     txn();
