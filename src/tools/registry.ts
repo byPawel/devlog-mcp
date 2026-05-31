@@ -1,4 +1,4 @@
-import { McpServer } from '../server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ZodRawShape } from 'zod';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 

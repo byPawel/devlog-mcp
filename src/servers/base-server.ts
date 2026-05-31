@@ -3,8 +3,8 @@
  * Base server setup for all devlog MCP servers
  */
 
-import { McpServer } from '../server/mcp.js';
-import { StdioServerTransport } from '../server/stdio.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ToolDefinition, registerTools } from '../tools/registry.js';
 import { withToolTracking } from '../utils/tool-tracker.js';
 import { DEVLOG_PATH } from '../shared/devlog-utils.js';

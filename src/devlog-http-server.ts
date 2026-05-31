@@ -6,8 +6,8 @@ import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { glob } from 'glob';
-import { McpServer } from './server/mcp.js';
-import { StreamableHTTPServerTransport } from './server/streamableHttp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolResult, isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 
 // Get devlog path from environment or use default
