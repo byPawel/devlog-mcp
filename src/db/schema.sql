@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS docs (
   gh_repo TEXT,                         -- owner/repo format
 
   -- Embeddings
-  embedding_id TEXT,                    -- Vector DB reference (ChromaDB/LanceDB)
+  embedding_id TEXT,                    -- Vector DB reference (LanceDB)
   embedding_model TEXT,                 -- Model used for embedding
   embedding_updated_at DATETIME,        -- When embedding was last updated
 
