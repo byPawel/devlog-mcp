@@ -715,20 +715,20 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 09 — The Survey</div>
       <h2>How it <span class="accent">compares</span></h2>
-      <p>Two capabilities set dokoro apart, and both are queryable as plain MCP tool calls.</p>
+      <p>Four capabilities set dokoro apart — bi-temporal facts, per-agent affective feedback, workspace lock coordination, and WAL concurrency — all queryable as plain MCP tool calls or visible directly in the SQLite schema.</p>
     </div>
     <div class="cmp-wrap reveal">
       <table class="cmp">
         <thead>
-          <tr><th>Project</th><th>Architecture</th><th style="text-align:center">Native temporal</th><th style="text-align:center">Native affective</th></tr>
+          <tr><th>Project</th><th>Architecture</th><th style="text-align:center">Native temporal</th><th style="text-align:center">Native affective</th><th style="text-align:center">Native multi-agent</th><th style="text-align:center">Concurrent access</th></tr>
         </thead>
         <tbody>
-          <tr class="me-row"><td class="me">dokoro</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td></tr>
-          <tr><td>Mem0</td><td>Vector + optional graph</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td>Letta (MemGPT)</td><td>Tiered, OS-like, self-editing</td><td class="partial">◐ via metadata</td><td class="partial">◐ via metadata</td></tr>
-          <tr><td>Zep / Graphiti</td><td>Temporal knowledge graph</td><td class="yes">✓ bi-temporal</td><td class="no">—</td></tr>
-          <tr><td>Cognee</td><td>Graph + vector poly-store</td><td class="partial">◐ partial</td><td class="no">—</td></tr>
-          <tr><td>LangMem</td><td>Modular over LangGraph</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr class="me-row"><td class="me">dokoro</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td><td class="yes">✓ per-agent feedback + workspace lock</td><td class="yes">✓ WAL + busy_timeout=5000</td></tr>
+          <tr><td>Mem0</td><td>Vector + optional graph</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td>Letta (MemGPT)</td><td>Tiered, OS-like, self-editing</td><td class="partial">◐ via metadata</td><td class="partial">◐ via metadata</td><td class="partial">◐ shared blocks</td><td class="no">—</td></tr>
+          <tr><td>Zep / Graphiti</td><td>Temporal knowledge graph</td><td class="yes">✓ bi-temporal</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td>Cognee</td><td>Graph + vector poly-store</td><td class="partial">◐ partial</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td>LangMem</td><td>Modular over LangGraph</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
         </tbody>
       </table>
     </div>

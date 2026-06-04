@@ -52,6 +52,7 @@
     "prepack": "npm run build:esm",
     "lint": "eslint src/",
     "test": "jest",
+    "test:site": "node site/compare-table.test.mjs",
     "start": "npm run server:core",
     "dev:core": "tsx watch src/servers/core-server.ts",
     "dev:search": "tsx watch src/servers/search-server.ts",
