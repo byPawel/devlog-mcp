@@ -105,4 +105,12 @@ describe('core-server tool registration', () => {
     expect(names).toContain('dokoro_handoff_inbox');
     expect(names).toContain('dokoro_handoff_claim');
   });
+
+  it('coreTools includes the presence (heartbeat) tools', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { coreTools } = require('./core-server.js') as typeof import('./core-server.js');
+    const names = coreTools.map((t: { name: string }) => t.name);
+    expect(names).toContain('dokoro_presence_ping');
+    expect(names).toContain('dokoro_presence_list');
+  });
 });

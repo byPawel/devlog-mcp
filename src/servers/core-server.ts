@@ -16,6 +16,7 @@ import { feedbackTools } from '../tools/feedback-tools.js';
 import { sharedNotesTools } from '../tools/shared-notes-tools.js';
 import { sharedBlocksTools } from '../tools/shared-blocks-tools.js';
 import { handoffTools } from '../tools/handoff-tools.js';
+import { presenceTools } from '../tools/presence-tools.js';
 
 // Select only the core tools
 // Exported for use in tests.
@@ -54,6 +55,9 @@ export const coreTools = [
 
   // Cross-session handoff (write/inbox/claim with atomic claim, per-project)
   ...handoffTools,
+
+  // Agent presence (daemonless heartbeat, read-time liveness, per-project)
+  ...presenceTools,
 
   // Initialization
   dokoroInitTool

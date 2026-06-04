@@ -187,6 +187,8 @@ Tools are organised by which memory layer they read or write.
 | `dokoro_handoff_write` | Record a cross-session handoff (summary + open items) |
 | `dokoro_handoff_inbox` | Read open handoffs targeted to / available to an agent |
 | `dokoro_handoff_claim` | Atomically claim a handoff so only one agent takes it |
+| `dokoro_presence_ping` | Heartbeat — announce this agent is active (status, focus) |
+| `dokoro_presence_list` | List agents currently active in the project (read-time TTL) |
 | `dokoro_question_add` | Log a question during development |
 | `dokoro_question_answer` | Answer a previously logged question |
 | `dokoro_question_list` | List all tracked questions |

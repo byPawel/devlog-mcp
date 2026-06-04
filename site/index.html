@@ -446,7 +446,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="stat-row fade" style="animation-delay:.78s">
       <div class="stat"><div class="n c">5</div><div class="l">Memory layers</div></div>
       <div class="stat"><div class="n">3</div><div class="l">Storage backends</div></div>
-      <div class="stat"><div class="n">38</div><div class="l">MCP tools</div></div>
+      <div class="stat"><div class="n">40</div><div class="l">MCP tools</div></div>
       <div class="stat"><div class="n">2</div><div class="l">Native edges*</div></div>
     </div>
   </div>
@@ -728,7 +728,7 @@ npm install --omit=optional</pre>
         <div id="layerChips"></div>
       </div>
     </div>
-    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 38 entries</div>
+    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 40 entries</div>
     <div class="tool-grid" id="toolGrid"></div>
   </div>
 </section>
@@ -852,6 +852,8 @@ const TOOLS = [
   {n:"dokoro_handoff_write",     l:"working", st:"handoffs",      d:"Record a cross-session handoff: summary + open items."},
   {n:"dokoro_handoff_inbox",     l:"working", st:"handoffs",      d:"Read open handoffs available to an agent."},
   {n:"dokoro_handoff_claim",     l:"working", st:"handoffs",      d:"Atomically claim a handoff so only one agent takes it."},
+  {n:"dokoro_presence_ping",     l:"working", st:"agent_presence", d:"Heartbeat: announce this agent is active (upsert, server clock)."},
+  {n:"dokoro_presence_list",     l:"working", st:"agent_presence", d:"List agents live within the TTL (read-time liveness, no sweeper)."},
   {n:"dokoro_question_add",     l:"working",  st:"questions.json",d:"Record an open question during development."},
   {n:"dokoro_question_answer",  l:"working",  st:"questions.json",d:"Answer a previously logged question."},
   {n:"dokoro_question_list",    l:"working",  st:"questions.json",d:"List all tracked questions."},
