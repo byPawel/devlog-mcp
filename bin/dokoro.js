@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 /**
- * Dokoro CLI Entry Point
+ * dokoro — package entrypoint (works from the published npm package; no tsx/src needed).
  *
- * This is the bin entry that gets installed when you npm install -g @dokoro-mcp/core
- * It delegates to the TypeScript CLI via tsx.
+ * Default (no subcommand): start the unified MCP server over stdio. This is what
+ *   `claude mcp add dokoro -- npx -y dokoro` runs — each project gets its own
+ *   ./dokoro store (DOKORO_PATH defaults to <cwd>/dokoro), so install is per-project
+ *   with zero shared state.
+ *
+ * Subcommands (init, migrate, …): delegate to the compiled CLI.
+ *
+ * Both targets are the compiled output under dist/esm (shipped via package.json
+ * "files"), so this runs under plain `node` without tsx or the TypeScript sources.
  */
 
-import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+const sub = process.argv[2];
+const CLI_COMMANDS = new Set([
+  'init', 'migrate', 'cleanup', 'help', '--help', '-h', 'version', '--version', '-v',
+]);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Path to the CLI source
-const cliPath = join(__dirname, '..', 'src', 'dokoro-cli.ts');
-
-// Run via tsx
-const child = spawn('npx', ['tsx', cliPath, ...process.argv.slice(2)], {
-  stdio: 'inherit',
-  shell: true
-});
-
-child.on('exit', (code) => {
-  process.exit(code ?? 0);
-});
+if (sub && CLI_COMMANDS.has(sub)) {
+  await import('../dist/esm/dokoro-cli.js');
+} else {
+  // No subcommand → run the MCP server (stdio). Default to the unified server so a
+  // single `npx -y dokoro` exposes all tools in one process.
+  await import('../dist/esm/servers/unified-server.js');
+}

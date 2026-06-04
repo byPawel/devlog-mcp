@@ -265,30 +265,34 @@ Claude Code is the hero use case throughout this README, but `dokoro` is a stand
 
 ## Quick start
 
+The fastest way — add it to a project with `npx`, no clone or build. **Run this from the project directory** you want memory for:
+
 ```bash
-# 1. Clone
+claude mcp add dokoro -- npx -y dokoro
+```
+
+That's it. Memory is **per-project**: each project gets its own isolated store in `./dokoro` (override with `DOKORO_PATH`), so sessions, entities, and tool-trust history never leak between projects. `npx -y dokoro` runs the unified server (all tools); subcommands like `npx dokoro init` and `npx dokoro migrate` hit the CLI.
+
+<details>
+<summary><strong>From source</strong> — for development or a pinned local checkout</summary>
+
+```bash
+# 1. Clone & install
 git clone https://github.com/byPawel/dokoro
 cd dokoro
-
-# 2. Install dependencies
 npm install
 
-# 3. Configure environment (API keys optional)
+# 2. Configure environment (API keys optional)
 cp .env.example .env.local
 
-# 4. Build
+# 3. Build
 npm run build
+
+# 4. Register (run from your target project dir; data lands in that project's ./dokoro)
+claude mcp add dokoro "node" "/absolute/path/to/dokoro/bin/dokoro-core.js"
 ```
 
-Register the server with Claude:
-
-```bash
-# Core server (essential features)
-claude mcp add dokoro-core "node" "$(pwd)/bin/dokoro-core.js"
-
-# …or with environment variables
-claude mcp add dokoro-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/bin/dokoro-core.js"
-```
+</details>
 
 ### Ollama setup (optional)
 

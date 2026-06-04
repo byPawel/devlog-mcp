@@ -25,10 +25,7 @@
     "qwen3"
   ],
   "exports": {
-    "./*": {
-      "import": "./dist/esm/*",
-      "require": "./dist/cjs/*"
-    }
+    "./*": "./dist/esm/*"
   },
   "typesVersions": {
     "*": {
@@ -52,9 +49,7 @@
     "build": "npm run build:esm",
     "build:esm": "mkdir -p dist/esm && echo '{\"type\": \"module\"}' > dist/esm/package.json && tsc -p tsconfig.prod.json",
     "build:esm:w": "npm run build:esm -- -w",
-    "build:cjs": "mkdir -p dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json && tsc -p tsconfig.cjs.json",
-    "build:cjs:w": "npm run build:cjs -- -w",
-    "prepack": "npm run build:esm && npm run build:cjs",
+    "prepack": "npm run build:esm",
     "lint": "eslint src/",
     "test": "jest",
     "start": "npm run server:core",
