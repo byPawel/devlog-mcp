@@ -48,11 +48,11 @@ describe('feedback-tools', () => {
     delete (globalThis as Record<string, unknown>).__TEST_DB__;
   });
 
-  it('devlog_feedback_record persists a row', async () => {
-    const tool = findTool('devlog_feedback_record');
+  it('dokoro_feedback_record persists a row', async () => {
+    const tool = findTool('dokoro_feedback_record');
     const res = await tool.handler({
       agent_id: 'claude-opus-4-7',
-      tool_name: 'devlog_entity_extract_deep',
+      tool_name: 'dokoro_entity_extract_deep',
       outcome: 'success',
       confidence: 0.9,
       latency_ms: 1200,
@@ -62,12 +62,12 @@ describe('feedback-tools', () => {
     expect(n.n).toBe(1);
   });
 
-  it('devlog_feedback_query returns success rate per tool', async () => {
-    const rec = findTool('devlog_feedback_record');
+  it('dokoro_feedback_query returns success rate per tool', async () => {
+    const rec = findTool('dokoro_feedback_record');
     await rec.handler({ agent_id: 'a', tool_name: 't', outcome: 'success', confidence: 1 });
     await rec.handler({ agent_id: 'a', tool_name: 't', outcome: 'failure', confidence: 0 });
 
-    const q = findTool('devlog_feedback_query');
+    const q = findTool('dokoro_feedback_query');
     const res = await q.handler({ tool_name: 't' });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
     expect(text).toMatch(/success.*1/i);
@@ -75,16 +75,16 @@ describe('feedback-tools', () => {
     expect(text).toMatch(/success_rate.*0\.5/i);
   });
 
-  describe('devlog_feedback_query since param validation (BUG-18)', () => {
+  describe('dokoro_feedback_query since param validation (BUG-18)', () => {
     it('rejects a malformed since value ("last week")', () => {
-      const q = findTool('devlog_feedback_query');
+      const q = findTool('dokoro_feedback_query');
       const schema = z.object(q.inputSchema);
       const result = schema.safeParse({ since: 'last week' });
       expect(result.success).toBe(false);
     });
 
     it('rejects an ISO datetime with trailing Z (no date-only prefix)', () => {
-      const q = findTool('devlog_feedback_query');
+      const q = findTool('dokoro_feedback_query');
       const schema = z.object(q.inputSchema);
       // Strings not starting with YYYY-MM-DD should fail
       const result = schema.safeParse({ since: 'T14:30:00Z' });
@@ -92,13 +92,13 @@ describe('feedback-tools', () => {
     });
 
     it('accepts a valid ISO date prefix (YYYY-MM-DD)', () => {
-      const q = findTool('devlog_feedback_query');
+      const q = findTool('dokoro_feedback_query');
       const schema = z.object(q.inputSchema);
       expect(schema.safeParse({ since: '2026-05-01' }).success).toBe(true);
     });
 
     it('accepts ISO datetime with YYYY-MM-DD prefix', () => {
-      const q = findTool('devlog_feedback_query');
+      const q = findTool('dokoro_feedback_query');
       const schema = z.object(q.inputSchema);
       expect(schema.safeParse({ since: '2026-05-01T00:00:00Z' }).success).toBe(true);
     });
@@ -111,7 +111,7 @@ describe('feedback-tools', () => {
                ('a', 'tool_new', 'success', '2026-05-01 00:00:00')
       `).run();
 
-      const q = findTool('devlog_feedback_query');
+      const q = findTool('dokoro_feedback_query');
       const res = await q.handler({ since: '2026-01-01' });
       const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
       expect(text).toMatch(/tool_new/);

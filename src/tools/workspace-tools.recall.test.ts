@@ -30,7 +30,7 @@ jest.mock('../services/vector-service.js', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { workspaceTools } = require('./workspace-tools.js') as typeof import('./workspace-tools.js');
 
-describe('devlog_session_recall', () => {
+describe('dokoro_session_recall', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -77,7 +77,7 @@ describe('devlog_session_recall', () => {
   });
 
   it('returns recent session summaries', async () => {
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall');
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall');
     expect(tool).toBeDefined();
     const res = await tool!.handler({ limit: 5 });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
@@ -86,7 +86,7 @@ describe('devlog_session_recall', () => {
   });
 
   it('filters by query substring', async () => {
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall');
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall');
     expect(tool).toBeDefined();
     const res = await tool!.handler({ query: 'nonexistent-token' });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
@@ -104,7 +104,7 @@ describe('devlog_session_recall', () => {
       `INSERT INTO conversation_summaries (session_id, ai_model, summary, started_at, summary_embedding) VALUES (?,?,?,?,?)`,
     ).run('d2', 'claude-opus-4-7', 'about caching', '2026-01-01T00:00:00Z', blob([1, 0, 0]));
 
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall');
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall');
     // Substring filter must match both candidates so semantic rank decides order.
     const res = await tool!.handler({ query: 'about' });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
@@ -124,7 +124,7 @@ describe('devlog_session_recall', () => {
     // truncation this would be dropped before ranking; correct semantic recall keeps it.
     ins.run('gold', 'opus', 'about caching internals', '2026-01-01T00:00:00Z', blob([1, 0, 0]));
 
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall');
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall');
     const res = await tool!.handler({ query: 'about', limit: 5 });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
     expect(text).toContain('about caching internals'); // not lost to the recency window

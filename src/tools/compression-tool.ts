@@ -25,7 +25,7 @@ interface SessionData {
 }
 
 export const compressionTool: ToolDefinition = {
-  name: 'devlog_compress_week',
+  name: 'dokoro_compress_week',
   title: 'Compress Weekly Sessions',
   description: 'Compress daily session files into weekly summary',
   inputSchema: {

@@ -92,7 +92,7 @@ async function parseContent(file: DevLogFile): Promise<ParsedContent> {
 
 export const enhancedAnalysisTools: ToolDefinition[] = [
   {
-    name: 'devlog_analyze_patterns',
+    name: 'dokoro_analyze_patterns',
     title: 'Analyze Patterns',
     description: 'Find recurring issues, patterns, and technical debt across devlogs',
     inputSchema: {
@@ -185,7 +185,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_dependency_graph',
+    name: 'dokoro_dependency_graph',
     title: 'Dependency Graph',
     description: 'Visualize feature dependencies and blocking relationships',
     inputSchema: {
@@ -274,7 +274,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_burndown_chart',
+    name: 'dokoro_burndown_chart',
     title: 'Burndown Chart',
     description: 'Track progress on epics/features with burndown visualization',
     inputSchema: {
@@ -361,7 +361,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_team_metrics',
+    name: 'dokoro_team_metrics',
     title: 'Team Metrics',
     description: 'Analyze multi-agent collaboration and productivity metrics',
     inputSchema: {

@@ -38,7 +38,7 @@ import { icon } from '../utils/icons.js';
 
 export const workspaceTools: ToolDefinition[] = [
   {
-    name: 'devlog_workspace_claim',
+    name: 'dokoro_workspace_claim',
     title: 'Claim Workspace',
     description: 'Claim workspace with multi-agent lock and tracking',
     inputSchema: {
@@ -164,7 +164,7 @@ export const workspaceTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_workspace_status',
+    name: 'dokoro_workspace_status',
     title: 'Workspace Status',
     description: 'Get current workspace status, lock info, and tracking data',
     inputSchema: {},
@@ -184,7 +184,7 @@ export const workspaceTools: ToolDefinition[] = [
                   data: {
                     title: 'No Active Workspace',
                     status: 'warning',
-                    message: `Found existing lock by ${lock.agent_id}. Use devlog_workspace_claim to start.`,
+                    message: `Found existing lock by ${lock.agent_id}. Use dokoro_workspace_claim to start.`,
                     details: {
                       'Lock expires': lock.expires_at,
                     },
@@ -204,7 +204,7 @@ export const workspaceTools: ToolDefinition[] = [
                 data: {
                   title: 'No Workspace',
                   status: 'info',
-                  message: 'Use devlog_workspace_claim to create one.',
+                  message: 'Use dokoro_workspace_claim to create one.',
                 },
               }),
             },
@@ -268,7 +268,7 @@ export const workspaceTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_session_log',
+    name: 'dokoro_session_log',
     title: 'Session Log',
     description: 'Log progress or notes to current session',
     inputSchema: {
@@ -288,7 +288,7 @@ export const workspaceTools: ToolDefinition[] = [
                 data: {
                   title: 'No Workspace',
                   status: 'error',
-                  message: 'Use devlog_workspace_claim first.',
+                  message: 'Use dokoro_workspace_claim first.',
                 },
               }),
             },
@@ -352,7 +352,7 @@ export const workspaceTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_workspace_dump',
+    name: 'dokoro_workspace_dump',
     title: 'Dump Workspace',
     description: 'Save current workspace to daily log with tracking analytics. Shows exact save location.',
     inputSchema: {
@@ -581,9 +581,9 @@ export const workspaceTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_session_summary_add',
+    name: 'dokoro_session_summary_add',
     title: 'Record a session summary',
-    description: 'Persist a conversation summary into episodic memory (conversation_summaries), readable later via devlog_session_recall.',
+    description: 'Persist a conversation summary into episodic memory (conversation_summaries), readable later via dokoro_session_recall.',
     inputSchema: {
       session_id: z.string(),
       ai_model: z.string(),
@@ -671,7 +671,7 @@ export const workspaceTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_session_recall',
+    name: 'dokoro_session_recall',
     title: 'Recall past sessions',
     description: 'Read conversation summaries from finished sessions (episodic memory). Filter by query substring, session_id, or since timestamp.',
     inputSchema: {

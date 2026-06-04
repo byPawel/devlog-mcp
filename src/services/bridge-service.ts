@@ -152,7 +152,7 @@ export async function indexResearch(input: IndexResearchInput): Promise<IndexRes
 /**
  * Creates a Plan JSON matching plan-tools.ts interface.
  * Writes to DEVLOG_PATH/.mcp/plans/{planId}.json + updates index.json.
- * Imported plans immediately work with devlog_plan_check, devlog_plan_validate, etc.
+ * Imported plans immediately work with dokoro_plan_check, dokoro_plan_validate, etc.
  */
 export async function importPlan(input: ImportPlanInput): Promise<ImportPlanResult> {
   const { title, phases, status = 'active' } = input;

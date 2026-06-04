@@ -269,7 +269,7 @@ function createTablesManually(sqlite: Database.Database): void {
       id TEXT PRIMARY KEY DEFAULT 'default',
       name TEXT NOT NULL,
       root_path TEXT NOT NULL,
-      devlog_path TEXT NOT NULL,
+      dokoro_path TEXT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       settings_json TEXT

@@ -14,7 +14,7 @@ const IMAGES_DIR = path.join(ASSETS_DIR, 'images');
 
 export const assetTools: ToolDefinition[] = [
   {
-    name: 'devlog_save_image',
+    name: 'dokoro_save_image',
     title: 'Save Image',
     description: 'Save an image to the devlog assets folder. Supports copying from a path or saving base64 data.',
     inputSchema: {
@@ -143,7 +143,7 @@ export const assetTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_save_file',
+    name: 'dokoro_save_file',
     title: 'Save File',
     description: 'Save any file to the devlog assets folder with automatic organization.',
     inputSchema: {
@@ -237,7 +237,7 @@ export const assetTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_list_assets',
+    name: 'dokoro_list_assets',
     title: 'List Assets',
     description: 'List all saved assets in the devlog',
     inputSchema: {

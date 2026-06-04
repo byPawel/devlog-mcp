@@ -11,7 +11,7 @@ import * as path from 'path';
 
 export const similarityTools: ToolDefinition[] = [
   {
-    name: 'devlog_find_similar',
+    name: 'dokoro_find_similar',
     title: 'Find Similar Content',
     description: 'Find devlog entries similar to provided content',
     inputSchema: {
@@ -68,7 +68,7 @@ export const similarityTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_check_before_write',
+    name: 'dokoro_check_before_write',
     title: 'Check Before Writing',
     description: 'Check if similar content already exists before creating new entry',
     inputSchema: {
@@ -137,7 +137,7 @@ export const similarityTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_find_related',
+    name: 'dokoro_find_related',
     title: 'Find Related Entries',
     description: 'Find entries related to a specific file',
     inputSchema: {
@@ -194,7 +194,7 @@ export const similarityTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_cluster_topics',
+    name: 'dokoro_cluster_topics',
     title: 'Cluster Topics',
     description: 'Group similar devlog entries into topic clusters',
     inputSchema: {
@@ -260,7 +260,7 @@ export const similarityTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_similarity_index',
+    name: 'dokoro_similarity_index',
     title: 'Build Similarity Index', 
     description: 'Build or rebuild the similarity index for better performance',
     inputSchema: {

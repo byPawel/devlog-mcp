@@ -1,5 +1,5 @@
 /**
- * TDD tests for devlog_feedback_route
+ * TDD tests for dokoro_feedback_route
  *
  * Spec assertions:
  * (a) a tool with 1 success does NOT outrank a tool with 95/100 successes (Wilson + min_samples)
@@ -59,7 +59,7 @@ function insertRow(
   `).run(agent_id, tool_name, outcome, confidence);
 }
 
-describe('devlog_feedback_route', () => {
+describe('dokoro_feedback_route', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -73,7 +73,7 @@ describe('devlog_feedback_route', () => {
   });
 
   it('(a) a tool with 1 success does NOT outrank a tool with 95/100 successes', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
 
     // tool_a: 1 success out of 1 (raw rate=1.0 but low confidence, n=1)
     insertRow(db, 'agent1', 'tool_a', 'success', "datetime('now','-1 day')");
@@ -98,7 +98,7 @@ describe('devlog_feedback_route', () => {
   });
 
   it('(b) recent successes outrank old failures (recency decay)', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
 
     // tool_recent: 8 successes in last 1 day + 2 failures
     for (let i = 0; i < 8; i++) {
@@ -125,7 +125,7 @@ describe('devlog_feedback_route', () => {
   });
 
   it('(c) outcome breakdown (partial/rejected/timeout) is present in output', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
 
     insertRow(db, 'agent1', 'tool_x', 'success', "datetime('now','-1 day')");
     insertRow(db, 'agent1', 'tool_x', 'failure', "datetime('now','-1 day')");
@@ -144,7 +144,7 @@ describe('devlog_feedback_route', () => {
   });
 
   it('(d) agent_id filter isolates per-agent stats', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
 
     // agent_a: 10 successes for tool_shared
     for (let i = 0; i < 10; i++) {
@@ -170,14 +170,14 @@ describe('devlog_feedback_route', () => {
   });
 
   it('returns (no feedback recorded) when table is empty', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
     const res = await route.handler({});
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
     expect(text).toMatch(/no feedback/i);
   });
 
   it('confident=false when n < min_samples', async () => {
-    const route = findTool('devlog_feedback_route');
+    const route = findTool('dokoro_feedback_route');
 
     insertRow(db, 'agent1', 'rare_tool', 'success', "datetime('now','-1 day')");
 

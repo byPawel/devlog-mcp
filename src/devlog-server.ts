@@ -169,7 +169,7 @@ server.tool(
 
 // Register prompts
 server.registerPrompt(
-  'devlog_summary',
+  'dokoro_summary',
   {
     title: 'DevLog Summary',
     description: 'Generate a summary of recent development activities',

@@ -59,7 +59,7 @@ export async function startServer(server: McpServer, tools: ToolDefinition[], co
   
   if (!devlogExists) {
     console.error('⚠️  DevLog not initialized in this project!');
-    console.error('   Run "devlog_init" to create devlog structure.');
+    console.error('   Run "dokoro_init" to create devlog structure.');
     console.error('   Current path:', DEVLOG_PATH);
   } else {
     // Crash recovery: re-compact any sessions left mid-compaction at last exit.

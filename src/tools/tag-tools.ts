@@ -8,7 +8,7 @@ import { renderOutput } from '../utils/render-output.js';
 
 export const tagTools: ToolDefinition[] = [
   {
-    name: 'devlog_query_by_tags',
+    name: 'dokoro_query_by_tags',
     title: 'Query by Tags',
     description: 'Query devlogs by specific tags',
     inputSchema: {
@@ -48,7 +48,7 @@ export const tagTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_tag_stats',
+    name: 'dokoro_tag_stats',
     title: 'Tag Statistics',
     description: 'Get statistics about tag usage in devlogs',
     inputSchema: {},
@@ -116,7 +116,7 @@ export const tagTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_list_tag_values',
+    name: 'dokoro_list_tag_values',
     title: 'List Tag Values',
     description: 'List all unique values for a specific tag',
     inputSchema: {

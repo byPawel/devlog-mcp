@@ -155,7 +155,7 @@ function generateValidationTable(plan: Plan): string {
 
 export const planTools: ToolDefinition[] = [
   {
-    name: 'devlog_plan_create',
+    name: 'dokoro_plan_create',
     title: 'Create Plan',
     description: 'Create a new plan with trackable items. Each item gets timestamped when completed.',
     inputSchema: {
@@ -218,7 +218,7 @@ export const planTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_plan_check',
+    name: 'dokoro_plan_check',
     title: 'Check Plan Item',
     description: 'Mark a plan item as completed with timestamp. Can also add notes or blockers.',
     inputSchema: {
@@ -344,7 +344,7 @@ export const planTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_plan_blocker',
+    name: 'dokoro_plan_blocker',
     title: 'Add Blocker',
     description: 'Add a blocker to a plan item explaining why it cannot be completed',
     inputSchema: {
@@ -444,7 +444,7 @@ export const planTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_plan_validate',
+    name: 'dokoro_plan_validate',
     title: 'Validate Plan',
     description: 'Validate and finalize a plan. Generates a timestamped report table showing completion status of all items.',
     inputSchema: {
@@ -549,7 +549,7 @@ export const planTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_plan_status',
+    name: 'dokoro_plan_status',
     title: 'Plan Status',
     description: 'Show current status of a plan with progress',
     inputSchema: {
@@ -582,7 +582,7 @@ export const planTools: ToolDefinition[] = [
                 data: {
                   title: 'No Plans',
                   status: 'info',
-                  message: 'No plans found. Use devlog_plan_create to create one.',
+                  message: 'No plans found. Use dokoro_plan_create to create one.',
                 },
               }),
             },
@@ -626,7 +626,7 @@ export const planTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_plan_list',
+    name: 'dokoro_plan_list',
     title: 'List Plans',
     description: 'List all plans with their status',
     inputSchema: {

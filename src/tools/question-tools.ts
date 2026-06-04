@@ -60,7 +60,7 @@ function generateId(): string {
 
 export const questionTools: ToolDefinition[] = [
   {
-    name: 'devlog_question_add',
+    name: 'dokoro_question_add',
     title: 'Add Question',
     description: 'Add a question that needs to be answered during development. Questions are tracked and must be resolved.',
     inputSchema: {
@@ -124,7 +124,7 @@ export const questionTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_question_answer',
+    name: 'dokoro_question_answer',
     title: 'Answer Question',
     description: 'Mark a question as answered with the resolution',
     inputSchema: {
@@ -132,7 +132,7 @@ export const questionTools: ToolDefinition[] = [
       answer: z.string().describe('The answer or resolution'),
     },
     handler: async ({ id, answer }): Promise<CallToolResult> => {
-      // Serialise through the same mutex used by devlog_question_add (BUG-20).
+      // Serialise through the same mutex used by dokoro_question_add (BUG-20).
       const result = await withQuestionsLock(async () => {
         const questions = await loadQuestions();
 
@@ -216,7 +216,7 @@ export const questionTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_question_list',
+    name: 'dokoro_question_list',
     title: 'List Questions',
     description: 'List all questions, optionally filtered by status',
     inputSchema: {
@@ -313,7 +313,7 @@ export const questionTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_question_check',
+    name: 'dokoro_question_check',
     title: 'Check Questions',
     description: 'Check if there are any blocking questions that need answers before proceeding',
     inputSchema: {},
@@ -327,7 +327,7 @@ export const questionTools: ToolDefinition[] = [
         blockers.forEach(q => {
           output += `### ${q.question}\n`;
           if (q.context) output += `_Context: ${q.context}_\n`;
-          output += `ID: \`${q.id}\` | Use \`devlog_question_answer\` to resolve\n\n`;
+          output += `ID: \`${q.id}\` | Use \`dokoro_question_answer\` to resolve\n\n`;
         });
 
         return {

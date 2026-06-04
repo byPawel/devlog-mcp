@@ -84,18 +84,18 @@ function error(message: string): ToolResult {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const devlogInitTool: ToolDefinition = {
-  name: "devlog_init",
+  name: "dokoro_init",
   description:
     "Initialize devlog for a project. Creates the .devlog folder structure and SQLite database. Run this first before using other devlog tools.",
   inputSchema: z.object({
     project_path: z.string().optional().describe("Path to project root. Defaults to current directory."),
-    devlog_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
+    dokoro_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
   }),
   handler: async (args) => {
     try {
       const config = getDbConfig(args.project_path as string | undefined);
-      if (args.devlog_folder) {
-        config.devlogFolder = args.devlog_folder as string;
+      if (args.dokoro_folder) {
+        config.devlogFolder = args.dokoro_folder as string;
       }
 
       const devlogPath = path.join(config.projectPath, config.devlogFolder!);
@@ -152,12 +152,12 @@ const devlogInitTool: ToolDefinition = {
 };
 
 const devlogMigrateTool: ToolDefinition = {
-  name: "devlog_migrate",
+  name: "dokoro_migrate",
   description:
     "Migrate existing markdown files into the SQLite database. Extracts tags, frontmatter, and section tags. Safe to run multiple times - only updates changed files.",
   inputSchema: z.object({
     project_path: z.string().optional().describe("Path to project root. Defaults to current directory."),
-    devlog_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
+    dokoro_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
     dry_run: z.boolean().optional().describe("Preview changes without modifying database."),
     force: z.boolean().optional().describe("Re-import all files even if unchanged."),
   }),
@@ -165,7 +165,7 @@ const devlogMigrateTool: ToolDefinition = {
     try {
       const options: MigrationOptions = {
         projectPath: (args.project_path as string) || process.cwd(),
-        devlogFolder: (args.devlog_folder as string) || "devlog",
+        devlogFolder: (args.dokoro_folder as string) || "devlog",
         dryRun: args.dry_run as boolean,
         force: args.force as boolean,
         verbose: false,
@@ -193,7 +193,7 @@ const devlogMigrateTool: ToolDefinition = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const devlogSearchTool: ToolDefinition = {
-  name: "devlog_search",
+  name: "dokoro_search",
   description:
     "Search devlog documents. Supports full-text search, filtering by status/type/tags/priority, and pagination.",
   inputSchema: z.object({
@@ -256,7 +256,7 @@ const devlogSearchTool: ToolDefinition = {
 };
 
 const devlogGetTool: ToolDefinition = {
-  name: "devlog_get",
+  name: "dokoro_get",
   description: "Get a specific devlog document by ID with full content and tags.",
   inputSchema: z.object({
     id: z.string().describe("Document ID (usually the filename without .md extension)."),
@@ -285,7 +285,7 @@ const devlogGetTool: ToolDefinition = {
 };
 
 const devlogCreateTool: ToolDefinition = {
-  name: "devlog_create",
+  name: "dokoro_create",
   description: "Create a new devlog document. Creates both the markdown file and database entry. Use components to track which code files this PRD/issue affects.",
   inputSchema: z.object({
     title: z.string().describe("Document title."),
@@ -396,7 +396,7 @@ const devlogCreateTool: ToolDefinition = {
 };
 
 const devlogUpdateTool: ToolDefinition = {
-  name: "devlog_update",
+  name: "dokoro_update",
   description: "Update a devlog document status, priority, components, or other fields. Use components to track which code files this document affects.",
   inputSchema: z.object({
     id: z.string().describe("Document ID to update."),
@@ -458,7 +458,7 @@ const devlogUpdateTool: ToolDefinition = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const devlogTagsTool: ToolDefinition = {
-  name: "devlog_tags",
+  name: "dokoro_tags",
   description: "List all tags with usage counts, or get tags for a specific document.",
   inputSchema: z.object({
     doc_id: z.string().optional().describe("Get tags for specific document."),
@@ -492,7 +492,7 @@ const devlogTagsTool: ToolDefinition = {
 };
 
 const devlogSectionTagsTool: ToolDefinition = {
-  name: "devlog_section_tags",
+  name: "dokoro_section_tags",
   description:
     "Find all sections tagged with a specific tag (e.g., 'plan', 'future-sprint'). Useful for finding planned features across documents.",
   inputSchema: z.object({
@@ -529,7 +529,7 @@ const devlogSectionTagsTool: ToolDefinition = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const devlogSessionTool: ToolDefinition = {
-  name: "devlog_session",
+  name: "dokoro_session",
   description: "Start, end, or check current devlog session.",
   inputSchema: z.object({
     action: z.enum(["start", "end", "status"]).describe("Action to perform."),
@@ -596,7 +596,7 @@ const devlogSessionTool: ToolDefinition = {
 };
 
 const devlogTimeTool: ToolDefinition = {
-  name: "devlog_time",
+  name: "dokoro_time",
   description: "Track time spent on documents. Start/stop timers for tasks.",
   inputSchema: z.object({
     action: z.enum(["start", "stop", "status"]).describe("Action to perform."),

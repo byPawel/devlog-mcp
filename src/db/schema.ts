@@ -31,7 +31,7 @@ export const project = sqliteTable("project", {
   id: text("id").primaryKey().default("default"),
   name: text("name").notNull(),
   rootPath: text("root_path").notNull(),
-  devlogPath: text("devlog_path").notNull(),
+  devlogPath: text("dokoro_path").notNull(),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   settingsJson: text("settings_json"),

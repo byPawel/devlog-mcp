@@ -43,7 +43,7 @@ export const MIGRATIONS: Migration[] = [
     ];
     for (const s of statements) db.prepare(s).run();
   } },
-  // Add composite routing index on agent_feedback for the devlog_feedback_route read path.
+  // Add composite routing index on agent_feedback for the dokoro_feedback_route read path.
   // Without this index, the Wilson-bound + decay query performs a full scan per tool
   // group (BUG-12). Statements run individually — NOT db.exec — consistent with v2.
   { version: 3, description: 'agent_feedback composite routing index (BUG-12)', up: (db) => {
@@ -115,7 +115,7 @@ export const MIGRATIONS: Migration[] = [
   // The table lives in schema.sql, but initializeSchema only runs schema.sql when
   // schema_version is ABSENT. DBs created before this table was added to schema.sql
   // already have schema_version, so they never got it — and no migration created it,
-  // so devlog_session_summary_add/recall failed. CREATE IF NOT EXISTS is a no-op on
+  // so dokoro_session_summary_add/recall failed. CREATE IF NOT EXISTS is a no-op on
   // fresh DBs (schema.sql already made it). The summary_embedding/compacted columns
   // are added idempotently at runtime by ensureEpisodicEmbeddingColumn/ensureCompactedColumn.
   { version: 7, description: 'create conversation_summaries on legacy DBs (episodic memory, BUG-31)', up: (db) => {

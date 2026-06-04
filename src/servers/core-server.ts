@@ -18,12 +18,12 @@ import { feedbackTools } from '../tools/feedback-tools.js';
 // Exported for use in tests.
 export const coreTools = [
   // Workspace management (includes time tracking)
-  workspaceTools.find(t => t.name === 'devlog_workspace_status')!,
-  workspaceTools.find(t => t.name === 'devlog_workspace_claim')!,
-  workspaceTools.find(t => t.name === 'devlog_workspace_dump')!,
-  workspaceTools.find(t => t.name === 'devlog_session_log')!,
-  workspaceTools.find(t => t.name === 'devlog_session_recall')!,
-  workspaceTools.find(t => t.name === 'devlog_session_summary_add')!,
+  workspaceTools.find(t => t.name === 'dokoro_workspace_status')!,
+  workspaceTools.find(t => t.name === 'dokoro_workspace_claim')!,
+  workspaceTools.find(t => t.name === 'dokoro_workspace_dump')!,
+  workspaceTools.find(t => t.name === 'dokoro_session_log')!,
+  workspaceTools.find(t => t.name === 'dokoro_session_recall')!,
+  workspaceTools.find(t => t.name === 'dokoro_session_summary_add')!,
 
   // Current.md management
   ...currentWorkspaceTools,

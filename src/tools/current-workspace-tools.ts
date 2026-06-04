@@ -28,7 +28,7 @@ interface UpdateSectionParams {
 
 export const currentWorkspaceTools: ToolDefinition[] = [
   {
-    name: 'devlog_regenerate_current',
+    name: 'dokoro_regenerate_current',
     title: 'Regenerate Current Workspace',
     description: 'Auto-generate or update current.md based on recent activity',
     inputSchema: {
@@ -98,7 +98,7 @@ export const currentWorkspaceTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_update_current_section',
+    name: 'dokoro_update_current_section',
     title: 'Update Current Section',
     description: 'Update a specific section in current.md',
     inputSchema: {
@@ -151,7 +151,7 @@ export const currentWorkspaceTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_get_current_focus',
+    name: 'dokoro_get_current_focus',
     title: 'Get Current Focus',
     description: 'Get the current focus and active tasks from current.md',
     inputSchema: {},

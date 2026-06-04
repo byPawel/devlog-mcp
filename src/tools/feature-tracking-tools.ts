@@ -199,7 +199,7 @@ async function listFeaturesInDirectory(dir: string): Promise<Feature[]> {
 
 export const featureTrackingTools: ToolDefinition[] = [
   {
-    name: 'devlog_feature_add',
+    name: 'dokoro_feature_add',
     title: 'Add Feature',
     description: 'Add a new feature idea for future development',
     inputSchema: {
@@ -277,7 +277,7 @@ export const featureTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_feature_list',
+    name: 'dokoro_feature_list',
     title: 'List Features',
     description: 'List features by status and/or priority',
     inputSchema: {
@@ -390,7 +390,7 @@ export const featureTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_feature_start',
+    name: 'dokoro_feature_start',
     title: 'Start Working on Feature',
     description: 'Start working on a feature (integrates with time tracking)',
     inputSchema: {
@@ -464,7 +464,7 @@ export const featureTrackingTools: ToolDefinition[] = [
                     `📊 Complexity: ${feature.complexity} | Priority: ${feature.priority} | Estimate: ${feature.estimate}\n\n` +
                     `📁 File: ${feature.file_path}\n\n` +
                     `💡 Feature is now marked as 'active'\n` +
-                    `💡 Use \`mcp: devlog_task_track start "Feature: ${feature.title}"\` to start time tracking\n` +
+                    `💡 Use \`mcp: dokoro_task_track start "Feature: ${feature.title}"\` to start time tracking\n` +
                     `💡 Use \`/feature:plan ${feature_id}\` to create implementation plan`,
             },
           ],
@@ -483,7 +483,7 @@ export const featureTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_feature_plan',
+    name: 'dokoro_feature_plan',
     title: 'Create Feature Implementation Plan',
     description: 'Convert a feature idea into a detailed implementation plan',
     inputSchema: {

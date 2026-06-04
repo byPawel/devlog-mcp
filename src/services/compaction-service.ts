@@ -129,7 +129,7 @@ export class CompactionService {
       }
 
       // Retain the consolidated history as ONE compacted row so it stays in the
-      // recall corpus (devlog_session_recall reads conversation_summaries).
+      // recall corpus (dokoro_session_recall reads conversation_summaries).
       // compacted=1 keeps it out of needsCompaction's trigger, so it never
       // self-retriggers; a later batch of summaries folds this row back in.
       const latestStartedAt = summaries[summaries.length - 1].started_at;

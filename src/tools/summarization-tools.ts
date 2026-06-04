@@ -13,7 +13,7 @@ import matter from 'gray-matter';
 
 export const summarizationTools: ToolDefinition[] = [
   {
-    name: 'devlog_summarize',
+    name: 'dokoro_summarize',
     title: 'Summarize Content',
     description: 'Generate a summary of devlog content',
     inputSchema: {
@@ -60,7 +60,7 @@ export const summarizationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_summarize_file',
+    name: 'dokoro_summarize_file',
     title: 'Summarize File',
     description: 'Summarize a specific devlog file',
     inputSchema: {
@@ -121,7 +121,7 @@ export const summarizationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_batch_summarize',
+    name: 'dokoro_batch_summarize',
     title: 'Batch Summarize',
     description: 'Summarize multiple devlog files',
     inputSchema: {
@@ -182,7 +182,7 @@ export const summarizationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_timeline_summary',
+    name: 'dokoro_timeline_summary',
     title: 'Timeline Summary',
     description: 'Generate a timeline summary of devlog entries',
     inputSchema: {
@@ -313,7 +313,7 @@ export const summarizationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_smart_digest',
+    name: 'dokoro_smart_digest',
     title: 'Smart Digest',
     description: 'Generate an intelligent digest of recent activity',
     inputSchema: {

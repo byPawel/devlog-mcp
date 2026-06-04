@@ -29,10 +29,10 @@ describe('agent_feedback table', () => {
       INSERT INTO agent_feedback
         (agent_id, tool_name, outcome, confidence, latency_ms, error_message, doc_id, session_id, recorded_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run('claude-opus-4-7', 'devlog_entity_extract_deep', 'success', 0.91, 1240, null, null, null);
+    `).run('claude-opus-4-7', 'dokoro_entity_extract_deep', 'success', 0.91, 1240, null, null, null);
 
     const row = db.prepare(`SELECT outcome, confidence FROM agent_feedback WHERE tool_name = ?`)
-      .get('devlog_entity_extract_deep') as { outcome: string; confidence: number };
+      .get('dokoro_entity_extract_deep') as { outcome: string; confidence: number };
 
     expect(row.outcome).toBe('success');
     expect(row.confidence).toBeCloseTo(0.91, 2);

@@ -28,7 +28,7 @@ jest.mock('../services/vector-service.js', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { workspaceTools } = require('./workspace-tools.js') as typeof import('./workspace-tools.js');
 
-const summaryAdd = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_summary_add')!;
+const summaryAdd = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_summary_add')!;
 
 describe('session_summary_add auto-compaction', () => {
   let db: Database.Database;
@@ -93,7 +93,7 @@ describe('session_summary_add auto-compaction', () => {
   });
 
   it('session_recall surfaces compacted history', async () => {
-    const recall = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall')!;
+    const recall = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall')!;
     for (const i of [1, 2]) {
       await summaryAdd.handler({ session_id: 's1', ai_model: 'opus', summary: `chunk ${i}`, token_count: 25000 });
     }

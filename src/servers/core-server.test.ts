@@ -1,7 +1,7 @@
 /**
  * Regression test: core-server must register both episodic-memory tools so
- * that the WRITE path (devlog_session_summary_add) is reachable alongside
- * the READ path (devlog_session_recall).
+ * that the WRITE path (dokoro_session_summary_add) is reachable alongside
+ * the READ path (dokoro_session_recall).
  *
  * We reconstruct the coreTools selection locally (mirroring core-server.ts)
  * rather than importing the entry-point file, which would start the server as
@@ -38,22 +38,22 @@ const { workspaceTools } = require('../tools/workspace-tools.js') as typeof impo
 
 // Names that core-server cherry-picks from workspaceTools.
 const CORE_WORKSPACE_TOOL_NAMES = [
-  'devlog_workspace_status',
-  'devlog_workspace_claim',
-  'devlog_workspace_dump',
-  'devlog_session_log',
-  'devlog_session_recall',
-  'devlog_session_summary_add',
+  'dokoro_workspace_status',
+  'dokoro_workspace_claim',
+  'dokoro_workspace_dump',
+  'dokoro_session_log',
+  'dokoro_session_recall',
+  'dokoro_session_summary_add',
 ];
 
 describe('core-server tool registration', () => {
-  it('includes devlog_session_recall (episodic read)', () => {
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_recall');
+  it('includes dokoro_session_recall (episodic read)', () => {
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_recall');
     expect(tool).toBeDefined();
   });
 
-  it('includes devlog_session_summary_add (episodic write)', () => {
-    const tool = workspaceTools.find((t: { name: string }) => t.name === 'devlog_session_summary_add');
+  it('includes dokoro_session_summary_add (episodic write)', () => {
+    const tool = workspaceTools.find((t: { name: string }) => t.name === 'dokoro_session_summary_add');
     expect(tool).toBeDefined();
   });
 
@@ -75,8 +75,8 @@ describe('core-server tool registration', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { coreTools } = require('./core-server.js') as typeof import('./core-server.js');
     const names = coreTools.map((t: { name: string }) => t.name);
-    expect(names).toContain('devlog_regenerate_current');
-    expect(names).toContain('devlog_update_current_section');
-    expect(names).toContain('devlog_get_current_focus');
+    expect(names).toContain('dokoro_regenerate_current');
+    expect(names).toContain('dokoro_update_current_section');
+    expect(names).toContain('dokoro_get_current_focus');
   });
 });

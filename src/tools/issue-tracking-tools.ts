@@ -203,7 +203,7 @@ async function listIssuesInDirectory(dir: string): Promise<Issue[]> {
 
 export const issueTrackingTools: ToolDefinition[] = [
   {
-    name: 'devlog_issue_add',
+    name: 'dokoro_issue_add',
     title: 'Add Issue',
     description: 'Create a new issue/bug for tracking and later resolution',
     inputSchema: {
@@ -297,7 +297,7 @@ export const issueTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_issue_list',
+    name: 'dokoro_issue_list',
     title: 'List Issues',
     description: 'List issues by status and/or priority',
     inputSchema: {
@@ -408,7 +408,7 @@ export const issueTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_issue_work',
+    name: 'dokoro_issue_work',
     title: 'Start Working on Issue',
     description: 'Start working on an issue (integrates with time tracking)',
     inputSchema: {
@@ -497,7 +497,7 @@ export const issueTrackingTools: ToolDefinition[] = [
                 data: {
                   title: `Working on: ${issue.title}`,
                   status: 'success',
-                  message: `${icon('info')} This issue is now marked as 'active'\n${icon('info')} Use \`devlog_task_track start "Issue: ${issue.title}"\` to start time tracking\n${icon('info')} Use \`/issue:done ${issue_id}\` when completed`,
+                  message: `${icon('info')} This issue is now marked as 'active'\n${icon('info')} Use \`dokoro_task_track start "Issue: ${issue.title}"\` to start time tracking\n${icon('info')} Use \`/issue:done ${issue_id}\` when completed`,
                   details: {
                     'Details': `${issue.category} | ${issue.priority} | ${issue.estimate}`,
                     'File': issue.file_path,
@@ -528,7 +528,7 @@ export const issueTrackingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_issue_complete',
+    name: 'dokoro_issue_complete',
     title: 'Complete Issue',
     description: 'Mark an issue as completed with solution (integrates with time tracking)',
     inputSchema: {
@@ -619,7 +619,7 @@ export const issueTrackingTools: ToolDefinition[] = [
                 data: {
                   title: `Issue Completed: ${issue.title}`,
                   status: 'success',
-                  message: `${icon('info')} Issue moved to 'resolved' status\n${icon('info')} Use \`devlog_task_track complete\` to stop time tracking if active`,
+                  message: `${icon('info')} Issue moved to 'resolved' status\n${icon('info')} Use \`dokoro_task_track complete\` to stop time tracking if active`,
                   details: {
                     'Solution': solution,
                     'File': newFilePath,

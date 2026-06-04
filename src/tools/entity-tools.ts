@@ -75,7 +75,7 @@ interface DocRow {
 
 export const entityTools: ToolDefinition[] = [
   {
-    name: 'devlog_entity_graph',
+    name: 'dokoro_entity_graph',
     title: 'Entity Graph',
     description:
       'Query the entity knowledge graph. Search entities by name/type, or explore the graph from a specific entity using recursive traversal. Returns entities, their relations, and linked documents.',
@@ -125,7 +125,7 @@ export const entityTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '**Error:** Database not initialized. Run `devlog_init` first.',
+              text: '**Error:** Database not initialized. Run `dokoro_init` first.',
             },
           ],
           isError: true,
@@ -157,7 +157,7 @@ export const entityTools: ToolDefinition[] = [
     },
   },
   {
-    name: 'devlog_entity_extract_deep',
+    name: 'dokoro_entity_extract_deep',
     title: 'Deep Entity Extraction',
     description:
       'Run LLM-powered deep entity extraction on a document. Uses Ollama to extract richer entities and relations than regex alone, then persists to the knowledge graph. Requires Ollama with an inference model (default: llama3.2).',
@@ -183,7 +183,7 @@ export const entityTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: '**Error:** Database not initialized. Run `devlog_init` first.',
+              text: '**Error:** Database not initialized. Run `dokoro_init` first.',
             },
           ],
           isError: true,

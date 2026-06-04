@@ -165,7 +165,7 @@ async function getLatestBackup(): Promise<string | null> {
 
 export const backupRecoveryTools: ToolDefinition[] = [
   {
-    name: 'devlog_backup_verify',
+    name: 'dokoro_backup_verify',
     title: 'Verify Backup Status',
     description: 'Verify backup status and data integrity',
     inputSchema: {
@@ -271,7 +271,7 @@ export const backupRecoveryTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_restore_items',
+    name: 'dokoro_restore_items',
     title: 'Restore Items from Backup',
     description: 'Restore issues/features from backup files',
     inputSchema: {
@@ -442,7 +442,7 @@ export const backupRecoveryTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_health_check',
+    name: 'dokoro_health_check',
     title: 'System Health Check',
     description: 'Check consistency between files and currentWeek.md',
     inputSchema: {

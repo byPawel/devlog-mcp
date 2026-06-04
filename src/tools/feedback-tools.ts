@@ -2,8 +2,8 @@
  * Affective Memory MCP Tools
  *
  * Provides two tools for recording and querying agent feedback (affective memory layer):
- * - devlog_feedback_record: Persist the outcome of a tool call
- * - devlog_feedback_query: Summarise success rates and per-tool stats
+ * - dokoro_feedback_record: Persist the outcome of a tool call
+ * - dokoro_feedback_query: Summarise success rates and per-tool stats
  */
 
 import { z } from 'zod';
@@ -29,7 +29,7 @@ const Outcome = z.enum(['success', 'failure', 'partial', 'rejected', 'timeout'])
 /**
  * Wilson score lower bound at z=1.96 (95% confidence).
  * Returns a lower bound on the true success rate given n trials and k successes.
- * This is used as the sort key for devlog_feedback_route so a tool with 1/1 does
+ * This is used as the sort key for dokoro_feedback_route so a tool with 1/1 does
  * not outrank a tool with 95/100.
  */
 function wilsonLower(k: number, n: number, z = 1.96): number {
@@ -43,7 +43,7 @@ function wilsonLower(k: number, n: number, z = 1.96): number {
 
 export const feedbackTools: ToolDefinition[] = [
   {
-    name: 'devlog_feedback_record',
+    name: 'dokoro_feedback_record',
     title: 'Record agent feedback',
     description: 'Record the outcome of a tool call into the affective memory layer.',
     inputSchema: {
@@ -96,7 +96,7 @@ export const feedbackTools: ToolDefinition[] = [
     },
   },
   {
-    name: 'devlog_feedback_query',
+    name: 'dokoro_feedback_query',
     title: 'Query agent feedback',
     description: 'Summarise affective memory: success rate, recent failures, per-tool stats.',
     inputSchema: {
@@ -148,7 +148,7 @@ export const feedbackTools: ToolDefinition[] = [
     },
   },
   {
-    name: 'devlog_feedback_route',
+    name: 'dokoro_feedback_route',
     title: 'Route tool selection via affective memory',
     description:
       'Return a statistically-sound ranked list of tools using Wilson lower bound (z=1.96) ' +

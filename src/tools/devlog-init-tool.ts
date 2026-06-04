@@ -13,7 +13,7 @@ import { renderOutput } from '../utils/render-output.js';
 // import { icon } from '../utils/icons.js';
 
 export const devlogInitTool: ToolDefinition = {
-  name: 'devlog_init',
+  name: 'dokoro_init',
   title: 'Initialize DevLog',
   description: 'Initialize devlog structure in a project (creates directories and initial files)',
   inputSchema: {
@@ -92,9 +92,9 @@ This is the development log for tracking project progress, decisions, and insigh
 
 ## Getting Started
 
-1. Use \`devlog_workspace_claim\` to start a new session
-2. Track progress with \`devlog_session_log\`
-3. End sessions with \`devlog_workspace_dump\`
+1. Use \`dokoro_workspace_claim\` to start a new session
+2. Track progress with \`dokoro_session_log\`
+3. End sessions with \`dokoro_workspace_dump\`
 
 ## Conventions
 
@@ -197,7 +197,7 @@ private/
                 details: {
                   'Directories': `${directories.length} created`,
                   'Files': 'README.md, current.md, .gitignore',
-                  'Next': 'Run devlog_workspace_claim to start',
+                  'Next': 'Run dokoro_workspace_claim to start',
                 },
               },
             }),

@@ -9,7 +9,7 @@ import { icon } from '../utils/icons.js';
 
 export const analysisTools: ToolDefinition[] = [
   {
-    name: 'devlog_feature_status',
+    name: 'dokoro_feature_status',
     title: 'Feature Status',
     description: 'Get current feature implementation status',
     inputSchema: {
@@ -74,7 +74,7 @@ export const analysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_pending',
+    name: 'dokoro_pending',
     title: 'Pending Items',
     description: 'Find stale or incomplete work items',
     inputSchema: {
@@ -135,7 +135,7 @@ export const analysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_velocity_insights',
+    name: 'dokoro_velocity_insights',
     title: 'Velocity Insights',
     description: 'Track development productivity patterns and metrics',
     inputSchema: {
@@ -204,7 +204,7 @@ export const analysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_timeline',
+    name: 'dokoro_timeline',
     title: 'Timeline',
     description: 'Generate chronological development history',
     inputSchema: {
@@ -276,7 +276,7 @@ export const analysisTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_test_checklist',
+    name: 'dokoro_test_checklist',
     title: 'Test Checklist',
     description: 'Generate automated test suggestions based on feature and regression history',
     inputSchema: {

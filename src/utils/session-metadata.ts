@@ -162,7 +162,7 @@ export function classifyToolActivity(toolName: string): keyof SessionMetadata['a
     coding: ['Edit', 'Write', 'MultiEdit', 'NotebookEdit'],
     testing: ['Bash', 'eslint', 'TodoWrite'],
     research: ['Read', 'Grep', 'Search', 'WebFetch', 'WebSearch', 'perplexity'],
-    planning: ['think', 'exit_plan_mode', 'devlog_plan', 'devlog_whats_next']
+    planning: ['think', 'exit_plan_mode', 'dokoro_plan', 'dokoro_whats_next']
   };
   
   for (const [activity, tools] of Object.entries(patterns)) {

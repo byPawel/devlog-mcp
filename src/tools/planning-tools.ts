@@ -34,7 +34,7 @@ import { icon } from '../utils/icons.js';
 
 export const planningTools: ToolDefinition[] = [
   {
-    name: 'devlog_plan_feature',
+    name: 'dokoro_plan_feature',
     title: 'Plan Feature',
     description: 'Create implementation plan based on research and existing patterns',
     inputSchema: {
@@ -73,7 +73,7 @@ export const planningTools: ToolDefinition[] = [
           plan += `2. Review documentation and best practices\n`;
           plan += `3. Check for similar implementations in codebase\n`;
           plan += `4. Identify potential conflicts or dependencies\n\n`;
-          plan += `${icon('sparkle')} Use Perplexity or Claude.ai to research this feature, then save findings with devlog_capture_research.\n\n`;
+          plan += `${icon('sparkle')} Use Perplexity or Claude.ai to research this feature, then save findings with dokoro_capture_research.\n\n`;
           break;
         }
 
@@ -170,7 +170,7 @@ export const planningTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_capture_research',
+    name: 'dokoro_capture_research',
     title: 'Capture Research',
     description: 'Save research findings from Perplexity/Claude',
     inputSchema: {
@@ -232,7 +232,7 @@ export const planningTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `${icon('success')} **Research captured:** ${filePath}\n\n${icon('tag')} Topic: ${topic}\n\n${icon('sparkle')} Use 'devlog_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
+              text: `${icon('success')} **Research captured:** ${filePath}\n\n${icon('tag')} Topic: ${topic}\n\n${icon('sparkle')} Use 'dokoro_plan_feature' with approach='use_existing_research' to create an implementation plan based on this research.`,
             },
           ],
         };
@@ -250,7 +250,7 @@ export const planningTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_whats_next',
+    name: 'dokoro_whats_next',
     title: 'What\'s Next',
     description: 'Get prioritized suggestions for next tasks',
     inputSchema: {
@@ -334,9 +334,9 @@ export const planningTools: ToolDefinition[] = [
 
       // Add general suggestions
       suggestions.push(`## ${icon('task')} General Suggestions`);
-      suggestions.push(`${icon('chart')} Run \`devlog_velocity_insights\` to check your productivity patterns`);
-      suggestions.push(`${icon('tag')} Use \`devlog_tag_stats\` to ensure good documentation coverage`);
-      suggestions.push(`${icon('search')} Review \`devlog_pending staleness=stale\` for forgotten tasks`);
+      suggestions.push(`${icon('chart')} Run \`dokoro_velocity_insights\` to check your productivity patterns`);
+      suggestions.push(`${icon('tag')} Use \`dokoro_tag_stats\` to ensure good documentation coverage`);
+      suggestions.push(`${icon('search')} Review \`dokoro_pending staleness=stale\` for forgotten tasks`);
       
       return {
         content: [

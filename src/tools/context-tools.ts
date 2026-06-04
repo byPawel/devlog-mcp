@@ -6,7 +6,7 @@ import { AmbientContextService } from '../services/ambient-context.js';
 
 export const contextTools: ToolDefinition[] = [
   {
-    name: 'devlog_ambient_context',
+    name: 'dokoro_ambient_context',
     title: 'Ambient Context',
     description: 'Auto-detect project context from git state and surface relevant devlog entries',
     inputSchema: {

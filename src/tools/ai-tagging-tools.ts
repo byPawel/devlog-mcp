@@ -14,7 +14,7 @@ import matter from 'gray-matter';
 
 export const aiTaggingTools: ToolDefinition[] = [
   {
-    name: 'devlog_auto_tag',
+    name: 'dokoro_auto_tag',
     title: 'Auto Tag Content',
     description: 'Automatically suggest tags for devlog content',
     inputSchema: {
@@ -72,7 +72,7 @@ export const aiTaggingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_validate_tags',
+    name: 'dokoro_validate_tags',
     title: 'Validate Tags',
     description: 'Validate tags against the taxonomy',
     inputSchema: {
@@ -106,7 +106,7 @@ export const aiTaggingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_tag_batch',
+    name: 'dokoro_tag_batch',
     title: 'Batch Tag Analysis',
     description: 'Analyze and tag multiple devlog entries',
     inputSchema: {
@@ -194,7 +194,7 @@ export const aiTaggingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_tag_stats',
+    name: 'dokoro_tag_stats',
     title: 'Tag Statistics',
     description: 'Get statistics about tag usage',
     inputSchema: {
@@ -301,7 +301,7 @@ export const aiTaggingTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_suggest_tags',
+    name: 'dokoro_suggest_tags',
     title: 'Suggest Tags',
     description: 'Get real-time tag suggestions for partial content',
     inputSchema: {

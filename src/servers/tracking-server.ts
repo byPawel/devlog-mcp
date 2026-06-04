@@ -26,8 +26,8 @@ const trackingTools = [
   ...backupRecoveryTools,
   
   // Task tracking (time integration)
-  taskTrackingTools.find(t => t.name === 'devlog_task_track')!,
-  taskTrackingTools.find(t => t.name === 'devlog_task_list')!
+  taskTrackingTools.find(t => t.name === 'dokoro_task_track')!,
+  taskTrackingTools.find(t => t.name === 'dokoro_task_list')!
 ].filter(Boolean);
 
 const config = {

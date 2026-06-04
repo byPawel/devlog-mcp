@@ -82,7 +82,7 @@ export const bridgeTools: ToolDefinition[] = [
     title: 'Import Tachibot Plan',
     description:
       'Import phases from tachibot planner_maker into the devlog plan tracking system. ' +
-      'Creates a plan that works with devlog_plan_check, devlog_plan_validate, devlog_plan_status, etc.',
+      'Creates a plan that works with dokoro_plan_check, dokoro_plan_validate, dokoro_plan_status, etc.',
     inputSchema: {
       title: z.string().describe('Plan title'),
       phases: z.array(z.string()).min(1).describe('List of plan phases/steps to track'),
@@ -109,7 +109,7 @@ export const bridgeTools: ToolDefinition[] = [
               `Status: ${args.status || 'active'}`,
               `Path: ${result.planPath}`,
               '',
-              'Use devlog_plan_status, devlog_plan_check, devlog_plan_validate to manage this plan.',
+              'Use dokoro_plan_status, dokoro_plan_check, dokoro_plan_validate to manage this plan.',
             ].join('\n'),
           }],
         };

@@ -67,7 +67,7 @@ describe('question-tools concurrent writes (BUG-20)', () => {
   }
 
   it('single question add stores the question', async () => {
-    const addTool = findTool('devlog_question_add');
+    const addTool = findTool('dokoro_question_add');
     await addTool.handler({ question: 'Is this working?', priority: 'medium' });
 
     const questionsFile = path.join(tmpDir, '.mcp', 'questions.json');
@@ -76,9 +76,9 @@ describe('question-tools concurrent writes (BUG-20)', () => {
     expect(saved[0].question).toBe('Is this working?');
   });
 
-  it('N concurrent devlog_question_add calls — all N questions are persisted (no lost writes)', async () => {
+  it('N concurrent dokoro_question_add calls — all N questions are persisted (no lost writes)', async () => {
     const N = 10;
-    const addTool = findTool('devlog_question_add');
+    const addTool = findTool('dokoro_question_add');
 
     await Promise.all(
       Array.from({ length: N }, (_, i) =>
@@ -98,7 +98,7 @@ describe('question-tools concurrent writes (BUG-20)', () => {
   });
 
   it('question_add and question_answer interleaved — no data lost', async () => {
-    const addTool = findTool('devlog_question_add');
+    const addTool = findTool('dokoro_question_add');
 
     // Add 5 questions sequentially to populate
     for (let i = 0; i < 5; i++) {
@@ -117,9 +117,9 @@ describe('question-tools concurrent writes (BUG-20)', () => {
     expect(saved).toHaveLength(10);
   });
 
-  it('devlog_question_list returns all added questions', async () => {
-    const addTool = findTool('devlog_question_add');
-    const listTool = findTool('devlog_question_list');
+  it('dokoro_question_list returns all added questions', async () => {
+    const addTool = findTool('dokoro_question_add');
+    const listTool = findTool('dokoro_question_list');
 
     await Promise.all([
       addTool.handler({ question: 'Alpha?', priority: 'high' }),

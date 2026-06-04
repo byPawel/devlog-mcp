@@ -11,7 +11,7 @@ import Database from 'better-sqlite3';
 
 // We exercise the SQL statement directly, mirroring what workspace-tools.ts does.
 // This avoids the heavy file-system / workspace scaffolding required to invoke
-// the full devlog_workspace_dump handler.
+// the full dokoro_workspace_dump handler.
 function runDumpUpsert(
   db: Database.Database,
   docId: string,

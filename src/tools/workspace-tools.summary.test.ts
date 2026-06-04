@@ -31,7 +31,7 @@ jest.mock('../services/vector-service.js', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { workspaceTools } = require('./workspace-tools.js') as typeof import('./workspace-tools.js');
 
-describe('devlog_session_summary_add', () => {
+describe('dokoro_session_summary_add', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -92,7 +92,7 @@ describe('devlog_session_summary_add', () => {
     `).run();
     db.pragma('foreign_keys = ON');
 
-    const add = workspaceTools.find(t => t.name === 'devlog_session_summary_add')!;
+    const add = workspaceTools.find(t => t.name === 'dokoro_session_summary_add')!;
     const res = await add.handler({ session_id: 'council-adhoc-label', ai_model: 'claude', summary: 'ad-hoc council verdict' });
     expect((res as { isError?: boolean }).isError).toBeFalsy();
 
@@ -104,10 +104,10 @@ describe('devlog_session_summary_add', () => {
   });
 
   it('session_summary_add inserts a row that session_recall returns', async () => {
-    const add = workspaceTools.find(t => t.name === 'devlog_session_summary_add')!;
+    const add = workspaceTools.find(t => t.name === 'dokoro_session_summary_add')!;
     expect(add).toBeDefined();
     await add.handler({ session_id: 's1', ai_model: 'claude-opus-4-7', summary: 'fixed login race', message_count: 10 });
-    const recall = workspaceTools.find(t => t.name === 'devlog_session_recall')!;
+    const recall = workspaceTools.find(t => t.name === 'dokoro_session_recall')!;
     const res = await recall.handler({ query: 'login' });
     const text = res.content?.[0]?.type === 'text' ? res.content[0].text : '';
     expect(text).toMatch(/fixed login race/);

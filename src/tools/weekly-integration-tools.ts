@@ -268,7 +268,7 @@ async function extractItemsFromCurrent(): Promise<WeeklyItem[]> {
 
 export const weeklyIntegrationTools: ToolDefinition[] = [
   {
-    name: 'devlog_weekly_add_item',
+    name: 'dokoro_weekly_add_item',
     title: 'Add Item to Current Week',
     description: 'Add issue/feature/task to currentWeek.md without removing existing items',
     inputSchema: {
@@ -318,7 +318,7 @@ export const weeklyIntegrationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_weekly_sync',
+    name: 'dokoro_weekly_sync',
     title: 'Sync Current to Weekly',
     description: 'Sync pending items from current.md to currentWeek.md',
     inputSchema: {
@@ -417,7 +417,7 @@ export const weeklyIntegrationTools: ToolDefinition[] = [
   },
 
   {
-    name: 'devlog_weekly_status',
+    name: 'dokoro_weekly_status',
     title: 'Show Weekly Status',
     description: 'Show current week progress with time breakdown',
     inputSchema: {

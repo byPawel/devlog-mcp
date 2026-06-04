@@ -26,7 +26,7 @@ function extractText(res: Awaited<ReturnType<(typeof entityTools)[number]['handl
   return first.text;
 }
 
-describe('devlog_entity_graph bi-temporal filtering', () => {
+describe('dokoro_entity_graph bi-temporal filtering', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
   });
 
   it('default (no as_of): returns only the currently-open fact (valid_from in past, valid_to NULL)', async () => {
-    const tool = findTool('devlog_entity_graph');
+    const tool = findTool('dokoro_entity_graph');
     const res = await tool.handler({ entityId: 1, depth: 2 });
     expect(res.isError).toBeFalsy();
     const text = extractText(res);
@@ -71,7 +71,7 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
   });
 
   it('as_of in 2024: returns only the historical closed fact (open at that time)', async () => {
-    const tool = findTool('devlog_entity_graph');
+    const tool = findTool('dokoro_entity_graph');
     const res = await tool.handler({ entityId: 1, depth: 2, as_of: '2024-06-01T00:00:00Z' });
     expect(res.isError).toBeFalsy();
     const text = extractText(res);
@@ -81,7 +81,7 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
   });
 
   it('as_of in 2025: returns only the open fact (historical closed; future not yet started)', async () => {
-    const tool = findTool('devlog_entity_graph');
+    const tool = findTool('dokoro_entity_graph');
     const res = await tool.handler({ entityId: 1, depth: 2, as_of: '2025-06-01T00:00:00Z' });
     expect(res.isError).toBeFalsy();
     const text = extractText(res);
@@ -92,7 +92,7 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
 
   // BUG-6: as_of with milliseconds should be normalized and still match stored Z timestamps
   it('BUG-6: as_of WITH milliseconds normalizes correctly and returns the open relation', async () => {
-    const tool = findTool('devlog_entity_graph');
+    const tool = findTool('dokoro_entity_graph');
     // Pass as_of with explicit milliseconds — before the fix this could mis-sort
     // against the millisecond-free stored values like '2025-01-01T00:00:00Z'.
     const res = await tool.handler({ entityId: 1, depth: 2, as_of: '2026-06-01T00:00:00.000Z' });
@@ -106,7 +106,7 @@ describe('devlog_entity_graph bi-temporal filtering', () => {
   });
 });
 
-describe('devlog_entity_graph cycle traversal (BUG-14)', () => {
+describe('dokoro_entity_graph cycle traversal (BUG-14)', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -139,7 +139,7 @@ describe('devlog_entity_graph cycle traversal (BUG-14)', () => {
   // BUG-14: UNION ALL allows traversal through cyclic graphs up to depth limit;
   // the old UNION deduplication could prune valid deeper paths.
   it('BUG-14: depth-3 traversal through a cycle A→B→C→A returns all three relations', async () => {
-    const tool = findTool('devlog_entity_graph');
+    const tool = findTool('dokoro_entity_graph');
     const res = await tool.handler({ entityId: 1, depth: 3 });
     expect(res.isError).toBeFalsy();
     const text = extractText(res);

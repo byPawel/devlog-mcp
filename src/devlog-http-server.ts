@@ -185,7 +185,7 @@ const getDevLogServer = () => {
 
   // Register a test tool
   server.registerTool(
-    'test_devlog_connection',
+    'test_dokoro_connection',
     {
       title: 'Test DevLog Connection',
       description: 'Test if the devlog server is working',
@@ -237,7 +237,7 @@ app.get('/', (req, res) => {
           <li><code>search_devlogs</code> - Search across devlog entries</li>
           <li><code>list_recent_devlogs</code> - List recent modifications</li>
           <li><code>analyze_feature_history</code> - Analyze feature development</li>
-          <li><code>test_devlog_connection</code> - Test server connection</li>
+          <li><code>test_dokoro_connection</code> - Test server connection</li>
         </ul>
         
         <h2>Test with curl</h2>

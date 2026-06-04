@@ -14,7 +14,7 @@ import { icon } from '../utils/icons.js';
 
 export const taskTrackingTools: ToolDefinition[] = [
   {
-    name: 'devlog_task_track',
+    name: 'dokoro_task_track',
     title: 'Track Task',
     description: 'Start, pause, resume, iterate, or complete a task',
     inputSchema: {
@@ -35,7 +35,7 @@ export const taskTrackingTools: ToolDefinition[] = [
                 data: {
                   title: 'No Workspace',
                   status: 'error',
-                  message: 'Use devlog_workspace_claim first.',
+                  message: 'Use dokoro_workspace_claim first.',
                 },
               }),
             },
@@ -350,7 +350,7 @@ export const taskTrackingTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_task_list',
+    name: 'dokoro_task_list',
     title: 'List Tasks',
     description: 'List all tasks in current session',
     inputSchema: {},

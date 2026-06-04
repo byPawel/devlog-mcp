@@ -6,7 +6,7 @@ import { renderOutput } from '../utils/render-output.js';
 
 export const conflictTools: ToolDefinition[] = [
   {
-    name: 'devlog_detect_conflicts',
+    name: 'dokoro_detect_conflicts',
     title: 'Detect Conflicts',
     description: 'Find potential conflicts with existing features',
     inputSchema: {
@@ -65,7 +65,7 @@ export const conflictTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_check_duplicate',
+    name: 'dokoro_check_duplicate',
     title: 'Check Duplicate',
     description: 'Check if feature has already been implemented',
     inputSchema: {
@@ -122,7 +122,7 @@ export const conflictTools: ToolDefinition[] = [
   },
   
   {
-    name: 'devlog_regression_history',
+    name: 'dokoro_regression_history',
     title: 'Regression History',
     description: 'Track what broke before - prevent repeating failures',
     inputSchema: {
