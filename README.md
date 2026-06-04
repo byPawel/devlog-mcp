@@ -7,6 +7,7 @@
 A multi-layer **agent memory** MCP server: a persistent brain for your LLM agent.
 Remember what you're doing, what you did, what you know, and **how well each tool actually performs** — across sessions, models, and projects.
 
+[![Website](https://img.shields.io/badge/website-bypawel.github.io%2Fdevlog--mcp-6e5494.svg)](https://bypawel.github.io/devlog-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-43853d.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](https://www.typescriptlang.org/)
