@@ -5,7 +5,8 @@
  * computed at READ time: an agent is live if now - last_heartbeat <= TTL. Heartbeats
  * are opportunistic (an explicit dokoro_presence_ping; agents call it at session start
  * and during work — no timers). last_heartbeat is server-assigned (SQLite unixepoch,
- * one clock domain); heartbeat_seq rejects out-of-order retries. Per-project only.
+ * one clock domain), so out-of-order writes aren't a risk; heartbeat_seq is a
+ * monotonic per-agent beat counter (diagnostic). Per-project only.
  */
 import { z } from 'zod';
 import type Database from 'better-sqlite3';

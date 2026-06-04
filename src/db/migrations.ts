@@ -207,7 +207,7 @@ export const MIGRATIONS: Migration[] = [
   // v11: agent_presence — daemonless heartbeat presence. One row per agent (upsert).
   // last_heartbeat is server-assigned unixepoch seconds (single clock domain);
   // liveness is computed at READ time (now - last_heartbeat <= TTL). No sweeper.
-  // heartbeat_seq rejects out-of-order retries. Per-project only.
+  // heartbeat_seq is a monotonic per-agent beat counter (diagnostic). Per-project only.
   { version: 11, description: 'agent_presence table for heartbeat-based multi-agent presence', up: (db) => {
     const statements = [
       `CREATE TABLE IF NOT EXISTS agent_presence (
