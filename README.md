@@ -240,7 +240,7 @@ Tools are organised by which memory layer they read or write.
 
 </details>
 
-> Tools above are exposed by the **core server** (`dist/servers/core-server.js`). The optional **analytics server** (`dist/servers/analytics-server.js`) adds `devlog_compress_week`. Other modular servers (search, planning, tracking) expose additional tools not yet wired into core — see `src/servers/*.ts`.
+> Tools above are exposed by the **core server** (`bin/devlog-core.js`). The optional **analytics server** (`bin/devlog-analytics.js`) adds `devlog_compress_week`. Other modular servers (search, planning, tracking) expose additional tools not yet wired into core — see `src/servers/*.ts`.
 
 ---
 
@@ -278,10 +278,10 @@ Register the server with Claude:
 
 ```bash
 # Core server (essential features)
-claude mcp add devlog-core "node" "$(pwd)/dist/servers/core-server.js"
+claude mcp add devlog-core "node" "$(pwd)/bin/devlog-core.js"
 
 # …or with environment variables
-claude mcp add devlog-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/dist/servers/core-server.js"
+claude mcp add devlog-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/bin/devlog-core.js"
 ```
 
 ### Ollama setup (optional)

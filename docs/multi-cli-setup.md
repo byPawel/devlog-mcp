@@ -6,19 +6,19 @@ DevLog MCP is designed to work with various AI CLI tools, not just Claude Code.
 
 ### Claude Code (Primary)
 ```bash
-claude mcp add devlog "node" "$(pwd)/dist/servers/core-server.js"
+claude mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
 ```
 
 ### Gemini CLI
 ```bash
 # Using gemini-cli (https://github.com/google-gemini/gemini-cli)
-gemini mcp add devlog "node" "$(pwd)/dist/servers/core-server.js"
+gemini mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
 ```
 
 ### Qwen3 Coder
 ```bash
 # Using Qwen3 Coder (https://qwenlm.github.io/blog/qwen3-coder/)
-qwen mcp add devlog "node" "$(pwd)/dist/servers/core-server.js"
+qwen mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
 ```
 
 ## CLI-Specific Configuration
@@ -72,9 +72,9 @@ DEVLOG_WORKSPACE_ID=qwen-workspace
 
 Add servers with different names:
 ```bash
-claude mcp add devlog-claude "./mcp-wrapper.sh" ".env.claude" "node" "dist/servers/core-server.js"
-gemini mcp add devlog-gemini "./mcp-wrapper.sh" ".env.gemini" "node" "dist/servers/core-server.js"
-qwen mcp add devlog-qwen "./mcp-wrapper.sh" ".env.qwen" "node" "dist/servers/core-server.js"
+claude mcp add devlog-claude "./mcp-wrapper.sh" ".env.claude" "node" "bin/devlog-core.js"
+gemini mcp add devlog-gemini "./mcp-wrapper.sh" ".env.gemini" "node" "bin/devlog-core.js"
+qwen mcp add devlog-qwen "./mcp-wrapper.sh" ".env.qwen" "node" "bin/devlog-core.js"
 ```
 
 ### Option 2: Unified Configuration
@@ -161,7 +161,7 @@ qwen generate "Create a test suite"
 ### CLI Not Detected
 ```bash
 # Manually specify CLI
-DEVLOG_CLI_NAME=gemini node dist/servers/core-server.js
+DEVLOG_CLI_NAME=gemini node bin/devlog-core.js
 ```
 
 ### Feature Not Supported
