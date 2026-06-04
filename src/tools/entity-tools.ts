@@ -21,7 +21,7 @@ function getSqlite(): Database.Database {
   const existing = (globalThis as Record<string, unknown>).__TEST_DB__ as Database.Database | undefined;
   if (existing) return existing;
   const projectPath = path.dirname(DOKORO_PATH);
-  return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+  return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
 }
 
 interface EntityRow {

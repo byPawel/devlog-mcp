@@ -1,5 +1,5 @@
 /**
- * Built-in Themes for DevLog MCP
+ * Built-in Themes for Dokoro MCP
  *
  * Four themes ported from tachibot-mcp:
  * - nebula: Modern SaaS look, soft pastels (default)

@@ -3,8 +3,8 @@
  *
  * Three tools:
  * - bridge_index_research: Index tachibot research into LanceDB
- * - bridge_import_plan: Import tachibot planner phases into devlog plans
- * - bridge_get_context: Pull relevant devlog knowledge for tachibot reasoning
+ * - bridge_import_plan: Import tachibot planner phases into dokoro plans
+ * - bridge_get_context: Pull relevant dokoro knowledge for tachibot reasoning
  *
  * All opt-in via DOKORO_ENABLE_TACHIBOT_BRIDGE=true
  */
@@ -81,7 +81,7 @@ export const bridgeTools: ToolDefinition[] = [
     name: 'bridge_import_plan',
     title: 'Import Tachibot Plan',
     description:
-      'Import phases from tachibot planner_maker into the devlog plan tracking system. ' +
+      'Import phases from tachibot planner_maker into the dokoro plan tracking system. ' +
       'Creates a plan that works with dokoro_plan_check, dokoro_plan_validate, dokoro_plan_status, etc.',
     inputSchema: {
       title: z.string().describe('Plan title'),
@@ -129,7 +129,7 @@ export const bridgeTools: ToolDefinition[] = [
     name: 'bridge_get_context',
     title: 'Get Devlog Context',
     description:
-      'Pull relevant knowledge from devlog (research, plans, docs) as compact context for tachibot reasoning tools. ' +
+      'Pull relevant knowledge from dokoro (research, plans, docs) as compact context for tachibot reasoning tools. ' +
       'Returns title/type/excerpt/score entries optimized for pasting into tool inputs.',
     inputSchema: {
       query: z.string().describe('Search query (natural language or keywords)'),

@@ -1,5 +1,5 @@
 /**
- * Smart Icon System for DevLog MCP
+ * Smart Icon System for Dokoro MCP
  * Ported from tachibot-mcp's ink-renderer.tsx
  *
  * Auto-detects Nerd Font support and falls back to Unicode
@@ -114,7 +114,7 @@ export const nerdIcons = {
   branchEnd: '',    // dev-git-branch
   pipe: '│',
 
-  // DevLog specific
+  // Dokoro specific
   session: '󰧑',     // md-brain
   workspace: '',   // md-robot
   search: '',      // fa-search

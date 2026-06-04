@@ -127,7 +127,7 @@ function getAutoFeedbackDb(): import('better-sqlite3').Database | null {
     const testDb = (globalThis as Record<string, unknown>).__TEST_DB__ as import('better-sqlite3').Database | undefined;
     if (testDb) return testDb;
     const projectPath = path.dirname(DOKORO_PATH);
-    return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+    return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
   } catch {
     return null;
   }

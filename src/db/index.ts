@@ -2,7 +2,7 @@
  * Devlog-MCP 2.0 Database Module
  *
  * Per-project SQLite database with Drizzle ORM
- * Each project gets its own .devlog/db/devlog.sqlite file
+ * Each project gets its own .dokoro/db/dokoro.sqlite file
  */
 
 import Database from "better-sqlite3";
@@ -32,8 +32,8 @@ export type DevlogDB = BetterSQLite3Database<typeof schema>;
 
 export interface DevlogDbConfig {
   projectPath: string; // Root path of the project
-  devlogFolder?: string; // Default: 'devlog'
-  dbName?: string; // Default: 'devlog.sqlite'
+  dokoroFolder?: string; // Default: 'dokoro'
+  dbName?: string; // Default: 'dokoro.sqlite'
 }
 
 export interface DocCreateInput {
@@ -224,9 +224,9 @@ export function closeAllDbs(): void {
 }
 
 function getDbPath(config: DevlogDbConfig): string {
-  const devlogFolder = config.devlogFolder || "devlog";
-  const dbName = config.dbName || "devlog.sqlite";
-  return path.join(config.projectPath, devlogFolder, ".devlog", "db", dbName);
+  const dokoroFolder = config.dokoroFolder || "dokoro";
+  const dbName = config.dbName || "dokoro.sqlite";
+  return path.join(config.projectPath, dokoroFolder, ".dokoro", "db", dbName);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -9,15 +9,15 @@ const testContent = [
     id: 'test-1',
     title: 'Long Technical Document',
     content: `
-# Implementing Advanced AI Features for DevLog System
+# Implementing Advanced AI Features for Dokoro System
 
-Today I made significant progress on implementing the AI-powered features for our DevLog system. The goal is to create an intelligent system that can automatically tag entries, find similar content, and generate summaries.
+Today I made significant progress on implementing the AI-powered features for our Dokoro system. The goal is to create an intelligent system that can automatically tag entries, find similar content, and generate summaries.
 
 ## What was accomplished:
 
 First, I implemented the smart tagging system using regex-based pattern matching. This involved creating a comprehensive taxonomy of over 80 tags organized into categories like type, status, priority, and scope. The system uses confidence scoring to rank tag suggestions based on multiple factors including pattern match strength and context relevance.
 
-Next, I built the similarity detection engine using TF-IDF vectorization. This allows the system to find related devlog entries even when they don't share exact keywords. The cosine similarity algorithm compares document vectors to identify semantic similarities. I also added clustering capabilities to group related entries into topics.
+Next, I built the similarity detection engine using TF-IDF vectorization. This allows the system to find related dokoro entries even when they don't share exact keywords. The cosine similarity algorithm compares document vectors to identify semantic similarities. I also added clustering capabilities to group related entries into topics.
 
 Finally, I started work on the auto-summarization feature. This uses extractive summarization techniques to identify the most important sentences in a document. The scoring algorithm considers factors like sentence position, keyword density, and similarity to the title.
 

@@ -2,18 +2,18 @@
 /**
  * Devlog CLI
  *
- * Command-line interface for devlog management.
- * Run from your project folder to manage devlog files and database.
+ * Command-line interface for dokoro management.
+ * Run from your project folder to manage dokoro files and database.
  *
  * Usage:
- *   devlog init              - Initialize devlog in current project
- *   devlog migrate           - Import markdown files into database
- *   devlog search <query>    - Search devlog documents
- *   devlog list              - List recent documents
- *   devlog create <title>    - Create new document
- *   devlog status <id>       - Update document status
- *   devlog tags              - List all tags
- *   devlog cleanup           - Run cleanup script
+ *   dokoro init              - Initialize dokoro in current project
+ *   dokoro migrate           - Import markdown files into database
+ *   dokoro search <query>    - Search dokoro documents
+ *   dokoro list              - List recent documents
+ *   dokoro create <title>    - Create new document
+ *   dokoro status <id>       - Update document status
+ *   dokoro tags              - List all tags
+ *   dokoro cleanup           - Run cleanup script
  */
 
 import * as path from "node:path";
@@ -44,9 +44,9 @@ import { migrateDevlog } from "./db/migrate.js";
 function findProjectRoot(): string {
   let dir = process.cwd();
 
-  // Walk up looking for devlog folder or package.json
+  // Walk up looking for dokoro folder or package.json
   while (dir !== path.dirname(dir)) {
-    if (fs.existsSync(path.join(dir, "devlog")) || fs.existsSync(path.join(dir, "package.json"))) {
+    if (fs.existsSync(path.join(dir, "dokoro")) || fs.existsSync(path.join(dir, "package.json"))) {
       return dir;
     }
     dir = path.dirname(dir);
@@ -57,17 +57,17 @@ function findProjectRoot(): string {
 
 function getConfig(): DevlogDbConfig {
   const projectPath = findProjectRoot();
-  const possibleFolders = ["devlog", "docs/devlog", ".devlog"];
-  let devlogFolder = "devlog";
+  const possibleFolders = ["dokoro", "docs/dokoro", ".dokoro"];
+  let dokoroFolder = "dokoro";
 
   for (const folder of possibleFolders) {
     if (fs.existsSync(path.join(projectPath, folder))) {
-      devlogFolder = folder;
+      dokoroFolder = folder;
       break;
     }
   }
 
-  return { projectPath, devlogFolder };
+  return { projectPath, dokoroFolder };
 }
 
 function printHelp(): void {
@@ -75,10 +75,10 @@ function printHelp(): void {
 Devlog CLI - Developer Knowledge Management
 
 USAGE:
-  devlog <command> [options]
+  dokoro <command> [options]
 
 COMMANDS:
-  init                    Initialize devlog in current project
+  init                    Initialize dokoro in current project
   migrate [--dry-run]     Import markdown files into database
   search <query>          Search documents by text
   list [--status=X]       List documents (filter by status)
@@ -101,18 +101,18 @@ COMMANDS:
 
 OPTIONS:
   --project=PATH          Override project path
-  --devlog=FOLDER         Override devlog folder name
+  --dokoro=FOLDER         Override dokoro folder name
   --help                  Show this help
 
 EXAMPLES:
-  devlog init                          # Initialize devlog
-  devlog migrate --dry-run             # Preview migration
-  devlog search "rate limit"           # Search documents
-  devlog list --status=active          # List active documents
-  devlog create "Fix login bug"        # Create new issue
-  devlog update my-doc --status=done   # Mark as done
-  devlog tag my-doc urgent             # Add tag
-  devlog time start my-doc --slot=1    # Start timer
+  dokoro init                          # Initialize dokoro
+  dokoro migrate --dry-run             # Preview migration
+  dokoro search "rate limit"           # Search documents
+  dokoro list --status=active          # List active documents
+  dokoro create "Fix login bug"        # Create new issue
+  dokoro update my-doc --status=done   # Mark as done
+  dokoro tag my-doc urgent             # Add tag
+  dokoro time start my-doc --slot=1    # Start timer
 `);
 }
 
@@ -150,14 +150,14 @@ function parseArgs(args: string[]): { command: string; positional: string[]; fla
 
 async function cmdInit(): Promise<void> {
   const config = getConfig();
-  const devlogPath = path.join(config.projectPath, config.devlogFolder!);
-  console.log("Initializing devlog...\n");
+  const dokoroPath = path.join(config.projectPath, config.dokoroFolder!);
+  console.log("Initializing dokoro...\n");
 
   // Create folders
-  const folders = ["inbox", "active", "backlog", "archive", "research", "decisions", ".devlog/db", ".devlog/backup"];
+  const folders = ["inbox", "active", "backlog", "archive", "research", "decisions", ".dokoro/db", ".dokoro/backup"];
 
   for (const folder of folders) {
-    const fullPath = path.join(devlogPath, folder);
+    const fullPath = path.join(dokoroPath, folder);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
       console.log(`  Created: ${folder}/`);
@@ -166,10 +166,10 @@ async function cmdInit(): Promise<void> {
 
   // Initialize database
   getDb(config);
-  console.log(`  Database: .devlog/db/devlog.sqlite`);
+  console.log(`  Database: .dokoro/db/dokoro.sqlite`);
 
   // Create config
-  const configPath = path.join(devlogPath, ".devlog", "config.json");
+  const configPath = path.join(dokoroPath, ".dokoro", "config.json");
   if (!fs.existsSync(configPath)) {
     fs.writeFileSync(
       configPath,
@@ -183,13 +183,13 @@ async function cmdInit(): Promise<void> {
         2
       )
     );
-    console.log(`  Config: .devlog/config.json`);
+    console.log(`  Config: .dokoro/config.json`);
   }
 
-  console.log(`\nDevlog initialized at: ${devlogPath}`);
+  console.log(`\nDevlog initialized at: ${dokoroPath}`);
   console.log("\nNext steps:");
-  console.log("  1. Run 'devlog migrate' to import existing markdown files");
-  console.log("  2. Run 'devlog list' to see your documents");
+  console.log("  1. Run 'dokoro migrate' to import existing markdown files");
+  console.log("  2. Run 'dokoro list' to see your documents");
 }
 
 async function cmdMigrate(flags: Record<string, string | boolean>): Promise<void> {
@@ -200,13 +200,13 @@ async function cmdMigrate(flags: Record<string, string | boolean>): Promise<void
   console.log("         DEVLOG MIGRATION");
   console.log("═".repeat(60));
   console.log(`Project: ${config.projectPath}`);
-  console.log(`Devlog:  ${config.devlogFolder}`);
+  console.log(`Devlog:  ${config.dokoroFolder}`);
   console.log(`Mode:    ${dryRun ? "DRY RUN" : "EXECUTE"}`);
   console.log("─".repeat(60));
 
   const result = await migrateDevlog({
     projectPath: config.projectPath,
-    devlogFolder: config.devlogFolder,
+    dokoroFolder: config.dokoroFolder,
     dryRun,
     verbose: true,
   });
@@ -426,7 +426,7 @@ async function cmdTime(action: string, positional: string[], flags: Record<strin
     case "start": {
       const docId = positional[0];
       if (!docId) {
-        console.error("Usage: devlog time start <doc-id> [--slot=N]");
+        console.error("Usage: dokoro time start <doc-id> [--slot=N]");
         process.exit(1);
       }
       const entry = await startTimeEntry(db, docId, {
@@ -506,7 +506,7 @@ async function main(): Promise<void> {
       case "get":
       case "show":
         if (!positional[0]) {
-          console.error("Usage: devlog get <id>");
+          console.error("Usage: dokoro get <id>");
           process.exit(1);
         }
         await cmdGet(positional[0]);
@@ -514,7 +514,7 @@ async function main(): Promise<void> {
 
       case "update":
         if (!positional[0]) {
-          console.error("Usage: devlog update <id> [--status=X] [--priority=X]");
+          console.error("Usage: dokoro update <id> [--status=X] [--priority=X]");
           process.exit(1);
         }
         await cmdUpdate(positional[0], flags);
@@ -526,7 +526,7 @@ async function main(): Promise<void> {
 
       case "tag":
         if (positional.length < 2) {
-          console.error("Usage: devlog tag <doc-id> <tag-name>");
+          console.error("Usage: dokoro tag <doc-id> <tag-name>");
           process.exit(1);
         }
         await cmdTag(positional[0], positional[1]);
@@ -545,7 +545,7 @@ async function main(): Promise<void> {
         const { execSync } = await import("node:child_process");
         const config = getConfig();
         const cleanupArgs = flags["dry-run"] ? "--dry-run" : "--execute";
-        const cmd = `npx tsx scripts/cleanup.ts --devlog ${path.join(config.projectPath, config.devlogFolder!)} ${cleanupArgs}`;
+        const cmd = `npx tsx scripts/cleanup.ts --dokoro ${path.join(config.projectPath, config.dokoroFolder!)} ${cleanupArgs}`;
         execSync(cmd, { stdio: "inherit", cwd: path.dirname(import.meta.url.replace("file://", "")) });
         break;
       }

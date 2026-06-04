@@ -1,17 +1,17 @@
 /**
- * Shared utilities for all devlog servers
+ * Shared utilities for all dokoro servers
  */
 
 import path from 'path';
 import { promises as fs, existsSync } from 'fs';
 
-// Get devlog path from environment or use default
-// Prevents devlog/devlog doubling when cwd is already the devlog directory
+// Get dokoro path from environment or use default
+// Prevents dokoro/dokoro doubling when cwd is already the dokoro directory
 export const DOKORO_PATH = process.env.DOKORO_PATH || (() => {
   const cwd = process.cwd();
-  const withDevlog = path.join(cwd, 'devlog');
-  // If cwd is already named 'devlog' and there's no nested devlog/ subfolder, use cwd directly
-  if (path.basename(cwd) === 'devlog' && !existsSync(withDevlog)) {
+  const withDevlog = path.join(cwd, 'dokoro');
+  // If cwd is already named 'dokoro' and there's no nested dokoro/ subfolder, use cwd directly
+  if (path.basename(cwd) === 'dokoro' && !existsSync(withDevlog)) {
     return cwd;
   }
   return withDevlog;

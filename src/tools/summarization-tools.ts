@@ -1,6 +1,6 @@
 /**
  * MCP Tool Definitions for Auto-Summarization
- * Provides tools for generating summaries of devlog content
+ * Provides tools for generating summaries of dokoro content
  */
 
 import { z } from 'zod';
@@ -15,7 +15,7 @@ export const summarizationTools: ToolDefinition[] = [
   {
     name: 'dokoro_summarize',
     title: 'Summarize Content',
-    description: 'Generate a summary of devlog content',
+    description: 'Generate a summary of dokoro content',
     inputSchema: {
       content: z.string().describe('Content to summarize'),
       maxWords: z.number().default(100).describe('Maximum words in summary'),
@@ -62,7 +62,7 @@ export const summarizationTools: ToolDefinition[] = [
   {
     name: 'dokoro_summarize_file',
     title: 'Summarize File',
-    description: 'Summarize a specific devlog file',
+    description: 'Summarize a specific dokoro file',
     inputSchema: {
       file: z.string().describe('File path to summarize'),
       maxWords: z.number().default(150).describe('Maximum words'),
@@ -71,8 +71,8 @@ export const summarizationTools: ToolDefinition[] = [
     handler: async (args: { file: string; maxWords?: number; includeMetadata?: boolean }): Promise<CallToolResult> => {
       const { file, maxWords = 150, includeMetadata = true } = args;
       try {
-        const devlogPath = process.env.DOKORO_PATH || path.join(process.cwd(), 'devlog');
-        const filePath = path.join(devlogPath, file);
+        const dokoroPath = process.env.DOKORO_PATH || path.join(process.cwd(), 'dokoro');
+        const filePath = path.join(dokoroPath, file);
         const content = await fs.readFile(filePath, 'utf-8');
         const parsed = matter(content);
 
@@ -123,15 +123,15 @@ export const summarizationTools: ToolDefinition[] = [
   {
     name: 'dokoro_batch_summarize',
     title: 'Batch Summarize',
-    description: 'Summarize multiple devlog files',
+    description: 'Summarize multiple dokoro files',
     inputSchema: {
       pattern: z.string().default('**/*.md').describe('File pattern to match'),
-      directory: z.string().default('devlog').describe('Directory to search'),
+      directory: z.string().default('dokoro').describe('Directory to search'),
       maxFiles: z.number().default(10).describe('Maximum files to process'),
       maxWordsPerSummary: z.number().default(50).describe('Max words per summary')
     },
     handler: async (args: { pattern?: string; directory?: string; maxFiles?: number; maxWordsPerSummary?: number }): Promise<CallToolResult> => {
-      const { pattern = '**/*.md', directory = 'devlog', maxFiles = 10, maxWordsPerSummary = 50 } = args;
+      const { pattern = '**/*.md', directory = 'dokoro', maxFiles = 10, maxWordsPerSummary = 50 } = args;
       try {
         const glob = (await import('glob')).glob;
         const files = await glob(pattern, { cwd: directory });
@@ -184,13 +184,13 @@ export const summarizationTools: ToolDefinition[] = [
   {
     name: 'dokoro_timeline_summary',
     title: 'Timeline Summary',
-    description: 'Generate a timeline summary of devlog entries',
+    description: 'Generate a timeline summary of dokoro entries',
     inputSchema: {
       period: z.enum(['day', 'week', 'month']).default('week').describe('Time period to summarize'),
-      directory: z.string().default('devlog').describe('Directory to analyze')
+      directory: z.string().default('dokoro').describe('Directory to analyze')
     },
     handler: async (args: { period?: 'day' | 'week' | 'month'; directory?: string }): Promise<CallToolResult> => {
-      const { period = 'week', directory = 'devlog' } = args;
+      const { period = 'week', directory = 'dokoro' } = args;
       try {
         const glob = (await import('glob')).glob;
         const files = await glob('**/*.md', { cwd: directory });
@@ -324,7 +324,7 @@ export const summarizationTools: ToolDefinition[] = [
       const { focusAreas = [], days = 7 } = args;
       try {
         const glob = (await import('glob')).glob;
-        const files = await glob('**/*.md', { cwd: 'devlog' });
+        const files = await glob('**/*.md', { cwd: 'dokoro' });
         
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -338,7 +338,7 @@ export const summarizationTools: ToolDefinition[] = [
 
         for (const file of files) {
           try {
-            const filePath = path.join('devlog', file);
+            const filePath = path.join('dokoro', file);
             const stats = await fs.stat(filePath);
             
             if (stats.mtime < cutoffDate) continue;

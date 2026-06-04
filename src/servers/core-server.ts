@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Core DevLog Server - Always loaded
+ * Core Dokoro Server - Always loaded
  * Provides essential workspace management tools
  */
 
 import { createDevlogServer, startServer } from './base-server.js';
 import { workspaceTools } from '../tools/workspace-tools.js';
 import { currentWorkspaceTools } from '../tools/current-workspace-tools.js';
-import { devlogInitTool } from '../tools/dokoro-init-tool.js';
+import { dokoroInitTool } from '../tools/dokoro-init-tool.js';
 import { questionTools } from '../tools/question-tools.js';
 import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
@@ -44,13 +44,13 @@ export const coreTools = [
   ...feedbackTools,
 
   // Initialization
-  devlogInitTool
+  dokoroInitTool
 ].filter(Boolean);
 
 const config = {
   name: 'dokoro-core',
   version: '1.0.0',
-  description: 'Core DevLog workspace management tools'
+  description: 'Core Dokoro workspace management tools'
 };
 
 const server = createDevlogServer(config);

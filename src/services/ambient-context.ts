@@ -2,7 +2,7 @@
  * Ambient Context Service
  *
  * Auto-detects project context from git state and surfaces relevant
- * devlog entries. Uses execFileSync (not execSync) for shell safety.
+ * dokoro entries. Uses execFileSync (not execSync) for shell safety.
  */
 import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';

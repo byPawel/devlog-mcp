@@ -7,14 +7,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolResult, GetPromptResult, ReadResourceResult } from '@modelcontextprotocol/sdk/types.js';
 
-// Get devlog path from environment or use default
+// Get dokoro path from environment or use default
 import { DOKORO_PATH } from './shared/dokoro-utils.js';
 
 // Initialize the MCP server
 const server = new McpServer({
-  name: 'mcp-devlog',
+  name: 'mcp-dokoro',
   version: '2.0.0',
-  description: 'DevLog MCP server for development insights and test tracking'
+  description: 'Dokoro MCP server for development insights and test tracking'
 }, {
   capabilities: {
     resources: {},
@@ -23,7 +23,7 @@ const server = new McpServer({
   },
 });
 
-// Helper to read devlog files
+// Helper to read dokoro files
 async function readDevlogFile(filePath: string) {
   try {
     return await fs.readFile(filePath, 'utf-8');
@@ -33,7 +33,7 @@ async function readDevlogFile(filePath: string) {
   }
 }
 
-// Helper to search devlog entries
+// Helper to search dokoro entries
 async function searchDevlogs(query: string, type: string = 'all') {
   const patterns: Record<string, string> = {
     posts: 'posts/**/*.md',
@@ -62,8 +62,8 @@ async function searchDevlogs(query: string, type: string = 'all') {
 
 // Register tools
 server.tool(
-  'search_devlogs',
-  'Search across all devlog entries',
+  'search_dokoros',
+  'Search across all dokoro entries',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   {
     query: z.string().describe('Search query'),
@@ -88,8 +88,8 @@ server.tool(
 );
 
 server.tool(
-  'list_recent_devlogs',
-  'List recently modified devlog entries',
+  'list_recent_dokoros',
+  'List recently modified dokoro entries',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   {
     days: z.number().optional().default(7).describe('Number of days to look back'),
@@ -126,7 +126,7 @@ server.tool(
       content: [
         {
           type: 'text',
-          text: `Recent devlogs (last ${days} days):\n\n` +
+          text: `Recent dokoros (last ${days} days):\n\n` +
             recentFiles.map(f => `- ${f.file} (${f.modified.toISOString()})`).join('\n'),
         },
       ],
@@ -171,7 +171,7 @@ server.tool(
 server.registerPrompt(
   'dokoro_summary',
   {
-    title: 'DevLog Summary',
+    title: 'Dokoro Summary',
     description: 'Generate a summary of recent development activities',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     argsSchema: {
@@ -187,13 +187,13 @@ server.registerPrompt(
           role: 'user',
           content: {
             type: 'text',
-            text: `Please analyze the devlogs from the last ${numDays} days and provide:
+            text: `Please analyze the dokoros from the last ${numDays} days and provide:
 1. A summary of completed features
 2. Current work in progress
 3. Identified blockers or issues
 4. Upcoming priorities
 
-Use the list_recent_devlogs tool to get the recent files, then analyze their content.`,
+Use the list_recent_dokoros tool to get the recent files, then analyze their content.`,
           },
         },
       ],
@@ -220,13 +220,13 @@ server.registerPrompt(
           role: 'user',
           content: {
             type: 'text',
-            text: `Please analyze the devlogs${featureClause} and identify:
+            text: `Please analyze the dokoros${featureClause} and identify:
 1. Which components have been tested
 2. Which areas lack test coverage
 3. Potential edge cases that need testing
 4. Regression risks
 
-Use the search_devlogs and analyze_feature_history tools to gather information.`,
+Use the search_dokoros and analyze_feature_history tools to gather information.`,
           },
         },
       ],
@@ -259,7 +259,7 @@ server.registerPrompt(
 3. Common blockers or delays
 4. Productivity patterns
 
-Use the list_recent_devlogs tool with ${days} days to gather data.`,
+Use the list_recent_dokoros tool with ${days} days to gather data.`,
           },
         },
       ],
@@ -270,10 +270,10 @@ Use the list_recent_devlogs tool with ${days} days to gather data.`,
 // Register resources
 server.registerResource(
   'recent-posts',
-  'devlog://posts/recent',
+  'dokoro://posts/recent',
   {
-    title: 'Recent DevLog Posts',
-    description: 'List recent devlog posts',
+    title: 'Recent Dokoro Posts',
+    description: 'List recent dokoro posts',
     mimeType: 'text/plain',
   },
   async (): Promise<ReadResourceResult> => {
@@ -290,7 +290,7 @@ server.registerResource(
     
     return {
       contents: recent.map(({ file }: { file: string }) => ({
-        uri: `devlog://posts/${file}`,
+        uri: `dokoro://posts/${file}`,
         mimeType: 'text/markdown',
         text: file,
       })),
@@ -302,7 +302,7 @@ server.registerResource(
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('DevLog MCP Server v2.0 running...');
+  console.error('Dokoro MCP Server v2.0 running...');
 }
 
 main().catch((error) => {

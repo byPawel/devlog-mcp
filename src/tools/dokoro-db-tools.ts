@@ -1,7 +1,7 @@
 /**
  * Devlog MCP Tools - Database Operations
  *
- * MCP tools for the new SQLite-based devlog system.
+ * MCP tools for the new SQLite-based dokoro system.
  * These tools work with per-project databases.
  */
 
@@ -53,20 +53,20 @@ interface ToolDefinition {
 function getDbConfig(projectPath?: string): DevlogDbConfig {
   const resolvedPath = projectPath || process.cwd();
 
-  // Find devlog folder (check common locations)
-  const possibleFolders = ["devlog", "docs/devlog", ".devlog"];
-  let devlogFolder = "devlog";
+  // Find dokoro folder (check common locations)
+  const possibleFolders = ["dokoro", "docs/dokoro", ".dokoro"];
+  let dokoroFolder = "dokoro";
 
   for (const folder of possibleFolders) {
     if (fs.existsSync(path.join(resolvedPath, folder))) {
-      devlogFolder = folder;
+      dokoroFolder = folder;
       break;
     }
   }
 
   return {
     projectPath: resolvedPath,
-    devlogFolder,
+    dokoroFolder,
   };
 }
 
@@ -83,34 +83,34 @@ function error(message: string): ToolResult {
 // INITIALIZATION TOOLS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const devlogInitTool: ToolDefinition = {
+const dokoroInitTool: ToolDefinition = {
   name: "dokoro_init",
   description:
-    "Initialize devlog for a project. Creates the .devlog folder structure and SQLite database. Run this first before using other devlog tools.",
+    "Initialize dokoro for a project. Creates the .dokoro folder structure and SQLite database. Run this first before using other dokoro tools.",
   inputSchema: z.object({
     project_path: z.string().optional().describe("Path to project root. Defaults to current directory."),
-    dokoro_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
+    dokoro_folder: z.string().optional().describe("Name of dokoro folder. Defaults to 'dokoro'."),
   }),
   handler: async (args) => {
     try {
       const config = getDbConfig(args.project_path as string | undefined);
       if (args.dokoro_folder) {
-        config.devlogFolder = args.dokoro_folder as string;
+        config.dokoroFolder = args.dokoro_folder as string;
       }
 
-      const devlogPath = path.join(config.projectPath, config.devlogFolder!);
-      const dbPath = path.join(devlogPath, ".devlog", "db");
+      const dokoroPath = path.join(config.projectPath, config.dokoroFolder!);
+      const dbPath = path.join(dokoroPath, ".dokoro", "db");
 
       // Create folders
       const folders = [
-        path.join(devlogPath, "inbox"),
-        path.join(devlogPath, "active"),
-        path.join(devlogPath, "backlog"),
-        path.join(devlogPath, "archive"),
-        path.join(devlogPath, "research"),
-        path.join(devlogPath, "decisions"),
-        path.join(devlogPath, ".devlog", "db"),
-        path.join(devlogPath, ".devlog", "backup"),
+        path.join(dokoroPath, "inbox"),
+        path.join(dokoroPath, "active"),
+        path.join(dokoroPath, "backlog"),
+        path.join(dokoroPath, "archive"),
+        path.join(dokoroPath, "research"),
+        path.join(dokoroPath, "decisions"),
+        path.join(dokoroPath, ".dokoro", "db"),
+        path.join(dokoroPath, ".dokoro", "backup"),
       ];
 
       for (const folder of folders) {
@@ -123,7 +123,7 @@ const devlogInitTool: ToolDefinition = {
       getDb(config);
 
       // Create config file
-      const configPath = path.join(devlogPath, ".devlog", "config.json");
+      const configPath = path.join(dokoroPath, ".dokoro", "config.json");
       if (!fs.existsSync(configPath)) {
         fs.writeFileSync(
           configPath,
@@ -141,8 +141,8 @@ const devlogInitTool: ToolDefinition = {
 
       return success({
         message: "Devlog initialized successfully",
-        path: devlogPath,
-        database: path.join(dbPath, "devlog.sqlite"),
+        path: dokoroPath,
+        database: path.join(dbPath, "dokoro.sqlite"),
         folders: folders.map((f) => path.relative(config.projectPath, f)),
       });
     } catch (err) {
@@ -151,13 +151,13 @@ const devlogInitTool: ToolDefinition = {
   },
 };
 
-const devlogMigrateTool: ToolDefinition = {
+const dokoroMigrateTool: ToolDefinition = {
   name: "dokoro_migrate",
   description:
     "Migrate existing markdown files into the SQLite database. Extracts tags, frontmatter, and section tags. Safe to run multiple times - only updates changed files.",
   inputSchema: z.object({
     project_path: z.string().optional().describe("Path to project root. Defaults to current directory."),
-    dokoro_folder: z.string().optional().describe("Name of devlog folder. Defaults to 'devlog'."),
+    dokoro_folder: z.string().optional().describe("Name of dokoro folder. Defaults to 'dokoro'."),
     dry_run: z.boolean().optional().describe("Preview changes without modifying database."),
     force: z.boolean().optional().describe("Re-import all files even if unchanged."),
   }),
@@ -165,7 +165,7 @@ const devlogMigrateTool: ToolDefinition = {
     try {
       const options: MigrationOptions = {
         projectPath: (args.project_path as string) || process.cwd(),
-        devlogFolder: (args.dokoro_folder as string) || "devlog",
+        dokoroFolder: (args.dokoro_folder as string) || "dokoro",
         dryRun: args.dry_run as boolean,
         force: args.force as boolean,
         verbose: false,
@@ -192,10 +192,10 @@ const devlogMigrateTool: ToolDefinition = {
 // DOCUMENT TOOLS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const devlogSearchTool: ToolDefinition = {
+const dokoroSearchTool: ToolDefinition = {
   name: "dokoro_search",
   description:
-    "Search devlog documents. Supports full-text search, filtering by status/type/tags/priority, and pagination.",
+    "Search dokoro documents. Supports full-text search, filtering by status/type/tags/priority, and pagination.",
   inputSchema: z.object({
     query: z.string().optional().describe("Search query (searches title and content)."),
     status: z
@@ -255,9 +255,9 @@ const devlogSearchTool: ToolDefinition = {
   },
 };
 
-const devlogGetTool: ToolDefinition = {
+const dokoroGetTool: ToolDefinition = {
   name: "dokoro_get",
-  description: "Get a specific devlog document by ID with full content and tags.",
+  description: "Get a specific dokoro document by ID with full content and tags.",
   inputSchema: z.object({
     id: z.string().describe("Document ID (usually the filename without .md extension)."),
     project_path: z.string().optional().describe("Path to project root."),
@@ -284,9 +284,9 @@ const devlogGetTool: ToolDefinition = {
   },
 };
 
-const devlogCreateTool: ToolDefinition = {
+const dokoroCreateTool: ToolDefinition = {
   name: "dokoro_create",
-  description: "Create a new devlog document. Creates both the markdown file and database entry. Use components to track which code files this PRD/issue affects.",
+  description: "Create a new dokoro document. Creates both the markdown file and database entry. Use components to track which code files this PRD/issue affects.",
   inputSchema: z.object({
     title: z.string().describe("Document title."),
     content: z.string().optional().describe("Markdown content."),
@@ -362,7 +362,7 @@ const devlogCreateTool: ToolDefinition = {
       const content = frontmatter.join("\n");
 
       // Write markdown file
-      const fullPath = path.join(config.projectPath, config.devlogFolder!, filepath);
+      const fullPath = path.join(config.projectPath, config.dokoroFolder!, filepath);
       const dir = path.dirname(fullPath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -395,9 +395,9 @@ const devlogCreateTool: ToolDefinition = {
   },
 };
 
-const devlogUpdateTool: ToolDefinition = {
+const dokoroUpdateTool: ToolDefinition = {
   name: "dokoro_update",
-  description: "Update a devlog document status, priority, components, or other fields. Use components to track which code files this document affects.",
+  description: "Update a dokoro document status, priority, components, or other fields. Use components to track which code files this document affects.",
   inputSchema: z.object({
     id: z.string().describe("Document ID to update."),
     status: z.enum(["inbox", "active", "researched", "backlog", "done", "archived"]).optional().describe("New status."),
@@ -457,7 +457,7 @@ const devlogUpdateTool: ToolDefinition = {
 // TAG TOOLS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const devlogTagsTool: ToolDefinition = {
+const dokoroTagsTool: ToolDefinition = {
   name: "dokoro_tags",
   description: "List all tags with usage counts, or get tags for a specific document.",
   inputSchema: z.object({
@@ -491,7 +491,7 @@ const devlogTagsTool: ToolDefinition = {
   },
 };
 
-const devlogSectionTagsTool: ToolDefinition = {
+const dokoroSectionTagsTool: ToolDefinition = {
   name: "dokoro_section_tags",
   description:
     "Find all sections tagged with a specific tag (e.g., 'plan', 'future-sprint'). Useful for finding planned features across documents.",
@@ -528,9 +528,9 @@ const devlogSectionTagsTool: ToolDefinition = {
 // SESSION & TIME TRACKING TOOLS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const devlogSessionTool: ToolDefinition = {
+const dokoroSessionTool: ToolDefinition = {
   name: "dokoro_session",
-  description: "Start, end, or check current devlog session.",
+  description: "Start, end, or check current dokoro session.",
   inputSchema: z.object({
     action: z.enum(["start", "end", "status"]).describe("Action to perform."),
     focus_doc: z.string().optional().describe("Document to focus on (for start action)."),
@@ -595,7 +595,7 @@ const devlogSessionTool: ToolDefinition = {
   },
 };
 
-const devlogTimeTool: ToolDefinition = {
+const dokoroTimeTool: ToolDefinition = {
   name: "dokoro_time",
   description: "Track time spent on documents. Start/stop timers for tasks.",
   inputSchema: z.object({
@@ -670,24 +670,24 @@ const devlogTimeTool: ToolDefinition = {
 // EXPORT ALL TOOLS
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const devlogDbTools: ToolDefinition[] = [
+export const dokoroDbTools: ToolDefinition[] = [
   // Initialization
-  devlogInitTool,
-  devlogMigrateTool,
+  dokoroInitTool,
+  dokoroMigrateTool,
 
   // Documents
-  devlogSearchTool,
-  devlogGetTool,
-  devlogCreateTool,
-  devlogUpdateTool,
+  dokoroSearchTool,
+  dokoroGetTool,
+  dokoroCreateTool,
+  dokoroUpdateTool,
 
   // Tags
-  devlogTagsTool,
-  devlogSectionTagsTool,
+  dokoroTagsTool,
+  dokoroSectionTagsTool,
 
   // Sessions & Time
-  devlogSessionTool,
-  devlogTimeTool,
+  dokoroSessionTool,
+  dokoroTimeTool,
 ];
 
-export default devlogDbTools;
+export default dokoroDbTools;

@@ -73,7 +73,7 @@ describe('runMigrations', () => {
     // ("Initial schema"), which collides with MIGRATIONS v1 and makes it skip —
     // so entity_relations never got valid_from/valid_to and agent_feedback was
     // never created. v2's copy-SELECT then threw "no such column: valid_from",
-    // aborting DB init for every devlog tool on that DB.
+    // aborting DB init for every dokoro tool on that DB.
     db.prepare(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, description TEXT, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
     db.prepare(`INSERT INTO schema_version (version, description) VALUES (1, 'Initial schema')`).run();
     db.prepare(`

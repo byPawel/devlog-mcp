@@ -1,4 +1,4 @@
-// Shared types for DevLog MCP Server
+// Shared types for Dokoro MCP Server
 
 export interface ParsedDevlog {
   content: string;

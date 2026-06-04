@@ -15,7 +15,7 @@ import * as path from 'node:path';
 
 function getSqlite(): Database.Database {
   const projectPath = path.dirname(DOKORO_PATH);
-  return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+  return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
 }
 
 function db(): Database.Database {

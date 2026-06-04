@@ -13,7 +13,7 @@ export const similarityTools: ToolDefinition[] = [
   {
     name: 'dokoro_find_similar',
     title: 'Find Similar Content',
-    description: 'Find devlog entries similar to provided content',
+    description: 'Find dokoro entries similar to provided content',
     inputSchema: {
       content: z.string().describe('Content to find similar entries for'),
       threshold: z.number().default(0.3).describe('Similarity threshold (0-1)'),
@@ -196,13 +196,13 @@ export const similarityTools: ToolDefinition[] = [
   {
     name: 'dokoro_cluster_topics',
     title: 'Cluster Topics',
-    description: 'Group similar devlog entries into topic clusters',
+    description: 'Group similar dokoro entries into topic clusters',
     inputSchema: {
       threshold: z.number().default(0.5).describe('Clustering threshold (0-1)'),
-      directory: z.string().default('devlog').describe('Directory to analyze')
+      directory: z.string().default('dokoro').describe('Directory to analyze')
     },
     handler: async (args: { threshold?: number; directory?: string }): Promise<CallToolResult> => {
-      const { threshold = 0.5, directory = 'devlog' } = args;
+      const { threshold = 0.5, directory = 'dokoro' } = args;
       try {
         // Build index first
         await similarityDetector.buildIndex([`${directory}/**/*.md`]);
@@ -264,11 +264,11 @@ export const similarityTools: ToolDefinition[] = [
     title: 'Build Similarity Index', 
     description: 'Build or rebuild the similarity index for better performance',
     inputSchema: {
-      patterns: z.array(z.string()).default(['devlog/**/*.md']).describe('File patterns to index'),
+      patterns: z.array(z.string()).default(['dokoro/**/*.md']).describe('File patterns to index'),
       force: z.boolean().default(false).describe('Force rebuild even if index exists')
     },
     handler: async (args: { patterns?: string[]; force?: boolean }): Promise<CallToolResult> => {
-      const { patterns = ['devlog/**/*.md'] } = args;
+      const { patterns = ['dokoro/**/*.md'] } = args;
       try {
         const startTime = Date.now();
         

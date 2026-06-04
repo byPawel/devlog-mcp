@@ -17,10 +17,10 @@ import matter from 'gray-matter';
 
 export class SimilarityDetector {
   private index: SimilarityIndex | null = null;
-  private readonly devlogPath: string;
+  private readonly dokoroPath: string;
 
-  constructor(devlogPath: string = process.env.DOKORO_PATH || path.join(process.cwd(), 'devlog')) {
-    this.devlogPath = devlogPath;
+  constructor(dokoroPath: string = process.env.DOKORO_PATH || path.join(process.cwd(), 'dokoro')) {
+    this.dokoroPath = dokoroPath;
   }
 
   /**
@@ -34,11 +34,11 @@ export class SimilarityDetector {
 
     // Collect all documents
     for (const pattern of patterns) {
-      const files = await glob(pattern, { cwd: this.devlogPath });
+      const files = await glob(pattern, { cwd: this.dokoroPath });
       
       for (const file of files) {
         try {
-          const filePath = path.join(this.devlogPath, file);
+          const filePath = path.join(this.dokoroPath, file);
           const content = await fs.readFile(filePath, 'utf-8');
           const parsed = matter(content);
           const stats = await fs.stat(filePath);
@@ -199,7 +199,7 @@ export class SimilarityDetector {
     filePath: string,
     options: SimilarityOptions = {}
   ): Promise<SimilarityResult[]> {
-    const content = await fs.readFile(path.join(this.devlogPath, filePath), 'utf-8');
+    const content = await fs.readFile(path.join(this.dokoroPath, filePath), 'utf-8');
     const parsed = matter(content);
     
     return this.findSimilar(parsed.content, {

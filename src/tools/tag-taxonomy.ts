@@ -317,9 +317,9 @@ export class TagTaxonomy {
         description: 'Artificial Intelligence'
       },
       {
-        tag: 'devlog',
+        tag: 'dokoro',
         category: 'technical',
-        description: 'DevLog system'
+        description: 'Dokoro system'
       }
     ];
 

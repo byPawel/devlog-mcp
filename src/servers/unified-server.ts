@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Unified DevLog Server - All tools in one process
+ * Unified Dokoro Server - All tools in one process
  *
- * Zero-config starter mode: devlog init && devlog serve
+ * Zero-config starter mode: dokoro init && dokoro serve
  * Registers core + search + planning + tracking tools.
  */
 
 import { createDevlogServer, startServer } from './base-server.js';
 import { workspaceTools } from '../tools/workspace-tools.js';
 import { currentWorkspaceTools } from '../tools/current-workspace-tools.js';
-import { devlogInitTool } from '../tools/dokoro-init-tool.js';
+import { dokoroInitTool } from '../tools/dokoro-init-tool.js';
 import { questionTools } from '../tools/question-tools.js';
 import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
@@ -26,7 +26,7 @@ async function main() {
     ...assetTools,
     ...planTools,
     ...contextTools,
-    devlogInitTool,
+    dokoroInitTool,
     ...basicTools,
     ...entityTools,
   ];
@@ -50,7 +50,7 @@ async function main() {
   const config = {
     name: 'dokoro-unified',
     version: '2.0.0',
-    description: 'Unified DevLog MCP Server - all tools in one process',
+    description: 'Unified Dokoro MCP Server - all tools in one process',
   };
 
   const server = createDevlogServer(config);

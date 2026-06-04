@@ -1,5 +1,5 @@
 {
-  "name": "@devlog-mcp/core",
+  "name": "dokoro",
   "version": "0.1.0",
   "description": "Multi-layer agent-memory MCP server (working, episodic, semantic, procedural, affective) for Claude Code and any MCP client.",
   "license": "MIT",
@@ -17,7 +17,7 @@
   "keywords": [
     "modelcontextprotocol",
     "mcp",
-    "devlog",
+    "dokoro",
     "developer-tools",
     "logging",
     "claude",

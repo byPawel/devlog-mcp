@@ -10,7 +10,7 @@ import { getSqliteDb } from '../db/index.js';
 
 function getSqlite(): Database.Database {
   const projectPath = path.dirname(DOKORO_PATH);
-  return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+  return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
 }
 
 function db(): Database.Database {
@@ -359,7 +359,7 @@ export const workspaceTools: ToolDefinition[] = [
       reason: z.string().describe('Reason for dumping workspace'),
       keepActive: z.boolean().optional().default(true).describe('Keep workspace active after dump'),
       status: z.enum(['active', 'pending', 'backlog', 'done', 'paused', 'blocked']).optional().default('active')
-        .describe('Status for the saved devlog (default: active)'),
+        .describe('Status for the saved dokoro (default: active)'),
       docType: z.enum(['issue', 'prd', 'research', 'decision', 'note', 'session', 'plan']).optional().default('session')
         .describe('Document type for categorization'),
     },
@@ -497,7 +497,7 @@ export const workspaceTools: ToolDefinition[] = [
         // Register in docs table so entity_extract_deep can find it
         try {
           const projectPath = path.dirname(DOKORO_PATH);
-          const db = getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+          const db = getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
           const docId = path.basename(filename, '.md');
           const relPath = path.relative(DOKORO_PATH, sessionFile);
           const now_iso = new Date().toISOString();

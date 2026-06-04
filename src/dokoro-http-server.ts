@@ -10,11 +10,11 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolResult, isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 
-// Get devlog path from environment or use default
-const DOKORO_PATH = process.env.DOKORO_PATH || path.join(process.cwd(), '..', 'devlog');
+// Get dokoro path from environment or use default
+const DOKORO_PATH = process.env.DOKORO_PATH || path.join(process.cwd(), '..', 'dokoro');
 const MCP_PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT) : 3100;
 
-// Helper to read devlog files
+// Helper to read dokoro files
 async function readDevlogFile(filePath: string) {
   try {
     return await fs.readFile(filePath, 'utf-8');
@@ -24,7 +24,7 @@ async function readDevlogFile(filePath: string) {
   }
 }
 
-// Helper to search devlog entries
+// Helper to search dokoro entries
 async function searchDevlogs(query: string, type: string = 'all') {
   const patterns: Record<string, string> = {
     posts: 'posts/**/*.md',
@@ -51,12 +51,12 @@ async function searchDevlogs(query: string, type: string = 'all') {
   return results.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
 }
 
-// Create DevLog MCP server
-const getDevLogServer = () => {
+// Create Dokoro MCP server
+const getDokoroServer = () => {
   const server = new McpServer({
     name: 'mcp-dokoro-http',
     version: '2.0.0',
-    description: 'DevLog MCP server (HTTP mode) for development insights'
+    description: 'Dokoro MCP server (HTTP mode) for development insights'
   }, {
     capabilities: {
       resources: {},
@@ -67,10 +67,10 @@ const getDevLogServer = () => {
 
   // Register search tool
   server.registerTool(
-    'search_devlogs',
+    'search_dokoros',
     {
-      title: 'Search DevLogs',
-      description: 'Search across all devlog entries',
+      title: 'Search Dokoros',
+      description: 'Search across all dokoro entries',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputSchema: {
         query: z.string().describe('Search query'),
@@ -95,12 +95,12 @@ const getDevLogServer = () => {
     }
   );
 
-  // Register recent devlogs tool
+  // Register recent dokoros tool
   server.registerTool(
-    'list_recent_devlogs',
+    'list_recent_dokoros',
     {
-      title: 'List Recent DevLogs',
-      description: 'List recently modified devlog entries',
+      title: 'List Recent Dokoros',
+      description: 'List recently modified dokoro entries',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputSchema: {
         days: z.number().optional().default(7).describe('Number of days to look back'),
@@ -138,7 +138,7 @@ const getDevLogServer = () => {
         content: [
           {
             type: 'text',
-            text: `Recent devlogs (last ${days} days):\n\n` +
+            text: `Recent dokoros (last ${days} days):\n\n` +
               recentFiles.map(f => `- ${f.file} (${f.modified.toISOString()})`).join('\n'),
           },
         ],
@@ -187,8 +187,8 @@ const getDevLogServer = () => {
   server.registerTool(
     'test_dokoro_connection',
     {
-      title: 'Test DevLog Connection',
-      description: 'Test if the devlog server is working',
+      title: 'Test Dokoro Connection',
+      description: 'Test if the dokoro server is working',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputSchema: {} as any,
     },
@@ -197,7 +197,7 @@ const getDevLogServer = () => {
         content: [
           {
             type: 'text',
-            text: `✅ DevLog MCP Server is running!\n\nDevLog Path: ${DOKORO_PATH}\nServer Port: ${MCP_PORT}`,
+            text: `✅ Dokoro MCP Server is running!\n\nDokoro Path: ${DOKORO_PATH}\nServer Port: ${MCP_PORT}`,
           },
         ],
       };
@@ -219,23 +219,23 @@ const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 app.get('/', (req, res) => {
   res.send(`
     <html>
-      <head><title>DevLog MCP Server</title></head>
+      <head><title>Dokoro MCP Server</title></head>
       <body>
-        <h1>DevLog MCP Server v2.0</h1>
-        <p>HTTP-based Model Context Protocol server for DevLog analysis</p>
+        <h1>Dokoro MCP Server v2.0</h1>
+        <p>HTTP-based Model Context Protocol server for Dokoro analysis</p>
         
         <h2>Status</h2>
         <ul>
           <li>Server: ✅ Running</li>
           <li>Port: ${MCP_PORT}</li>
-          <li>DevLog Path: ${DOKORO_PATH}</li>
+          <li>Dokoro Path: ${DOKORO_PATH}</li>
           <li>Active Sessions: ${Object.keys(transports).length}</li>
         </ul>
         
         <h2>Available Tools</h2>
         <ul>
-          <li><code>search_devlogs</code> - Search across devlog entries</li>
-          <li><code>list_recent_devlogs</code> - List recent modifications</li>
+          <li><code>search_dokoros</code> - Search across dokoro entries</li>
+          <li><code>list_recent_dokoros</code> - List recent modifications</li>
           <li><code>analyze_feature_history</code> - Analyze feature development</li>
           <li><code>test_dokoro_connection</code> - Test server connection</li>
         </ul>
@@ -282,7 +282,7 @@ app.post('/mcp', async (req, res) => {
       };
 
       // Connect the transport to the MCP server
-      const server = getDevLogServer();
+      const server = getDokoroServer();
       await server.connect(transport);
 
       await transport.handleRequest(req, res, req.body);
@@ -317,7 +317,7 @@ app.post('/mcp', async (req, res) => {
 
 // Start server
 app.listen(MCP_PORT, () => {
-  console.log(`🚀 DevLog MCP HTTP Server running at http://localhost:${MCP_PORT}`);
-  console.log(`📁 DevLog Path: ${DOKORO_PATH}`);
+  console.log(`🚀 Dokoro MCP HTTP Server running at http://localhost:${MCP_PORT}`);
+  console.log(`📁 Dokoro Path: ${DOKORO_PATH}`);
   console.log(`\n📄 Visit http://localhost:${MCP_PORT} for server info`);
 });

@@ -1,5 +1,5 @@
 /**
- * Filename generation utilities for devlog
+ * Filename generation utilities for dokoro
  * Generates descriptive filenames with day-of-week
  */
 
@@ -59,9 +59,9 @@ export function generateFilename(options: FilenameOptions): string {
 /**
  * Extract main focus from current.md to generate descriptive filename
  */
-export async function extractMainFocus(devlogPath: string): Promise<string | undefined> {
+export async function extractMainFocus(dokoroPath: string): Promise<string | undefined> {
   try {
-    const currentPath = path.join(devlogPath, 'current.md');
+    const currentPath = path.join(dokoroPath, 'current.md');
     const content = await fs.readFile(currentPath, 'utf-8');
     const parsed = matter(content);
     
@@ -99,8 +99,8 @@ export async function extractMainFocus(devlogPath: string): Promise<string | und
 /**
  * Generate session filename based on current work
  */
-export async function generateSessionFilename(devlogPath: string): Promise<string> {
-  const mainFocus = await extractMainFocus(devlogPath);
+export async function generateSessionFilename(dokoroPath: string): Promise<string> {
+  const mainFocus = await extractMainFocus(dokoroPath);
   
   return generateFilename({
     type: 'session',

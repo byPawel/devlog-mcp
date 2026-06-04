@@ -24,7 +24,7 @@ Key components:
     content: `
 # Research on AI-powered tagging
 
-Investigating how to use AI to automatically suggest tags for devlog entries. Looking at pattern matching and NLP techniques.
+Investigating how to use AI to automatically suggest tags for dokoro entries. Looking at pattern matching and NLP techniques.
 
 Approaches considered:
 - Regex-based pattern matching
@@ -40,7 +40,7 @@ async function runTests() {
   // Test 1: Build Index
   console.log('📚 Building similarity index...');
   const startTime = Date.now();
-  await similarityDetector.buildIndex(['devlog/**/*.md']);
+  await similarityDetector.buildIndex(['dokoro/**/*.md']);
   console.log(`✅ Index built in ${Date.now() - startTime}ms\n`);
 
   // Test 2: Find similar content

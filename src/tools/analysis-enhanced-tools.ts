@@ -34,7 +34,7 @@ interface AgentMetrics {
   handoffs: { to: string; efficiency: number }[];
 }
 
-interface DevLogFile {
+interface DokoroFile {
   path: string;
   name: string;
   content: string;
@@ -51,9 +51,9 @@ interface ParsedContent {
   };
 }
 
-// Helper function to read devlog files
-async function readDevLogFiles(): Promise<DevLogFile[]> {
-  const files: DevLogFile[] = [];
+// Helper function to read dokoro files
+async function readDokoroFiles(): Promise<DokoroFile[]> {
+  const files: DokoroFile[] = [];
   
   async function scanDirectory(dir: string) {
     const entries = await readdir(dir, { withFileTypes: true });
@@ -79,7 +79,7 @@ async function readDevLogFiles(): Promise<DevLogFile[]> {
 }
 
 // Helper function to parse content with gray-matter
-async function parseContent(file: DevLogFile): Promise<ParsedContent> {
+async function parseContent(file: DokoroFile): Promise<ParsedContent> {
   const parsed = matter(file.content);
   return {
     content: parsed.content,
@@ -94,14 +94,14 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
   {
     name: 'dokoro_analyze_patterns',
     title: 'Analyze Patterns',
-    description: 'Find recurring issues, patterns, and technical debt across devlogs',
+    description: 'Find recurring issues, patterns, and technical debt across dokoros',
     inputSchema: {
       timeRange: z.string().optional().default('30d').describe('Time range to analyze (e.g., "7d", "30d", "all")'),
       minOccurrences: z.number().optional().default(3).describe('Minimum occurrences to be considered a pattern')
     },
     handler: async (args: { timeRange?: string; minOccurrences?: number }): Promise<CallToolResult> => {
       const { timeRange = '30d', minOccurrences = 3 } = args;
-      const files = await readDevLogFiles();
+      const files = await readDokoroFiles();
       const patterns: Map<string, Pattern> = new Map();
       
       // Common issue patterns to look for
@@ -194,7 +194,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
     },
     handler: async (args: { format?: 'mermaid' | 'json' | 'dot'; scope?: string }): Promise<CallToolResult> => {
       const { format = 'mermaid', scope = 'features' } = args;
-      const files = await readDevLogFiles();
+      const files = await readDokoroFiles();
       const dependencies: Dependency[] = [];
       const nodes: Map<string, { title: string; status: string }> = new Map();
       
@@ -283,13 +283,13 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
     },
     handler: async (args: { epic?: string; days?: number }): Promise<CallToolResult> => {
       const { epic, days = 30 } = args;
-      const files = await readDevLogFiles();
+      const files = await readDokoroFiles();
       const burndownData: BurndownData[] = [];
       const dailyProgress: Map<string, { completed: Set<string>; added: Set<string> }> = new Map();
       
       // Filter files related to the epic
       const epicFiles = epic 
-        ? files.filter((f: DevLogFile) => f.path.toLowerCase().includes(epic.toLowerCase()) || 
+        ? files.filter((f: DokoroFile) => f.path.toLowerCase().includes(epic.toLowerCase()) || 
                            f.name.toLowerCase().includes(epic.toLowerCase()))
         : files;
       
@@ -369,7 +369,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
     },
     handler: async (args: { days?: number }): Promise<CallToolResult> => {
       const { days = 7 } = args;
-      const files = await readDevLogFiles();
+      const files = await readDokoroFiles();
       const agentMetrics: Map<string, AgentMetrics> = new Map();
       const handoffs: Map<string, Map<string, number>> = new Map();
       
@@ -400,7 +400,7 @@ export const enhancedAnalysisTools: ToolDefinition[] = [
       }
       
       // Analyze handoffs from current.md history
-      const currentFile = files.find((f: DevLogFile) => f.name === 'current.md');
+      const currentFile = files.find((f: DokoroFile) => f.name === 'current.md');
       if (currentFile) {
         const parsed = await parseContent(currentFile);
         const content = parsed.content;
@@ -527,7 +527,7 @@ function generateBurndownRecommendation(velocity: number, remaining: number, pro
   }
 }
 
-function calculateHandoffEfficiency(_from: string, _to: string, _files: DevLogFile[]): number {
+function calculateHandoffEfficiency(_from: string, _to: string, _files: DokoroFile[]): number {
   // Simple efficiency calculation based on overlap and completion
   // In a real implementation, this would analyze actual handoff quality
   return 0.85; // Placeholder

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Search DevLog Server - LanceDB powered semantic search
+ * Search Dokoro Server - LanceDB powered semantic search
  * Provides hybrid vector + FTS5 search with Ollama embeddings
  */
 
@@ -17,7 +17,7 @@ async function main() {
   // All LanceDB tools + grep-based fallback
   const allTools: ToolDefinition[] = [
     ...lancedbTools,
-    basicTools.find(t => t.name === 'search_devlogs')!,
+    basicTools.find(t => t.name === 'search_dokoros')!,
   ].filter(Boolean);
 
   // Conditionally load tachibot bridge tools (dynamic import = zero cost when disabled)
@@ -30,7 +30,7 @@ async function main() {
   const config = {
     name: 'dokoro-search',
     version: '2.0.0',
-    description: 'LanceDB-powered hybrid semantic search for DevLog entries',
+    description: 'LanceDB-powered hybrid semantic search for Dokoro entries',
   };
 
   const server = createDevlogServer(config);
@@ -40,7 +40,7 @@ async function main() {
 
   try {
     const projectPath = path.dirname(DOKORO_PATH);
-    const sqlite = getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+    const sqlite = getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
     startBackgroundIndexer(sqlite, path.join(projectPath, path.basename(DOKORO_PATH)));
   } catch (err) {
     console.error('[SearchServer] Background indexer failed to start:', err);

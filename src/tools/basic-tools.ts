@@ -19,11 +19,11 @@ export const basicTools: ToolDefinition[] = [
             text: renderOutput({
               type: 'status-card',
               data: {
-                title: 'MCP DevLog Server',
+                title: 'MCP Dokoro Server',
                 status: 'success',
                 message: 'Server is working!',
                 details: {
-                  'DevLog Path': DOKORO_PATH,
+                  'Dokoro Path': DOKORO_PATH,
                 },
               },
             }),
@@ -34,9 +34,9 @@ export const basicTools: ToolDefinition[] = [
   },
 
   {
-    name: 'search_devlogs',
-    title: 'Search DevLogs',
-    description: 'Search across all devlog entries with optional tag filtering',
+    name: 'search_dokoros',
+    title: 'Search Dokoros',
+    description: 'Search across all dokoro entries with optional tag filtering',
     inputSchema: {
       query: z.string().describe('Search query (optional if using tags)').optional().default(''),
       type: z.enum(['insights', 'decisions', 'features', 'daily', 'current', 'all']).optional().default('all'),
@@ -68,9 +68,9 @@ export const basicTools: ToolDefinition[] = [
   },
 
   {
-    name: 'list_recent_devlogs',
-    title: 'List Recent DevLogs',
-    description: 'List recently modified devlog entries',
+    name: 'list_recent_dokoros',
+    title: 'List Recent Dokoros',
+    description: 'List recently modified dokoro entries',
     inputSchema: {
       days: z.number().optional().default(7).describe('Number of days to look back'),
       type: z.enum(['posts', 'ideas', 'features', 'all']).optional().default('all'),
@@ -90,9 +90,9 @@ export const basicTools: ToolDefinition[] = [
               text: renderOutput({
                 type: 'status-card',
                 data: {
-                  title: 'Recent DevLogs',
+                  title: 'Recent Dokoros',
                   status: 'info',
-                  message: `No devlog entries found in the last ${days} days.`,
+                  message: `No dokoro entries found in the last ${days} days.`,
                 },
               }),
             },

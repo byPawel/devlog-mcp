@@ -1,5 +1,5 @@
 /**
- * DevLog MCP Theme System
+ * Dokoro MCP Theme System
  *
  * Exports:
  * - Types: Theme, ThemeName, RenderableResult, component props

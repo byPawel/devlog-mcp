@@ -1,5 +1,5 @@
 /**
- * Test the AI Smart Tagger with sample devlog entries
+ * Test the AI Smart Tagger with sample dokoro entries
  */
 
 import { smartTagger } from './ai-smart-tagger.js';

@@ -1,5 +1,5 @@
 /**
- * Test script for the devlog database module
+ * Test script for the dokoro database module
  */
 
 import { getDb, createDoc, searchDocs, addTagsToDoc, getDocTags, closeAllDbs } from "./index.js";
@@ -12,14 +12,14 @@ async function main() {
   console.log("Testing database at:", testDir);
 
   try {
-    const db = getDb({ projectPath: testDir, devlogFolder: "." });
+    const db = getDb({ projectPath: testDir, dokoroFolder: "." });
 
     // Create a test document
     const doc = await createDoc(db, {
       id: "test-doc-1",
       filepath: "test-doc-1.md",
       title: "Test Document",
-      content: "This is a test document for the devlog system.",
+      content: "This is a test document for the dokoro system.",
       docType: "issue",
       status: "inbox",
       tags: ["test", "demo"],

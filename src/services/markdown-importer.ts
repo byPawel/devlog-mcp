@@ -2,7 +2,7 @@
  * Markdown Importer
  *
  * Imports Markdown files (including OpenClaw MEMORY.md format) into
- * the devlog SQLite database. Supports:
+ * the dokoro SQLite database. Supports:
  * - OpenClaw MEMORY.md -> research/decision docs
  * - OpenClaw daily logs (YYYY-MM-DD.md) -> session docs
  * - Generic markdown with YAML frontmatter -> auto-detected doc type

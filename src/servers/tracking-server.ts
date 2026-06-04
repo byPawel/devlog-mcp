@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Tracking DevLog Server - Issue & Feature Tracking
+ * Tracking Dokoro Server - Issue & Feature Tracking
  * Provides issue tracking, feature tracking, weekly integration, and backup tools
  */
 

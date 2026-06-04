@@ -313,7 +313,7 @@ export class VectorStoreService {
   private initialized = false;
 
   constructor(projectPath: string) {
-    this.dbPath = path.join(projectPath, '.devlog', 'db', 'vectors.lance');
+    this.dbPath = path.join(projectPath, '.dokoro', 'db', 'vectors.lance');
   }
 
   async init(): Promise<void> {

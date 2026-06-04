@@ -40,7 +40,7 @@ export function loadToolConfig(): ToolConfig {
       enabled: process.env.DOKORO_ENABLE_SEMANTIC_SEARCH === 'true'
     },
 
-    // Tachibot bridge tools (connects tachibot-mcp to devlog persistence)
+    // Tachibot bridge tools (connects tachibot-mcp to dokoro persistence)
     bridge_index_research: { enabled: process.env.DOKORO_ENABLE_TACHIBOT_BRIDGE === 'true' },
     bridge_import_plan: { enabled: process.env.DOKORO_ENABLE_TACHIBOT_BRIDGE === 'true' },
     bridge_get_context: { enabled: process.env.DOKORO_ENABLE_TACHIBOT_BRIDGE === 'true' },

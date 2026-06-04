@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Planning DevLog Server - Feature planning and research tools
+ * Planning Dokoro Server - Feature planning and research tools
  * Provides planning, research capture, and roadmap generation
  */
 
@@ -21,7 +21,7 @@ const planningServerTools: ToolDefinition[] = [
 const config = {
   name: 'dokoro-planning',
   version: '1.0.0',
-  description: 'Feature planning and research tools for DevLog'
+  description: 'Feature planning and research tools for Dokoro'
 };
 
 const server = createDevlogServer(config);

@@ -10,7 +10,7 @@ export const tagTools: ToolDefinition[] = [
   {
     name: 'dokoro_query_by_tags',
     title: 'Query by Tags',
-    description: 'Query devlogs by specific tags',
+    description: 'Query dokoros by specific tags',
     inputSchema: {
       tags: z.record(z.any()).describe('Tag filters as key-value pairs'),
       limit: z.number().optional().default(10),
@@ -24,7 +24,7 @@ export const tagTools: ToolDefinition[] = [
           content: [
             {
               type: 'text',
-              text: `No devlogs found with tags: ${JSON.stringify(tags)}`,
+              text: `No dokoros found with tags: ${JSON.stringify(tags)}`,
             },
           ],
         };
@@ -34,7 +34,7 @@ export const tagTools: ToolDefinition[] = [
         content: [
           {
             type: 'text',
-            text: `Found ${results.length} devlogs with specified tags:\n\n` +
+            text: `Found ${results.length} dokoros with specified tags:\n\n` +
               limited.map(r => {
                 const tagStr = r.tags ? Object.entries(r.tags).map(([k, v]) => 
                   Array.isArray(v) ? `${k}: ${v.join(', ')}` : `${k}: ${v}`
@@ -50,7 +50,7 @@ export const tagTools: ToolDefinition[] = [
   {
     name: 'dokoro_tag_stats',
     title: 'Tag Statistics',
-    description: 'Get statistics about tag usage in devlogs',
+    description: 'Get statistics about tag usage in dokoros',
     inputSchema: {},
     handler: async (): Promise<CallToolResult> => {
       const results = await searchDevlogs('');

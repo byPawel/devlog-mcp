@@ -21,7 +21,7 @@ let vectorServicesInstance: ReturnType<typeof createVectorServices> | null = nul
 function getVectorServices() {
   if (!vectorServicesInstance) {
     const projectPath = path.dirname(DOKORO_PATH);
-    const sqlite = getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+    const sqlite = getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
     ensureVectorTables(sqlite);
     vectorServicesInstance = createVectorServices(sqlite, path.join(projectPath, path.basename(DOKORO_PATH)));
   }
@@ -30,7 +30,7 @@ function getVectorServices() {
 
 function getSqlite() {
   const projectPath = path.dirname(DOKORO_PATH);
-  return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+  return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

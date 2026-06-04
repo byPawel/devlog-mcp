@@ -1,5 +1,5 @@
 /**
- * Shared constants across all devlog servers
+ * Shared constants across all dokoro servers
  */
 
 export const LOCK_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours

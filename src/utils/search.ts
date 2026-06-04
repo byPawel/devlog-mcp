@@ -5,7 +5,7 @@ import { parseDevlogContent } from './parsing.js';
 import { SearchResult, DOKORO_PATH } from '../types/dokoro.js';
 
 /**
- * Read a devlog file
+ * Read a dokoro file
  */
 export async function readDevlogFile(filePath: string): Promise<string | null> {
   try {
@@ -17,7 +17,7 @@ export async function readDevlogFile(filePath: string): Promise<string | null> {
 }
 
 /**
- * Search devlog entries with optional tag filtering
+ * Search dokoro entries with optional tag filtering
  */
 export async function searchDevlogs(
   query: string, 

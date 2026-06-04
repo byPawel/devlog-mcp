@@ -1,6 +1,6 @@
 /**
  * MCP Tool Definitions for AI Tagging
- * Integrates smart tagging into the DevLog MCP server
+ * Integrates smart tagging into the Dokoro MCP server
  */
 
 import { z } from 'zod';
@@ -16,7 +16,7 @@ export const aiTaggingTools: ToolDefinition[] = [
   {
     name: 'dokoro_auto_tag',
     title: 'Auto Tag Content',
-    description: 'Automatically suggest tags for devlog content',
+    description: 'Automatically suggest tags for dokoro content',
     inputSchema: {
       content: z.string().describe('Devlog content to analyze'),
       threshold: z.number().optional().default(0.6).describe('Confidence threshold (0-1)'),
@@ -108,14 +108,14 @@ export const aiTaggingTools: ToolDefinition[] = [
   {
     name: 'dokoro_tag_batch',
     title: 'Batch Tag Analysis',
-    description: 'Analyze and tag multiple devlog entries',
+    description: 'Analyze and tag multiple dokoro entries',
     inputSchema: {
-      directory: z.string().optional().default('devlog').describe('Directory containing devlog files'),
+      directory: z.string().optional().default('dokoro').describe('Directory containing dokoro files'),
       pattern: z.string().optional().default('**/*.md').describe('File pattern to match (glob)'),
       dryRun: z.boolean().optional().default(true).describe('Preview changes without applying'),
       threshold: z.number().optional().default(0.7).describe('Confidence threshold')
     },
-    handler: async ({ directory = 'devlog', pattern = '**/*.md', dryRun = true, threshold = 0.7 }): Promise<CallToolResult> => {
+    handler: async ({ directory = 'dokoro', pattern = '**/*.md', dryRun = true, threshold = 0.7 }): Promise<CallToolResult> => {
       const glob = (await import('glob')).glob;
       const files = await glob(pattern, { cwd: directory });
       
@@ -198,9 +198,9 @@ export const aiTaggingTools: ToolDefinition[] = [
     title: 'Tag Statistics',
     description: 'Get statistics about tag usage',
     inputSchema: {
-      directory: z.string().optional().default('devlog').describe('Directory to analyze')
+      directory: z.string().optional().default('dokoro').describe('Directory to analyze')
     },
-    handler: async ({ directory = 'devlog' }): Promise<CallToolResult> => {
+    handler: async ({ directory = 'dokoro' }): Promise<CallToolResult> => {
       const glob = (await import('glob')).glob;
       const files = await glob('**/*.md', { cwd: directory });
       

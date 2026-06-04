@@ -1,6 +1,6 @@
 /**
  * Devlog initialization tool
- * Creates devlog structure in a project
+ * Creates dokoro structure in a project
  */
 
 import { z } from 'zod';
@@ -12,20 +12,20 @@ import { renderOutput } from '../utils/render-output.js';
 // icon available for future use
 // import { icon } from '../utils/icons.js';
 
-export const devlogInitTool: ToolDefinition = {
+export const dokoroInitTool: ToolDefinition = {
   name: 'dokoro_init',
-  title: 'Initialize DevLog',
-  description: 'Initialize devlog structure in a project (creates directories and initial files)',
+  title: 'Initialize Dokoro',
+  description: 'Initialize dokoro structure in a project (creates directories and initial files)',
   inputSchema: {
     projectPath: z.string().optional().describe('Project path (defaults to current directory)'),
-    skipIfExists: z.boolean().optional().default(true).describe('Skip initialization if devlog already exists'),
+    skipIfExists: z.boolean().optional().default(true).describe('Skip initialization if dokoro already exists'),
   },
   handler: async ({ projectPath = process.cwd(), skipIfExists = true }): Promise<CallToolResult> => {
-    const devlogPath = path.join(projectPath, 'devlog');
+    const dokoroPath = path.join(projectPath, 'dokoro');
     
-    // Check if devlog already exists
+    // Check if dokoro already exists
     try {
-      await fs.access(devlogPath);
+      await fs.access(dokoroPath);
       if (skipIfExists) {
         return {
           content: [
@@ -37,7 +37,7 @@ export const devlogInitTool: ToolDefinition = {
                   title: 'Already Exists',
                   status: 'info',
                   message: 'Use skipIfExists=false to reinitialize.',
-                  details: { 'Path': devlogPath },
+                  details: { 'Path': dokoroPath },
                 },
               }),
             },
@@ -51,19 +51,19 @@ export const devlogInitTool: ToolDefinition = {
     try {
       // Create directory structure
       const directories = [
-        'devlog',
-        'devlog/daily',
-        'devlog/features',
-        'devlog/decisions',
-        'devlog/insights',
-        'devlog/research',
-        'devlog/retrospective',
-        'devlog/retrospective/weekly',
-        'devlog/retrospective/monthly',
-        'devlog/archive',
-        'devlog/.mcp',
-        'devlog/.config',
-        'devlog/.tags',
+        'dokoro',
+        'dokoro/daily',
+        'dokoro/features',
+        'dokoro/decisions',
+        'dokoro/insights',
+        'dokoro/research',
+        'dokoro/retrospective',
+        'dokoro/retrospective/weekly',
+        'dokoro/retrospective/monthly',
+        'dokoro/archive',
+        'dokoro/.mcp',
+        'dokoro/.config',
+        'dokoro/.tags',
       ];
       
       for (const dir of directories) {
@@ -76,7 +76,7 @@ export const devlogInitTool: ToolDefinition = {
       const timestamp = now.toISOString().slice(0, 10).replace(/-/g, '');
       
       // Create README.md
-      const readmeContent = `# DevLog
+      const readmeContent = `# Dokoro
 
 This is the development log for tracking project progress, decisions, and insights.
 
@@ -119,7 +119,7 @@ tags:
 *Initialized: ${dateStr}*
 `;
       
-      await fs.writeFile(path.join(devlogPath, 'README.md'), readmeContent);
+      await fs.writeFile(path.join(dokoroPath, 'README.md'), readmeContent);
       
       // Create current.md
       const currentContent = `---
@@ -140,10 +140,10 @@ tags:
 - [ ] Review project requirements
 
 ## 🚧 In Progress
-- [ ] DevLog initialization
+- [ ] Dokoro initialization
 
 ## 💭 Quick Notes & Ideas
-- DevLog initialized successfully
+- Dokoro initialized successfully
 
 ## ⏭️ Next Session
 - [ ] Start feature planning
@@ -152,10 +152,10 @@ tags:
 - Project setup tasks
 
 ---
-*DevLog initialized: ${dateStr}*
+*Dokoro initialized: ${dateStr}*
 `;
       
-      await fs.writeFile(path.join(devlogPath, 'current.md'), currentContent);
+      await fs.writeFile(path.join(dokoroPath, 'current.md'), currentContent);
       
       // Create .gitignore
       const gitignoreContent = `# MCP metadata
@@ -172,14 +172,14 @@ personal/
 private/
 `;
       
-      await fs.writeFile(path.join(devlogPath, '.gitignore'), gitignoreContent);
+      await fs.writeFile(path.join(dokoroPath, '.gitignore'), gitignoreContent);
       
       // Create search mode config
-      await fs.writeFile(path.join(devlogPath, '.config', 'search-mode'), 'auto');
+      await fs.writeFile(path.join(dokoroPath, '.config', 'search-mode'), 'auto');
       
       // Build tree items for directories (for future tree rendering)
       const _treeItems = directories.map(d => ({
-        text: `${d.replace('devlog/', '')}/`,
+        text: `${d.replace('dokoro/', '')}/`,
         level: d.split('/').length - 1,
       }));
       void _treeItems; // Reserved for tree component
@@ -191,9 +191,9 @@ private/
             text: renderOutput({
               type: 'status-card',
               data: {
-                title: 'DevLog Initialized',
+                title: 'Dokoro Initialized',
                 status: 'success',
-                message: `Created at: ${devlogPath}`,
+                message: `Created at: ${dokoroPath}`,
                 details: {
                   'Directories': `${directories.length} created`,
                   'Files': 'README.md, current.md, .gitignore',

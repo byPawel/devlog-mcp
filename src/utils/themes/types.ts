@@ -1,5 +1,5 @@
 /**
- * Theme Types for DevLog MCP - React Ink Edition
+ * Theme Types for Dokoro MCP - React Ink Edition
  *
  * Provides type definitions for React Ink component theming.
  * Uses Ink's native styling (Box borderStyle, Text color props).

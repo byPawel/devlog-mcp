@@ -283,7 +283,7 @@ export class PatternMatcher {
     const phrases: string[] = [];
     
     // Technical terms
-    const techTerms = content.match(/\b(?:React|TypeScript|Node\.js|API|MCP|DevLog|Jira|database|frontend|backend)\b/gi);
+    const techTerms = content.match(/\b(?:React|TypeScript|Node\.js|API|MCP|Dokoro|Jira|database|frontend|backend)\b/gi);
     if (techTerms) {
       phrases.push(...techTerms);
     }

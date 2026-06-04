@@ -16,7 +16,7 @@ export const assetTools: ToolDefinition[] = [
   {
     name: 'dokoro_save_image',
     title: 'Save Image',
-    description: 'Save an image to the devlog assets folder. Supports copying from a path or saving base64 data.',
+    description: 'Save an image to the dokoro assets folder. Supports copying from a path or saving base64 data.',
     inputSchema: {
       source: z.string().describe('Source image path (absolute or relative to cwd) or base64 data'),
       name: z.string().optional().describe('Custom filename (auto-generated if not provided)'),
@@ -110,7 +110,7 @@ export const assetTools: ToolDefinition[] = [
                 data: {
                   title: 'Image Saved',
                   status: 'success',
-                  message: description || 'Image saved to devlog',
+                  message: description || 'Image saved to dokoro',
                   details: {
                     'Location': targetPath,
                     'Relative path': relativePath,
@@ -145,7 +145,7 @@ export const assetTools: ToolDefinition[] = [
   {
     name: 'dokoro_save_file',
     title: 'Save File',
-    description: 'Save any file to the devlog assets folder with automatic organization.',
+    description: 'Save any file to the dokoro assets folder with automatic organization.',
     inputSchema: {
       source: z.string().describe('Source file path'),
       category: z.enum(['documents', 'code', 'data', 'other']).optional().default('other')
@@ -239,7 +239,7 @@ export const assetTools: ToolDefinition[] = [
   {
     name: 'dokoro_list_assets',
     title: 'List Assets',
-    description: 'List all saved assets in the devlog',
+    description: 'List all saved assets in the dokoro',
     inputSchema: {
       category: z.enum(['images', 'documents', 'code', 'data', 'other', 'all']).optional().default('all'),
     },
@@ -273,7 +273,7 @@ export const assetTools: ToolDefinition[] = [
                   data: {
                     title: 'No Assets',
                     status: 'info',
-                    message: 'No assets found in devlog.',
+                    message: 'No assets found in dokoro.',
                   },
                 }),
               },

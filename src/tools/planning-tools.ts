@@ -137,7 +137,7 @@ export const planningTools: ToolDefinition[] = [
 
       plan += `5. **Documentation**\n`;
       plan += `   ${icon('arrow')} Update feature status in features/\n`;
-      plan += `   ${icon('arrow')} Document in devlog\n`;
+      plan += `   ${icon('arrow')} Document in dokoro\n`;
       plan += `   ${icon('arrow')} Update any relevant configs\n\n`;
       
       // Save plan to file

@@ -31,7 +31,7 @@ import {
 
 export interface MigrationOptions {
   projectPath: string;
-  devlogFolder?: string; // Default: 'devlog'
+  dokoroFolder?: string; // Default: 'dokoro'
   dryRun?: boolean;
   force?: boolean; // Re-import all files even if unchanged
   verbose?: boolean;
@@ -67,7 +67,7 @@ interface ParsedMarkdown {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const IGNORED_FOLDERS = [".mcp", ".obsidian", ".private", ".tags", ".git", "node_modules", ".devlog", ".dokoro-backup"];
+const IGNORED_FOLDERS = [".mcp", ".obsidian", ".private", ".tags", ".git", "node_modules", ".dokoro", ".dokoro-backup"];
 
 const STATUS_MAP: Record<string, string> = {
   done: "done",
@@ -122,9 +122,9 @@ const PRIORITY_MAP: Record<string, string> = {
 // PARSING
 // ═══════════════════════════════════════════════════════════════════════════
 
-function parseMarkdownFile(filePath: string, devlogRoot: string): ParsedMarkdown {
+function parseMarkdownFile(filePath: string, dokoroRoot: string): ParsedMarkdown {
   const content = fs.readFileSync(filePath, "utf-8");
-  const relativePath = path.relative(devlogRoot, filePath);
+  const relativePath = path.relative(dokoroRoot, filePath);
   const filename = path.basename(filePath, ".md");
 
   // Parse frontmatter
@@ -407,11 +407,11 @@ function parseTimeEstimate(frontmatter: Record<string, unknown>): number | undef
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function migrateDevlog(options: MigrationOptions): Promise<MigrationResult> {
-  const devlogFolder = options.devlogFolder || "devlog";
-  const devlogRoot = path.join(options.projectPath, devlogFolder);
+  const dokoroFolder = options.dokoroFolder || "dokoro";
+  const dokoroRoot = path.join(options.projectPath, dokoroFolder);
 
-  if (!fs.existsSync(devlogRoot)) {
-    throw new Error(`Devlog folder not found: ${devlogRoot}`);
+  if (!fs.existsSync(dokoroRoot)) {
+    throw new Error(`Devlog folder not found: ${dokoroRoot}`);
   }
 
   const result: MigrationResult = {
@@ -423,7 +423,7 @@ export async function migrateDevlog(options: MigrationOptions): Promise<Migratio
   };
 
   // Find all markdown files
-  const pattern = path.join(devlogRoot, "**/*.md");
+  const pattern = path.join(dokoroRoot, "**/*.md");
   const files = await glob(pattern, {
     ignore: IGNORED_FOLDERS.map((f) => `**/${f}/**`),
   });
@@ -437,14 +437,14 @@ export async function migrateDevlog(options: MigrationOptions): Promise<Migratio
   // Get database
   const dbConfig: DevlogDbConfig = {
     projectPath: options.projectPath,
-    devlogFolder,
+    dokoroFolder,
   };
 
   const db = getDb(dbConfig);
 
   for (const filePath of files) {
     try {
-      const parsed = parseMarkdownFile(filePath, devlogRoot);
+      const parsed = parseMarkdownFile(filePath, dokoroRoot);
 
       // Check if document already exists
       const existing = await getDoc(db, parsed.id);
@@ -574,7 +574,7 @@ async function main(): Promise<void> {
 
   const options: MigrationOptions = {
     projectPath: process.cwd(),
-    devlogFolder: "devlog",
+    dokoroFolder: "dokoro",
     dryRun: args.includes("--dry-run"),
     force: args.includes("--force"),
     verbose: args.includes("--verbose") || args.includes("-v"),
@@ -587,17 +587,17 @@ async function main(): Promise<void> {
     options.projectPath = args[projectIndex + 1];
   }
 
-  // Parse --devlog folder
-  const devlogIndex = args.indexOf("--devlog");
-  if (devlogIndex !== -1 && args[devlogIndex + 1]) {
-    options.devlogFolder = args[devlogIndex + 1];
+  // Parse --dokoro folder
+  const dokoroIndex = args.indexOf("--dokoro");
+  if (dokoroIndex !== -1 && args[dokoroIndex + 1]) {
+    options.dokoroFolder = args[dokoroIndex + 1];
   }
 
   console.log("═".repeat(60));
   console.log("         DEVLOG MIGRATION");
   console.log("═".repeat(60));
   console.log(`Project: ${options.projectPath}`);
-  console.log(`Devlog:  ${options.devlogFolder}`);
+  console.log(`Devlog:  ${options.dokoroFolder}`);
   console.log(`Mode:    ${options.dryRun ? "DRY RUN" : "EXECUTE"}`);
   console.log("─".repeat(60));
 

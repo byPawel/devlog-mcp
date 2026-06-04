@@ -8,7 +8,7 @@ export const contextTools: ToolDefinition[] = [
   {
     name: 'dokoro_ambient_context',
     title: 'Ambient Context',
-    description: 'Auto-detect project context from git state and surface relevant devlog entries',
+    description: 'Auto-detect project context from git state and surface relevant dokoro entries',
     inputSchema: {
       projectPath: z.string().optional().describe('Project path (defaults to cwd)'),
     },

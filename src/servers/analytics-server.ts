@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Analytics DevLog Server - Time tracking and productivity analytics
+ * Analytics Dokoro Server - Time tracking and productivity analytics
  * Provides time tracking, velocity insights, and pattern analysis
  */
 
@@ -25,7 +25,7 @@ const analyticsTools: ToolDefinition[] = [
 const config = {
   name: 'dokoro-analytics',
   version: '1.0.0',
-  description: 'Time tracking and productivity analytics for DevLog'
+  description: 'Time tracking and productivity analytics for Dokoro'
 };
 
 const server = createDevlogServer(config);

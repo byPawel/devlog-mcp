@@ -2,7 +2,7 @@ import matter from 'gray-matter';
 import { ParsedDevlog } from '../types/dokoro.js';
 
 /**
- * Parse devlog content with frontmatter
+ * Parse dokoro content with frontmatter
  */
 export function parseDevlogContent(content: string): ParsedDevlog {
   let parsed;

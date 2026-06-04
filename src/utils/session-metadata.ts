@@ -52,19 +52,19 @@ const LEGACY_METADATA_START = '<!-- DOKORO_METADATA (do not edit manually)';
 const LEGACY_METADATA_END = '-->';
 
 /**
- * Get the path to session.json from a devlog file path
+ * Get the path to session.json from a dokoro file path
  */
-function getSessionJsonPath(devlogFilePath: string): string {
-  const devlogDir = dirname(devlogFilePath);
-  return join(devlogDir, '.mcp', 'session.json');
+function getSessionJsonPath(dokoroFilePath: string): string {
+  const dokoroDir = dirname(dokoroFilePath);
+  return join(dokoroDir, '.mcp', 'session.json');
 }
 
 /**
  * Migrate legacy metadata from markdown to session.json
  */
-async function migrateLegacyMetadata(devlogFilePath: string): Promise<SessionMetadata | null> {
+async function migrateLegacyMetadata(dokoroFilePath: string): Promise<SessionMetadata | null> {
   try {
-    const content = await fs.readFile(devlogFilePath, 'utf-8');
+    const content = await fs.readFile(dokoroFilePath, 'utf-8');
 
     // Check for legacy embedded metadata
     const startIdx = content.indexOf(LEGACY_METADATA_START);
@@ -82,10 +82,10 @@ async function migrateLegacyMetadata(devlogFilePath: string): Promise<SessionMet
                         content.substring(endIdx + LEGACY_METADATA_END.length);
 
     // Write cleaned markdown
-    await fs.writeFile(devlogFilePath, cleanContent);
+    await fs.writeFile(dokoroFilePath, cleanContent);
 
     // Save to session.json
-    const sessionPath = getSessionJsonPath(devlogFilePath);
+    const sessionPath = getSessionJsonPath(dokoroFilePath);
     await fs.mkdir(dirname(sessionPath), { recursive: true });
     await fs.writeFile(sessionPath, JSON.stringify(metadata, null, 2));
 

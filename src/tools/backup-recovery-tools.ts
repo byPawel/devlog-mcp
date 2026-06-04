@@ -455,16 +455,16 @@ export const backupRecoveryTools: ToolDefinition[] = [
         
         // Check tracking directory structure
         const requiredDirs = [
-          'devlog/tracking/issues/pending',
-          'devlog/tracking/issues/active',
-          'devlog/tracking/issues/resolved',
-          'devlog/tracking/issues/archived',
-          'devlog/tracking/features/ideas',
-          'devlog/tracking/features/planned',
-          'devlog/tracking/features/active',
-          'devlog/tracking/features/completed',
-          'devlog/tracking/features/archived',
-          'devlog/tracking/backups'
+          'dokoro/tracking/issues/pending',
+          'dokoro/tracking/issues/active',
+          'dokoro/tracking/issues/resolved',
+          'dokoro/tracking/issues/archived',
+          'dokoro/tracking/features/ideas',
+          'dokoro/tracking/features/planned',
+          'dokoro/tracking/features/active',
+          'dokoro/tracking/features/completed',
+          'dokoro/tracking/features/archived',
+          'dokoro/tracking/backups'
         ];
         
         const missingDirs: string[] = [];

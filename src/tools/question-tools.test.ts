@@ -4,7 +4,7 @@
  * Strategy: set process.env.DOKORO_PATH to a temp dir, then use
  * jest.isolateModules() to load a fresh question-tools instance whose
  * QUESTIONS_FILE points at that temp dir.  This avoids touching the real
- * devlog directory and lets us inspect the file directly.
+ * dokoro directory and lets us inspect the file directly.
  */
 
 import { promises as fs } from 'fs';

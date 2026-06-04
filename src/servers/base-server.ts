@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Base server setup for all devlog MCP servers
+ * Base server setup for all dokoro MCP servers
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -54,18 +54,18 @@ export async function startServer(server: McpServer, tools: ToolDefinition[], co
   const transport = new StdioServerTransport();
   await server.connect(transport);
   
-  // Check if devlog is initialized
-  const devlogExists = await isDevlogInitialized();
+  // Check if dokoro is initialized
+  const dokoroExists = await isDevlogInitialized();
   
-  if (!devlogExists) {
-    console.error('⚠️  DevLog not initialized in this project!');
-    console.error('   Run "dokoro_init" to create devlog structure.');
+  if (!dokoroExists) {
+    console.error('⚠️  Dokoro not initialized in this project!');
+    console.error('   Run "dokoro_init" to create dokoro structure.');
     console.error('   Current path:', DOKORO_PATH);
   } else {
     // Crash recovery: re-compact any sessions left mid-compaction at last exit.
     try {
       const projectPath = path.dirname(DOKORO_PATH);
-      const sqlite = getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+      const sqlite = getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
       const recovered = await new CompactionService(sqlite).recoverAll();
       if (recovered.length) {
         console.error(`   Recovered ${recovered.length} pending compaction(s).`);
@@ -74,6 +74,6 @@ export async function startServer(server: McpServer, tools: ToolDefinition[], co
       console.error('   Compaction recovery skipped:', (e as Error).message);
     }
     console.error(`✅ ${config.name} v${config.version} running...`);
-    console.error('   DevLog path:', DOKORO_PATH);
+    console.error('   Dokoro path:', DOKORO_PATH);
   }
 }

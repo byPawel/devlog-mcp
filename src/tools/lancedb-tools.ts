@@ -20,7 +20,7 @@ let vectorServicesInstance: ReturnType<typeof createVectorServices> | null = nul
 function getVectorServices() {
   if (!vectorServicesInstance) {
     const projectPath = path.dirname(DOKORO_PATH);
-    const sqlite = getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+    const sqlite = getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
     ensureVectorTables(sqlite);
     vectorServicesInstance = createVectorServices(sqlite, path.join(projectPath, path.basename(DOKORO_PATH)));
   }
@@ -29,7 +29,7 @@ function getVectorServices() {
 
 function getSqlite() {
   const projectPath = path.dirname(DOKORO_PATH);
-  return getSqliteDb({ projectPath, devlogFolder: path.basename(DOKORO_PATH) });
+  return getSqliteDb({ projectPath, dokoroFolder: path.basename(DOKORO_PATH) });
 }
 
 function formatSearchResult(r: SearchResult, i: number): string {
@@ -62,7 +62,7 @@ export const lancedbTools: ToolDefinition[] = [
   {
     name: 'search_universal',
     title: 'Universal Semantic Search',
-    description: 'Hybrid semantic + keyword search across all indexed devlog content using LanceDB vectors and FTS5. Returns results ranked by Reciprocal Rank Fusion.',
+    description: 'Hybrid semantic + keyword search across all indexed dokoro content using LanceDB vectors and FTS5. Returns results ranked by Reciprocal Rank Fusion.',
     inputSchema: {
       query: z.string().describe('Search query (natural language or keywords)'),
       limit: z.number().default(10).describe('Number of results to return'),
@@ -105,7 +105,7 @@ export const lancedbTools: ToolDefinition[] = [
   {
     name: 'search_reindex',
     title: 'Reindex Documents',
-    description: 'Incrementally reindex all devlog documents for semantic search. Only reindexes changed/new documents unless full=true.',
+    description: 'Incrementally reindex all dokoro documents for semantic search. Only reindexes changed/new documents unless full=true.',
     inputSchema: {
       full: z.boolean().default(false).describe('Full reindex (delete all vectors first)'),
     },

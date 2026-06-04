@@ -10,7 +10,7 @@
 import Database from 'better-sqlite3';
 import { jest } from '@jest/globals';
 
-// Mock db and ESM-only modules the same way other devlog tool tests do.
+// Mock db and ESM-only modules the same way other dokoro tool tests do.
 jest.mock('../db/index.js', () => ({
   getSqliteDb: () => {
     const test = (globalThis as { __TEST_DB__?: Database.Database }).__TEST_DB__;
