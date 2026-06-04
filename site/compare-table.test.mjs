@@ -57,7 +57,7 @@ assert.equal(
   `expected 6 <td> cells in me-row, got ${meCells.length}`,
 );
 
-// (e) 5th cell: multi-agent, class yes, mentions per-agent feedback
+// (e) 5th cell: multi-agent, class yes, mentions shared editable blocks + handoff
 const multiAgentCell = meCells[4];
 assert.match(
   multiAgentCell.attrs,
@@ -66,8 +66,8 @@ assert.match(
 );
 assert.match(
   multiAgentCell.text,
-  /per-agent feedback/,
-  `expected 5th me-row cell to mention 'per-agent feedback', got '${multiAgentCell.text}'`,
+  /shared editable blocks \+ handoff/,
+  `expected 5th me-row cell to mention 'shared editable blocks + handoff', got '${multiAgentCell.text}'`,
 );
 
 // (f) 6th cell: concurrency, class yes, mentions WAL

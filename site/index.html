@@ -446,7 +446,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="stat-row fade" style="animation-delay:.78s">
       <div class="stat"><div class="n c">5</div><div class="l">Memory layers</div></div>
       <div class="stat"><div class="n">3</div><div class="l">Storage backends</div></div>
-      <div class="stat"><div class="n">32</div><div class="l">MCP tools</div></div>
+      <div class="stat"><div class="n">38</div><div class="l">MCP tools</div></div>
       <div class="stat"><div class="n">2</div><div class="l">Native edges*</div></div>
     </div>
   </div>
@@ -728,7 +728,7 @@ npm install --omit=optional</pre>
         <div id="layerChips"></div>
       </div>
     </div>
-    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 32 entries</div>
+    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 38 entries</div>
     <div class="tool-grid" id="toolGrid"></div>
   </div>
 </section>
@@ -747,7 +747,7 @@ npm install --omit=optional</pre>
           <tr><th>Project</th><th>Architecture</th><th style="text-align:center">Native temporal</th><th style="text-align:center">Native affective</th><th style="text-align:center">Native multi-agent</th><th style="text-align:center">Concurrent access</th></tr>
         </thead>
         <tbody>
-          <tr class="me-row"><td class="me">dokoro</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td><td class="yes">✓ per-agent feedback + workspace lock</td><td class="yes">✓ WAL + busy_timeout=5000</td></tr>
+          <tr class="me-row"><td class="me">dokoro</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td><td class="yes">✓ shared editable blocks + handoff</td><td class="yes">✓ WAL + busy_timeout=5000</td></tr>
           <tr><td>Mem0</td><td>Vector + optional graph</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
           <tr><td>Letta (MemGPT)</td><td>Tiered, OS-like, self-editing</td><td class="partial">◐ via metadata</td><td class="partial">◐ via metadata</td><td class="partial">◐ shared blocks</td><td class="no">—</td></tr>
           <tr><td>Zep / Graphiti</td><td>Temporal knowledge graph</td><td class="yes">✓ bi-temporal</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
@@ -846,6 +846,12 @@ const TOOLS = [
   {n:"dokoro_regenerate_current",l:"working", st:"current.md",    d:"Auto-generate or refresh current.md from recent activity."},
   {n:"dokoro_update_current_section",l:"working",st:"current.md", d:"Update a specific section of current.md."},
   {n:"dokoro_get_current_focus",l:"working",  st:"current.md",    d:"Read the current focus and active tasks from current.md."},
+  {n:"dokoro_block_write",       l:"working", st:"shared_blocks", d:"Create/update a shared editable block; optimistic version compare-and-set."},
+  {n:"dokoro_block_read",        l:"working", st:"shared_blocks", d:"Read a shared block: content, version, last updater."},
+  {n:"dokoro_block_list",        l:"working", st:"shared_blocks", d:"List shared blocks with version + updater."},
+  {n:"dokoro_handoff_write",     l:"working", st:"handoffs",      d:"Record a cross-session handoff: summary + open items."},
+  {n:"dokoro_handoff_inbox",     l:"working", st:"handoffs",      d:"Read open handoffs available to an agent."},
+  {n:"dokoro_handoff_claim",     l:"working", st:"handoffs",      d:"Atomically claim a handoff so only one agent takes it."},
   {n:"dokoro_question_add",     l:"working",  st:"questions.json",d:"Record an open question during development."},
   {n:"dokoro_question_answer",  l:"working",  st:"questions.json",d:"Answer a previously logged question."},
   {n:"dokoro_question_list",    l:"working",  st:"questions.json",d:"List all tracked questions."},

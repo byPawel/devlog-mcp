@@ -181,6 +181,12 @@ Tools are organised by which memory layer they read or write.
 | `dokoro_regenerate_current` | Auto-generate or update `current.md` from recent activity |
 | `dokoro_update_current_section` | Update a specific section in `current.md` |
 | `dokoro_get_current_focus` | Read the current focus and active tasks from `current.md` |
+| `dokoro_block_write` | Create/update a shared editable memory block (optimistic version lock) |
+| `dokoro_block_read` | Read a shared block (content + version + last updater) |
+| `dokoro_block_list` | List shared blocks (key, version, updater) |
+| `dokoro_handoff_write` | Record a cross-session handoff (summary + open items) |
+| `dokoro_handoff_inbox` | Read open handoffs targeted to / available to an agent |
+| `dokoro_handoff_claim` | Atomically claim a handoff so only one agent takes it |
 | `dokoro_question_add` | Log a question during development |
 | `dokoro_question_answer` | Answer a previously logged question |
 | `dokoro_question_list` | List all tracked questions |
