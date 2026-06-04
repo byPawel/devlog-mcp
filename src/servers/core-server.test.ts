@@ -25,6 +25,13 @@ jest.mock('../utils/render-output.js', () => ({
 }));
 jest.mock('../utils/color-setup.js', () => ({}));
 
+// Stub the server runtime so importing core-server.ts to inspect its exported
+// coreTools selection does NOT start a real MCP server as an import side-effect.
+jest.mock('./base-server.js', () => ({
+  createDevlogServer: () => ({}),
+  startServer: () => Promise.resolve(),
+}));
+
 // Import after mocks are registered (require style avoids import.meta issues).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { workspaceTools } = require('../tools/workspace-tools.js') as typeof import('../tools/workspace-tools.js');
@@ -55,5 +62,21 @@ describe('core-server tool registration', () => {
       const tool = workspaceTools.find((t: { name: string }) => t.name === name);
       expect(tool).toBeDefined();
     }
+  });
+
+  it('exported coreTools has no undefined entries (every cherry-picked name resolves)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { coreTools } = require('./core-server.js') as typeof import('./core-server.js');
+    expect(coreTools.length).toBeGreaterThan(0);
+    expect(coreTools.every((t: { name?: string }) => typeof t?.name === 'string')).toBe(true);
+  });
+
+  it('coreTools includes the current.md management tools', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { coreTools } = require('./core-server.js') as typeof import('./core-server.js');
+    const names = coreTools.map((t: { name: string }) => t.name);
+    expect(names).toContain('devlog_regenerate_current');
+    expect(names).toContain('devlog_update_current_section');
+    expect(names).toContain('devlog_get_current_focus');
   });
 });

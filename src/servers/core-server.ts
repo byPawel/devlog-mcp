@@ -26,7 +26,7 @@ export const coreTools = [
   workspaceTools.find(t => t.name === 'devlog_session_summary_add')!,
 
   // Current.md management
-  currentWorkspaceTools.find(t => t.name === 'devlog_current_update')!,
+  ...currentWorkspaceTools,
 
   // Question tracking
   ...questionTools,
