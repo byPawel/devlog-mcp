@@ -445,7 +445,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="stat-row fade" style="animation-delay:.78s">
       <div class="stat"><div class="n c">5</div><div class="l">Memory layers</div></div>
       <div class="stat"><div class="n">3</div><div class="l">Storage backends</div></div>
-      <div class="stat"><div class="n">29</div><div class="l">MCP tools</div></div>
+      <div class="stat"><div class="n">32</div><div class="l">MCP tools</div></div>
       <div class="stat"><div class="n">2</div><div class="l">Native edges*</div></div>
     </div>
   </div>
@@ -704,7 +704,7 @@ footer .meta b{color:var(--text);font-weight:700}
         <div id="layerChips"></div>
       </div>
     </div>
-    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 29 entries</div>
+    <div class="tools-meta reveal">Showing <b id="toolCount">0</b> of 32 entries</div>
     <div class="tool-grid" id="toolGrid"></div>
   </div>
 </section>
@@ -819,6 +819,9 @@ const TOOLS = [
   {n:"devlog_workspace_claim",  l:"working",  st:"file lock",     d:"Claim the workspace with a file-based lock so two agents don't collide."},
   {n:"devlog_workspace_dump",   l:"working",  st:"→ sqlite",      d:"Flush the active workspace into durable storage; registers docs in SQLite."},
   {n:"devlog_session_log",      l:"working",  st:"file + sqlite", d:"Log development session entries with tags as work happens."},
+  {n:"devlog_regenerate_current",l:"working", st:"current.md",    d:"Auto-generate or refresh current.md from recent activity."},
+  {n:"devlog_update_current_section",l:"working",st:"current.md", d:"Update a specific section of current.md."},
+  {n:"devlog_get_current_focus",l:"working",  st:"current.md",    d:"Read the current focus and active tasks from current.md."},
   {n:"devlog_question_add",     l:"working",  st:"questions.json",d:"Record an open question during development."},
   {n:"devlog_question_answer",  l:"working",  st:"questions.json",d:"Answer a previously logged question."},
   {n:"devlog_question_list",    l:"working",  st:"questions.json",d:"List all tracked questions."},
