@@ -340,6 +340,17 @@ describe('runMigrations', () => {
     }
   });
 
+  it('migration v11 creates agent_presence keyed by agent_id', () => {
+    db.prepare(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, description TEXT, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    expect(() => runMigrations(db)).not.toThrow();
+    const cols = db.prepare(`PRAGMA table_info(agent_presence)`).all() as Array<{ name: string; pk: number }>;
+    const names = new Set(cols.map((c) => c.name));
+    for (const c of ['agent_id', 'session_id', 'status', 'current_focus', 'last_heartbeat', 'heartbeat_seq']) {
+      expect(names.has(c)).toBe(true);
+    }
+    expect(cols.find((c) => c.name === 'agent_id')?.pk).toBe(1);
+  });
+
   it('rolls back a failing migration: no version row is recorded', () => {
     runMigrations(db); // apply existing migrations first
     const failingVersion = MIGRATIONS[MIGRATIONS.length - 1].version + 1;

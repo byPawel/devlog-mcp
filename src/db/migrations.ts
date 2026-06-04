@@ -204,6 +204,24 @@ export const MIGRATIONS: Migration[] = [
     ];
     for (const s of statements) db.prepare(s).run();
   } },
+  // v11: agent_presence — daemonless heartbeat presence. One row per agent (upsert).
+  // last_heartbeat is server-assigned unixepoch seconds (single clock domain);
+  // liveness is computed at READ time (now - last_heartbeat <= TTL). No sweeper.
+  // heartbeat_seq rejects out-of-order retries. Per-project only.
+  { version: 11, description: 'agent_presence table for heartbeat-based multi-agent presence', up: (db) => {
+    const statements = [
+      `CREATE TABLE IF NOT EXISTS agent_presence (
+        agent_id TEXT PRIMARY KEY,
+        session_id TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        current_focus TEXT,
+        last_heartbeat INTEGER NOT NULL,
+        heartbeat_seq INTEGER NOT NULL DEFAULT 0
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_agent_presence_heartbeat ON agent_presence(last_heartbeat)`,
+    ];
+    for (const s of statements) db.prepare(s).run();
+  } },
 ];
 
 export function runMigrations(db: Database.Database): void {
