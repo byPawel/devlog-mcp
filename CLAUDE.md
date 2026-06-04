@@ -1,6 +1,6 @@
 # devlog-mcp Guide
 
-`devlog-mcp` is a multi-layer **agent memory** MCP server (Working, Episodic, Semantic, Procedural, Affective memory). Built on Anthropic's MCP TypeScript SDK, with SQLite (Drizzle ORM) + LanceDB vector storage and a file-backed workspace.
+`devlog-mcp` is a multi-layer **agent memory** MCP server (Working, Episodic, Semantic, Procedural, Affective memory). Built on the MCP TypeScript SDK, with SQLite (Drizzle ORM) + LanceDB vector storage and a file-backed workspace.
 
 ## Build & Test Commands
 

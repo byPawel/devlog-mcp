@@ -15,7 +15,7 @@ Remember what you're doing, what you did, what you know, and **how well each too
 
 </div>
 
-> **Built on** Anthropic's MCP TypeScript SDK.
+> **Built on** the MCP TypeScript SDK.
 > **Storage:** SQLite (Drizzle ORM) · LanceDB vectors · a small file-backed workspace.
 
 ---
@@ -373,5 +373,5 @@ devlog-mcp/
 
 ## Acknowledgments
 
-- Depends on the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/sdk`) by Anthropic, used under its MIT License.
-- Thanks to the Anthropic team for creating the Model Context Protocol.
+- Depends on the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/sdk`), used under its MIT License.
+- Implements the open Model Context Protocol.
