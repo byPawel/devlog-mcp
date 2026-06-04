@@ -1,6 +1,6 @@
 # Security Policy
 
-Thank you for helping keep `devlog-mcp` and its users secure.
+Thank you for helping keep `dokoro` and its users secure.
 
 ## Reporting a Vulnerability
 
@@ -8,7 +8,7 @@ Thank you for helping keep `devlog-mcp` and its users secure.
 
 Instead, use GitHub's private vulnerability reporting:
 
-1. Go to the [Security tab](https://github.com/byPawel/devlog-mcp/security) of this repository.
+1. Go to the [Security tab](https://github.com/byPawel/dokoro/security) of this repository.
 2. Click **"Report a vulnerability"** to open a private advisory.
 
 Include as much of the following as you can:
@@ -21,7 +21,7 @@ We will acknowledge your report and keep you updated on the fix.
 
 ## Scope
 
-`devlog-mcp` is an MCP server that reads and writes a local SQLite database, LanceDB vectors, and a file-backed workspace. Of particular interest:
+`dokoro` is an MCP server that reads and writes a local SQLite database, LanceDB vectors, and a file-backed workspace. Of particular interest:
 
 - Path traversal or arbitrary file read/write via tool inputs.
 - SQL injection in the entity/feedback/session queries.
@@ -29,4 +29,4 @@ We will acknowledge your report and keep you updated on the fix.
 
 ## Upstream
 
-`devlog-mcp` builds on the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk). Vulnerabilities in the SDK itself should be reported to Anthropic via their [HackerOne program](https://hackerone.com/anthropic-vdp).
+`dokoro` builds on the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk). Vulnerabilities in the SDK itself should be reported to Anthropic via their [HackerOne program](https://hackerone.com/anthropic-vdp).

@@ -4,7 +4,7 @@
  * Provides time tracking, velocity insights, and pattern analysis
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { taskTrackingTools } from '../tools/task-tracking-tools.js';
 import { analysisTools } from '../tools/analysis-tools.js';
 import { compressionTool } from '../tools/compression-tool.js';
@@ -28,7 +28,7 @@ const config = {
   description: 'Time tracking and productivity analytics for Dokoro'
 };
 
-const server = createDevlogServer(config);
+const server = createDokoroServer(config);
 
 // Start the server
 startServer(server, analyticsTools, config).catch(console.error);

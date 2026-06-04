@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
-import { searchDevlogs } from '../utils/search.js';
+import { searchDokoros } from '../utils/search.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 // renderOutput available for future migration
 // import { renderOutput } from '../utils/render-output.js';
@@ -17,7 +17,7 @@ export const analysisTools: ToolDefinition[] = [
     },
     handler: async ({ feature }): Promise<CallToolResult> => {
       // Search for the feature in features directory
-      const results = await searchDevlogs(feature, 'features');
+      const results = await searchDokoros(feature, 'features');
       
       if (results.length === 0) {
         return {
@@ -81,7 +81,7 @@ export const analysisTools: ToolDefinition[] = [
       staleness: z.enum(['all', 'stale', 'very_stale']).optional().default('all'),
     },
     handler: async ({ staleness }): Promise<CallToolResult> => {
-      const results = await searchDevlogs('');
+      const results = await searchDokoros('');
       
       // Filter for incomplete items
       const pending = results.filter(r => {
@@ -142,7 +142,7 @@ export const analysisTools: ToolDefinition[] = [
       period: z.enum(['day', 'week', 'month']).optional().default('week'),
     },
     handler: async ({ period }): Promise<CallToolResult> => {
-      const results = await searchDevlogs('');
+      const results = await searchDokoros('');
       
       // Calculate cutoff date
       const now = new Date();
@@ -212,7 +212,7 @@ export const analysisTools: ToolDefinition[] = [
       format: z.enum(['text', 'json']).optional().default('text'),
     },
     handler: async ({ range, format }): Promise<CallToolResult> => {
-      const results = await searchDevlogs('');
+      const results = await searchDokoros('');
       
       // Calculate cutoff date
       const now = new Date();
@@ -285,8 +285,8 @@ export const analysisTools: ToolDefinition[] = [
     },
     handler: async ({ feature, format }): Promise<CallToolResult> => {
       // Search for feature and related regressions
-      const featureResults = await searchDevlogs(feature, 'features');
-      const regressionResults = await searchDevlogs(feature);
+      const featureResults = await searchDokoros(feature, 'features');
+      const regressionResults = await searchDokoros(feature);
       
       const regressions = regressionResults.filter(r => {
         const content = r.fullContent?.toLowerCase() || '';

@@ -4,7 +4,7 @@
  * Provides essential workspace management tools
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { workspaceTools } from '../tools/workspace-tools.js';
 import { currentWorkspaceTools } from '../tools/current-workspace-tools.js';
 import { dokoroInitTool } from '../tools/dokoro-init-tool.js';
@@ -53,7 +53,7 @@ const config = {
   description: 'Core Dokoro workspace management tools'
 };
 
-const server = createDevlogServer(config);
+const server = createDokoroServer(config);
 
 // Start the server
 startServer(server, coreTools, config).catch(console.error);

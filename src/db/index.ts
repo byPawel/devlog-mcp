@@ -1,5 +1,5 @@
 /**
- * Devlog-MCP 2.0 Database Module
+ * Dokoro-MCP 2.0 Database Module
  *
  * Per-project SQLite database with Drizzle ORM
  * Each project gets its own .dokoro/db/dokoro.sqlite file
@@ -28,9 +28,9 @@ const __dirname = path.dirname(__filename);
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type DevlogDB = BetterSQLite3Database<typeof schema>;
+export type DokoroDB = BetterSQLite3Database<typeof schema>;
 
-export interface DevlogDbConfig {
+export interface DokoroDbConfig {
   projectPath: string; // Root path of the project
   dokoroFolder?: string; // Default: 'dokoro'
   dbName?: string; // Default: 'dokoro.sqlite'
@@ -99,12 +99,12 @@ export interface SectionTagInput {
 // DATABASE CONNECTION
 // ═══════════════════════════════════════════════════════════════════════════
 
-const dbConnections = new Map<string, { db: DevlogDB; sqlite: Database.Database }>();
+const dbConnections = new Map<string, { db: DokoroDB; sqlite: Database.Database }>();
 
 /**
  * Get or create a database connection for a project
  */
-export function getDb(config: DevlogDbConfig): DevlogDB {
+export function getDb(config: DokoroDbConfig): DokoroDB {
   const dbPath = getDbPath(config);
 
   if (dbConnections.has(dbPath)) {
@@ -152,7 +152,7 @@ export function getDb(config: DevlogDbConfig): DevlogDB {
 /**
  * Get raw better-sqlite3 handle for a project (used by vector services)
  */
-export function getSqliteDb(config: DevlogDbConfig): Database.Database {
+export function getSqliteDb(config: DokoroDbConfig): Database.Database {
   const dbPath = getDbPath(config);
 
   // If already cached, return the raw sqlite handle
@@ -203,7 +203,7 @@ export function ensureVectorTables(sqlite: Database.Database): void {
 /**
  * Close a database connection
  */
-export function closeDb(config: DevlogDbConfig): void {
+export function closeDb(config: DokoroDbConfig): void {
   const dbPath = getDbPath(config);
   const conn = dbConnections.get(dbPath);
 
@@ -223,7 +223,7 @@ export function closeAllDbs(): void {
   dbConnections.clear();
 }
 
-function getDbPath(config: DevlogDbConfig): string {
+function getDbPath(config: DokoroDbConfig): string {
   const dokoroFolder = config.dokoroFolder || "dokoro";
   const dbName = config.dbName || "dokoro.sqlite";
   return path.join(config.projectPath, dokoroFolder, ".dokoro", "db", dbName);
@@ -233,7 +233,7 @@ function getDbPath(config: DevlogDbConfig): string {
 // SCHEMA INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════
 
-function initializeSchema(_db: DevlogDB, sqlite: Database.Database): void {
+function initializeSchema(_db: DokoroDB, sqlite: Database.Database): void {
   // Check if schema version table exists
   const tableExists = sqlite
     .prepare(
@@ -373,7 +373,7 @@ function createTablesManually(sqlite: Database.Database): void {
 /**
  * Create a new document
  */
-export async function createDoc(db: DevlogDB, input: DocCreateInput): Promise<typeof schema.docs.$inferSelect> {
+export async function createDoc(db: DokoroDB, input: DocCreateInput): Promise<typeof schema.docs.$inferSelect> {
   const contentHash = input.content ? crypto.createHash("md5").update(input.content).digest("hex") : null;
 
   const [doc] = await db
@@ -409,7 +409,7 @@ export async function createDoc(db: DevlogDB, input: DocCreateInput): Promise<ty
  * Update a document
  */
 export async function updateDoc(
-  db: DevlogDB,
+  db: DokoroDB,
   docId: string,
   input: DocUpdateInput
 ): Promise<typeof schema.docs.$inferSelect | null> {
@@ -430,7 +430,7 @@ export async function updateDoc(
 /**
  * Get a document by ID
  */
-export async function getDoc(db: DevlogDB, docId: string): Promise<typeof schema.docs.$inferSelect | null> {
+export async function getDoc(db: DokoroDB, docId: string): Promise<typeof schema.docs.$inferSelect | null> {
   const [doc] = await db.select().from(schema.docs).where(eq(schema.docs.id, docId)).limit(1);
   return doc || null;
 }
@@ -438,7 +438,7 @@ export async function getDoc(db: DevlogDB, docId: string): Promise<typeof schema
 /**
  * Delete a document
  */
-export async function deleteDoc(db: DevlogDB, docId: string): Promise<boolean> {
+export async function deleteDoc(db: DokoroDB, docId: string): Promise<boolean> {
   await db.delete(schema.docs).where(eq(schema.docs.id, docId));
   return true;
 }
@@ -447,7 +447,7 @@ export async function deleteDoc(db: DevlogDB, docId: string): Promise<boolean> {
  * Search documents
  */
 export async function searchDocs(
-  db: DevlogDB,
+  db: DokoroDB,
   options: SearchOptions
 ): Promise<Array<typeof schema.docs.$inferSelect>> {
   let query = db.select().from(schema.docs).$dynamic();
@@ -538,7 +538,7 @@ export async function searchDocs(
  * Get or create a tag by name
  */
 export async function getOrCreateTag(
-  db: DevlogDB,
+  db: DokoroDB,
   name: string,
   options?: { color?: string; description?: string }
 ): Promise<typeof schema.tags.$inferSelect> {
@@ -568,7 +568,7 @@ export async function getOrCreateTag(
  * Add tags to a document
  */
 export async function addTagsToDoc(
-  db: DevlogDB,
+  db: DokoroDB,
   docId: string,
   tagNames: string[],
   source: string = "manual"
@@ -596,7 +596,7 @@ export async function addTagsToDoc(
 /**
  * Remove tags from a document
  */
-export async function removeTagsFromDoc(db: DevlogDB, docId: string, tagNames: string[]): Promise<void> {
+export async function removeTagsFromDoc(db: DokoroDB, docId: string, tagNames: string[]): Promise<void> {
   for (const tagName of tagNames) {
     const normalizedName = tagName.toLowerCase().trim();
     const [tag] = await db.select().from(schema.tags).where(eq(schema.tags.name, normalizedName)).limit(1);
@@ -616,7 +616,7 @@ export async function removeTagsFromDoc(db: DevlogDB, docId: string, tagNames: s
 /**
  * Get tags for a document
  */
-export async function getDocTags(db: DevlogDB, docId: string): Promise<Array<typeof schema.tags.$inferSelect>> {
+export async function getDocTags(db: DokoroDB, docId: string): Promise<Array<typeof schema.tags.$inferSelect>> {
   const results = await db
     .select({ tag: schema.tags })
     .from(schema.docTags)
@@ -629,7 +629,7 @@ export async function getDocTags(db: DevlogDB, docId: string): Promise<Array<typ
 /**
  * Get all tags
  */
-export async function getAllTags(db: DevlogDB): Promise<Array<typeof schema.tags.$inferSelect>> {
+export async function getAllTags(db: DokoroDB): Promise<Array<typeof schema.tags.$inferSelect>> {
   return db.select().from(schema.tags).orderBy(desc(schema.tags.usageCount));
 }
 
@@ -640,7 +640,7 @@ export async function getAllTags(db: DevlogDB): Promise<Array<typeof schema.tags
 /**
  * Add a tag to a section within a document
  */
-export async function addSectionTag(db: DevlogDB, input: SectionTagInput): Promise<void> {
+export async function addSectionTag(db: DokoroDB, input: SectionTagInput): Promise<void> {
   const tag = await getOrCreateTag(db, input.tagName);
 
   await db.insert(schema.sectionTags).values({
@@ -658,7 +658,7 @@ export async function addSectionTag(db: DevlogDB, input: SectionTagInput): Promi
  * Get section tags for a document
  */
 export async function getDocSectionTags(
-  db: DevlogDB,
+  db: DokoroDB,
   docId: string
 ): Promise<Array<{ section: typeof schema.sectionTags.$inferSelect; tag: typeof schema.tags.$inferSelect }>> {
   const results = await db
@@ -677,7 +677,7 @@ export async function getDocSectionTags(
  * Find all sections with a specific tag across all documents
  */
 export async function findSectionsByTag(
-  db: DevlogDB,
+  db: DokoroDB,
   tagName: string
 ): Promise<
   Array<{
@@ -708,7 +708,7 @@ export async function findSectionsByTag(
  * Start a new session
  */
 export async function startSession(
-  db: DevlogDB,
+  db: DokoroDB,
   options?: {
     userId?: number;
     focusDocId?: string;
@@ -735,7 +735,7 @@ export async function startSession(
  * End a session
  */
 export async function endSession(
-  db: DevlogDB,
+  db: DokoroDB,
   sessionId: string,
   summary?: string
 ): Promise<typeof schema.sessions.$inferSelect | null> {
@@ -755,7 +755,7 @@ export async function endSession(
 /**
  * Get active session
  */
-export async function getActiveSession(db: DevlogDB): Promise<typeof schema.sessions.$inferSelect | null> {
+export async function getActiveSession(db: DokoroDB): Promise<typeof schema.sessions.$inferSelect | null> {
   const [session] = await db
     .select()
     .from(schema.sessions)
@@ -774,7 +774,7 @@ export async function getActiveSession(db: DevlogDB): Promise<typeof schema.sess
  * Start time tracking for a document
  */
 export async function startTimeEntry(
-  db: DevlogDB,
+  db: DokoroDB,
   docId: string,
   options?: {
     userId?: number;
@@ -804,7 +804,7 @@ export async function startTimeEntry(
  * End time tracking for a document
  */
 export async function endTimeEntry(
-  db: DevlogDB,
+  db: DokoroDB,
   entryId: number,
   notes?: string
 ): Promise<typeof schema.timeEntries.$inferSelect | null> {
@@ -846,7 +846,7 @@ export async function endTimeEntry(
  * Get active time entries
  */
 export async function getActiveTimeEntries(
-  db: DevlogDB
+  db: DokoroDB
 ): Promise<Array<typeof schema.timeEntries.$inferSelect & { doc: typeof schema.docs.$inferSelect }>> {
   const results = await db
     .select({

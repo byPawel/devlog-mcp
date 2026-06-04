@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>devlog-mcp — Agent Memory, Engineered</title>
-<meta name="description" content="devlog-mcp: a multi-layer agent-memory MCP server. The five memory layers explained, how agent memory evolved, and interactive diagrams of the session loop, affective routing, bi-temporal facts and the tachibot bridge." />
+<title>dokoro — Agentic memory, engineered</title>
+<meta name="description" content="dokoro: a multi-layer agent-memory MCP server. The five memory layers explained, how agent memory evolved, and interactive diagrams of the session loop, affective routing, bi-temporal facts and the tachibot bridge." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   DEVLOG-MCP — AGENT MEMORY, ENGINEERED
+   DOKORO — AGENT MEMORY, ENGINEERED
    Modern dark product UI · near-black canvas, glass panels,
    electric-lime accent, neon layer-coding.
    Bricolage Grotesque / Hanken Grotesk / JetBrains Mono.
@@ -411,7 +411,7 @@ footer .meta b{color:var(--text);font-weight:700}
 <nav>
   <a class="brand" href="#top">
     <span class="seal">d</span>
-    <span><span class="bname">devlog-mcp</span><small>Agent Memory</small></span>
+    <span><span class="bname">dokoro</span><small>Agentic memory</small></span>
   </a>
   <div class="navlinks">
     <a href="#strata">Layers</a>
@@ -421,7 +421,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <a href="#temporal">Temporal</a>
     <a href="#storage">Storage</a>
     <a href="#tools">Catalogue</a>
-    <a class="pill" href="https://github.com/byPawel/devlog-mcp">GitHub ↗</a>
+    <a class="pill" href="https://github.com/byPawel/dokoro">GitHub ↗</a>
     <a class="pill" href="https://tachibot.com">TachiBot →</a>
   </div>
 </nav>
@@ -430,16 +430,16 @@ footer .meta b{color:var(--text);font-weight:700}
 <header class="hero" id="top">
   <canvas id="graph"></canvas>
   <div class="wrap">
-    <div class="eyebrow fade" style="animation-delay:.05s"><span class="dot"></span> <b>Agent-Memory MCP Server</b> · @devlog-mcp/core</div>
+    <div class="eyebrow fade" style="animation-delay:.05s"><span class="dot"></span> <b>Agentic-memory MCP server</b> · dokoro</div>
     <h1 class="title fade" style="animation-delay:.15s">An agent that<span class="light"><span class="accent">remembers.</span></span></h1>
-    <p class="lede fade" style="animation-delay:.3s"><strong>devlog-mcp</strong> is a persistent brain for your LLM agent — <em>five memory layers</em>, each answering a different question, so the agent recalls <em>the right kind</em> of memory instead of the most textually similar one.</p>
+    <p class="lede fade" style="animation-delay:.3s"><strong>dokoro</strong> is a persistent brain for your LLM agent — <em>five memory layers</em>, each answering a different question, so the agent recalls <em>the right kind</em> of memory instead of the most textually similar one.</p>
     <p class="lede fade" style="animation-delay:.42s">Working · episodic · semantic · procedural · affective — with bi-temporal facts and a track record of which tools to trust.</p>
-    <p class="subnote fade" style="animation-delay:.55s"><span class="kbd">SQLite + LanceDB</span> built on the MCP TypeScript SDK <span class="kbd">MIT</span> byPawel/devlog-mcp</p>
+    <p class="subnote fade" style="animation-delay:.55s"><span class="kbd">SQLite + LanceDB</span> built on the MCP TypeScript SDK <span class="kbd">MIT</span> byPawel/dokoro</p>
 
     <div class="hero-cta fade" style="animation-delay:.66s">
       <a class="btn primary" href="#strata">Explore the layers →</a>
       <a class="btn" href="#lineage">How memory evolved</a>
-      <a class="btn" href="https://github.com/byPawel/devlog-mcp">View on GitHub ↗</a>
+      <a class="btn" href="https://github.com/byPawel/dokoro">View on GitHub ↗</a>
     </div>
 
     <div class="stat-row fade" style="animation-delay:.78s">
@@ -458,7 +458,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 01 — The Five Layers</div>
       <h2>Memory, separated <span class="accent">by function</span></h2>
-      <p>Most memory plugins dump everything into one vector store and retrieve by fuzzy similarity. devlog-mcp follows the <b>CoALA</b> taxonomy used by Letta, Zep and Mem0: each layer owns a different question, a storage home, and its own tools — so the agent fetches the <em>right kind</em> of memory, not the most textually similar one. Each layer is also <em>retained for a different span</em> — from a single task to all-time.</p>
+      <p>Most memory plugins dump everything into one vector store and retrieve by fuzzy similarity. dokoro follows the <b>CoALA</b> taxonomy used by Letta, Zep and Mem0: each layer owns a different question, a storage home, and its own tools — so the agent fetches the <em>right kind</em> of memory, not the most textually similar one. Each layer is also <em>retained for a different span</em> — from a single task to all-time.</p>
     </div>
     <div class="strata reveal" id="strataCol"></div>
   </div>
@@ -470,7 +470,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 02 — The Lineage</div>
       <h2>How agent memory <span class="accent">evolved</span></h2>
-      <p>Agent memory has moved through four generations — from no memory at all, to one big similarity bucket, to tiered OS-like memory, to temporal graphs. devlog-mcp sits at the current edge: function-separated layers, bi-temporal facts, and an affective layer that learns which tools to trust.</p>
+      <p>Agent memory has moved through four generations — from no memory at all, to one big similarity bucket, to tiered OS-like memory, to temporal graphs. dokoro sits at the current edge: function-separated layers, bi-temporal facts, and an affective layer that learns which tools to trust.</p>
     </div>
     <div class="evo reveal">
       <div class="evo-step">
@@ -494,9 +494,9 @@ footer .meta b{color:var(--text);font-weight:700}
         <p>Facts became first-class and time-aware: entities and relations with <b>validity windows</b>, so you can ask what the graph believed at a past moment instead of overwriting history. Memory gains a timeline.</p>
       </div>
       <div class="evo-step now">
-        <div class="evo-year">Gen 4 · 2025 <span class="who">— devlog-mcp</span></div>
+        <div class="evo-year">Gen 4 · 2025 <span class="who">— dokoro</span></div>
         <h3>Function-separated <em>+ affective</em></h3>
-        <p>devlog-mcp keeps the temporal graph (bi-temporal relations) and adds two moves no popular OSS lib makes together: memory split into <b>five purpose-built layers</b> (CoALA), and an <b>affective layer</b> that records every tool outcome and turns it into a routing policy — so the agent learns <em>which tools and models to trust</em>, not just what it once saw.</p>
+        <p>dokoro keeps the temporal graph (bi-temporal relations) and adds two moves no popular OSS lib makes together: memory split into <b>five purpose-built layers</b> (CoALA), and an <b>affective layer</b> that records every tool outcome and turns it into a routing policy — so the agent learns <em>which tools and models to trust</em>, not just what it once saw.</p>
       </div>
     </div>
   </div>
@@ -534,7 +534,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 04 — The Distinguishing Trait</div>
       <h2>Affective memory — <span class="accent">learning what to trust</span></h2>
-      <p>Every tool outcome is recorded; the agent asks <code>devlog_feedback_route</code> for a <b>ranked</b> track record and biases itself accordingly. No other popular OSS memory library — Mem0, Letta, Zep, Cognee, LangMem — does this natively.</p>
+      <p>Every tool outcome is recorded; the agent asks <code>dokoro_feedback_route</code> for a <b>ranked</b> track record and biases itself accordingly. No other popular OSS memory library — Mem0, Letta, Zep, Cognee, LangMem — does this natively.</p>
     </div>
     <div class="plate reveal" id="dia-affective" style="margin-bottom:22px">
       <div class="dia-top">
@@ -547,20 +547,20 @@ footer .meta b{color:var(--text);font-weight:700}
     </div>
     <div class="split reveal">
       <div class="ledger">
-        <div class="lhead"><span class="d" style="background:var(--affective)"></span> devlog_feedback_route · ranked scores</div>
+        <div class="lhead"><span class="d" style="background:var(--affective)"></span> dokoro_feedback_route · ranked scores</div>
 <pre><span class="c"># MCP tools/call — ranked routing for this agent</span>
 {
-  <span class="k">"name"</span>: <span class="s">"devlog_feedback_route"</span>,
+  <span class="k">"name"</span>: <span class="s">"dokoro_feedback_route"</span>,
   <span class="k">"arguments"</span>: {
     <span class="k">"agent_id"</span>: <span class="s">"claude-code"</span>,
     <span class="k">"half_life_days"</span>: <span class="num">14</span>
   }
 }
 
-<span class="hl">devlog_session_recall</span>
+<span class="hl">dokoro_session_recall</span>
   n=<span class="num">89</span>  decayed_rate=<span class="num">1.000</span>
   wilson_lower=<span class="num">0.9583</span>  confident=<span class="s">true</span>
-<span class="hl">devlog_entity_extract_deep</span>
+<span class="hl">dokoro_entity_extract_deep</span>
   n=<span class="num">142</span> success=<span class="num">125</span> timeout=<span class="num">15</span>
   wilson_lower=<span class="num">0.8213</span>  confident=<span class="s">true</span></pre>
       </div>
@@ -575,7 +575,7 @@ footer .meta b{color:var(--text);font-weight:700}
         </div>
         <div class="acard">
           <h4>Confidence gate <span class="tag">sample size</span></h4>
-          <p>A <code>confident</code> flag flips true only once a tool clears the minimum sample size. Raw aggregates stay in <code>devlog_feedback_query</code>.</p>
+          <p>A <code>confident</code> flag flips true only once a tool clears the minimum sample size. Raw aggregates stay in <code>dokoro_feedback_query</code>.</p>
         </div>
       </div>
     </div>
@@ -672,11 +672,11 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 07 — The Companion</div>
       <h2>The tachibot <span class="accent">bridge</span></h2>
-      <p><a href="https://github.com/byPawel/tachibot-mcp" style="color:var(--accent);border-bottom:1px solid var(--accent)">tachibot-mcp</a> does the thinking; devlog remembers it. Three opt-in bridge tools (<code>DEVLOG_ENABLE_TACHIBOT_BRIDGE=true</code>) land each model's stateless output in the right layer — and feed it back into the next decision.</p>
+      <p><a href="https://github.com/byPawel/tachibot-mcp" style="color:var(--accent);border-bottom:1px solid var(--accent)">tachibot-mcp</a> does the thinking; dokoro remembers it. Three opt-in bridge tools (<code>DOKORO_ENABLE_TACHIBOT_BRIDGE=true</code>) land each model's stateless output in the right layer — and feed it back into the next decision.</p>
     </div>
     <div class="plate reveal" id="dia-bridge">
       <div class="dia-top">
-        <div class="dia-title">LOOP · tachibot reasons → devlog remembers → context flows back</div>
+        <div class="dia-title">LOOP · tachibot reasons → dokoro remembers → context flows back</div>
         <button class="play"><span class="tri"></span> Replay</button>
       </div>
       <div class="stage-flag"><span class="step">—</span><span class="cap">Stop re-researching what you already looked up</span></div>
@@ -715,7 +715,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <div class="sec-head reveal">
       <div class="sec-code">§ 09 — The Survey</div>
       <h2>How it <span class="accent">compares</span></h2>
-      <p>Two capabilities set devlog-mcp apart, and both are queryable as plain MCP tool calls.</p>
+      <p>Two capabilities set dokoro apart, and both are queryable as plain MCP tool calls.</p>
     </div>
     <div class="cmp-wrap reveal">
       <table class="cmp">
@@ -723,7 +723,7 @@ footer .meta b{color:var(--text);font-weight:700}
           <tr><th>Project</th><th>Architecture</th><th style="text-align:center">Native temporal</th><th style="text-align:center">Native affective</th></tr>
         </thead>
         <tbody>
-          <tr class="me-row"><td class="me">devlog-mcp</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td></tr>
+          <tr class="me-row"><td class="me">dokoro</td><td>SQLite + LanceDB + entity graph</td><td class="yes">✓ bi-temporal</td><td class="yes">✓ agent_feedback</td></tr>
           <tr><td>Mem0</td><td>Vector + optional graph</td><td class="no">—</td><td class="no">—</td></tr>
           <tr><td>Letta (MemGPT)</td><td>Tiered, OS-like, self-editing</td><td class="partial">◐ via metadata</td><td class="partial">◐ via metadata</td></tr>
           <tr><td>Zep / Graphiti</td><td>Temporal knowledge graph</td><td class="yes">✓ bi-temporal</td><td class="no">—</td></tr>
@@ -763,7 +763,7 @@ footer .meta b{color:var(--text);font-weight:700}
         <p>The agent never holds it all in context — it pulls the slice it needs from the layer that owns it, then writes back what it learned. The server stores and serves; the agent reads and writes.</p>
       </div>
       <div class="meta">
-        <b>PACKAGE</b><br>@devlog-mcp/core · v0.1.0<br><br>
+        <b>PACKAGE</b><br>dokoro · v0.1.0<br><br>
         <b>BUILT ON</b><br>MCP TypeScript SDK<br><br>
         <b>LICENSE</b><br>MIT
       </div>
@@ -775,7 +775,7 @@ footer .meta b{color:var(--text);font-weight:700}
     </div>
     <div class="fnote">
       <span>A generated guide · interactive architecture map &nbsp;·&nbsp; *native edges = bi-temporal + affective</span>
-      <span>github.com/byPawel/devlog-mcp</span>
+      <span>github.com/byPawel/dokoro</span>
     </div>
   </div>
 </footer>
@@ -811,41 +811,41 @@ const LAYERS = {
     ex:"entity_extract_deep · 88% success · prefer over regex",
     where:"agent_feedback"},
   other:{label:"Setup", color:"var(--faint)", q:"Init &amp; assets", where:"db bootstrap · assets/*"},
-  bridge:{label:"Bridge", color:"var(--accent)", q:"tachibot ↔ devlog", where:"opt-in · DEVLOG_ENABLE_TACHIBOT_BRIDGE"}
+  bridge:{label:"Bridge", color:"var(--accent)", q:"tachibot ↔ dokoro", where:"opt-in · DOKORO_ENABLE_TACHIBOT_BRIDGE"}
 };
 
 const TOOLS = [
-  {n:"devlog_workspace_status", l:"working",  st:"file + sqlite", d:"Check workspace status and active sessions."},
-  {n:"devlog_workspace_claim",  l:"working",  st:"file lock",     d:"Claim the workspace with a file-based lock so two agents don't collide."},
-  {n:"devlog_workspace_dump",   l:"working",  st:"→ sqlite",      d:"Flush the active workspace into durable storage; registers docs in SQLite."},
-  {n:"devlog_session_log",      l:"working",  st:"file + sqlite", d:"Log development session entries with tags as work happens."},
-  {n:"devlog_regenerate_current",l:"working", st:"current.md",    d:"Auto-generate or refresh current.md from recent activity."},
-  {n:"devlog_update_current_section",l:"working",st:"current.md", d:"Update a specific section of current.md."},
-  {n:"devlog_get_current_focus",l:"working",  st:"current.md",    d:"Read the current focus and active tasks from current.md."},
-  {n:"devlog_question_add",     l:"working",  st:"questions.json",d:"Record an open question during development."},
-  {n:"devlog_question_answer",  l:"working",  st:"questions.json",d:"Answer a previously logged question."},
-  {n:"devlog_question_list",    l:"working",  st:"questions.json",d:"List all tracked questions."},
-  {n:"devlog_question_check",   l:"working",  st:"questions.json",d:"Check the status of open questions."},
-  {n:"devlog_session_recall",   l:"episodic", st:"sqlite + vec",  d:"Read past session summaries — filter by query, session_id, since; semantically re-ranked."},
-  {n:"devlog_session_summary_add",l:"episodic",st:"sqlite",       d:"Write a session-end summary; auto-compacted past the token budget."},
-  {n:"devlog_compress_week",    l:"episodic", st:"analytics srv", d:"Generate a compressed weekly summary — sessions, tasks completed, decisions made."},
-  {n:"devlog_entity_graph",     l:"semantic", st:"sqlite (CTE)",  d:"Search or traverse the entity graph. Accepts as_of for point-in-time bi-temporal queries."},
-  {n:"devlog_entity_extract_deep",l:"semantic",st:"ollama",       d:"LLM-powered deep extraction on a document via Ollama (llama3.2)."},
-  {n:"devlog_plan_create",      l:"procedural",st:"plans/*.json", d:"Create a development plan with tasks."},
-  {n:"devlog_plan_check",       l:"procedural",st:"plans/*.json", d:"Check progress on a plan's tasks."},
-  {n:"devlog_plan_blocker",     l:"procedural",st:"plans/*.json", d:"Report a blocker on a plan task."},
-  {n:"devlog_plan_validate",    l:"procedural",st:"plans/*.json", d:"Validate plan completion criteria."},
-  {n:"devlog_plan_status",      l:"procedural",st:"plans/*.json", d:"Get an overall plan status summary."},
-  {n:"devlog_plan_list",        l:"procedural",st:"plans/*.json", d:"List all plans."},
-  {n:"devlog_feedback_record",  l:"affective",st:"agent_feedback",d:"Record a tool-call outcome (success / failure / partial / rejected / timeout) with confidence + latency."},
-  {n:"devlog_feedback_route",   l:"affective",st:"agent_feedback",d:"Ranked track record — Wilson lower bound + recency decay turn outcomes into a routing policy."},
-  {n:"devlog_feedback_query",   l:"affective",st:"agent_feedback",d:"Raw per-tool success rates, recent failures, agent-specific stats."},
-  {n:"devlog_init",             l:"other",    st:"bootstrap",     d:"Initialize the devlog workspace and database."},
-  {n:"devlog_save_image",       l:"other",    st:"assets/*",      d:"Save an image asset (base64 or URL)."},
-  {n:"devlog_save_file",        l:"other",    st:"assets/*",      d:"Save a file asset."},
-  {n:"devlog_list_assets",      l:"other",    st:"assets/*",      d:"List saved assets."},
+  {n:"dokoro_workspace_status", l:"working",  st:"file + sqlite", d:"Check workspace status and active sessions."},
+  {n:"dokoro_workspace_claim",  l:"working",  st:"file lock",     d:"Claim the workspace with a file-based lock so two agents don't collide."},
+  {n:"dokoro_workspace_dump",   l:"working",  st:"→ sqlite",      d:"Flush the active workspace into durable storage; registers docs in SQLite."},
+  {n:"dokoro_session_log",      l:"working",  st:"file + sqlite", d:"Log development session entries with tags as work happens."},
+  {n:"dokoro_regenerate_current",l:"working", st:"current.md",    d:"Auto-generate or refresh current.md from recent activity."},
+  {n:"dokoro_update_current_section",l:"working",st:"current.md", d:"Update a specific section of current.md."},
+  {n:"dokoro_get_current_focus",l:"working",  st:"current.md",    d:"Read the current focus and active tasks from current.md."},
+  {n:"dokoro_question_add",     l:"working",  st:"questions.json",d:"Record an open question during development."},
+  {n:"dokoro_question_answer",  l:"working",  st:"questions.json",d:"Answer a previously logged question."},
+  {n:"dokoro_question_list",    l:"working",  st:"questions.json",d:"List all tracked questions."},
+  {n:"dokoro_question_check",   l:"working",  st:"questions.json",d:"Check the status of open questions."},
+  {n:"dokoro_session_recall",   l:"episodic", st:"sqlite + vec",  d:"Read past session summaries — filter by query, session_id, since; semantically re-ranked."},
+  {n:"dokoro_session_summary_add",l:"episodic",st:"sqlite",       d:"Write a session-end summary; auto-compacted past the token budget."},
+  {n:"dokoro_compress_week",    l:"episodic", st:"analytics srv", d:"Generate a compressed weekly summary — sessions, tasks completed, decisions made."},
+  {n:"dokoro_entity_graph",     l:"semantic", st:"sqlite (CTE)",  d:"Search or traverse the entity graph. Accepts as_of for point-in-time bi-temporal queries."},
+  {n:"dokoro_entity_extract_deep",l:"semantic",st:"ollama",       d:"LLM-powered deep extraction on a document via Ollama (llama3.2)."},
+  {n:"dokoro_plan_create",      l:"procedural",st:"plans/*.json", d:"Create a development plan with tasks."},
+  {n:"dokoro_plan_check",       l:"procedural",st:"plans/*.json", d:"Check progress on a plan's tasks."},
+  {n:"dokoro_plan_blocker",     l:"procedural",st:"plans/*.json", d:"Report a blocker on a plan task."},
+  {n:"dokoro_plan_validate",    l:"procedural",st:"plans/*.json", d:"Validate plan completion criteria."},
+  {n:"dokoro_plan_status",      l:"procedural",st:"plans/*.json", d:"Get an overall plan status summary."},
+  {n:"dokoro_plan_list",        l:"procedural",st:"plans/*.json", d:"List all plans."},
+  {n:"dokoro_feedback_record",  l:"affective",st:"agent_feedback",d:"Record a tool-call outcome (success / failure / partial / rejected / timeout) with confidence + latency."},
+  {n:"dokoro_feedback_route",   l:"affective",st:"agent_feedback",d:"Ranked track record — Wilson lower bound + recency decay turn outcomes into a routing policy."},
+  {n:"dokoro_feedback_query",   l:"affective",st:"agent_feedback",d:"Raw per-tool success rates, recent failures, agent-specific stats."},
+  {n:"dokoro_init",             l:"other",    st:"bootstrap",     d:"Initialize the dokoro workspace and database."},
+  {n:"dokoro_save_image",       l:"other",    st:"assets/*",      d:"Save an image asset (base64 or URL)."},
+  {n:"dokoro_save_file",        l:"other",    st:"assets/*",      d:"Save a file asset."},
+  {n:"dokoro_list_assets",      l:"other",    st:"assets/*",      d:"List saved assets."},
   {n:"bridge_index_research",   l:"bridge",   st:"→ lancedb",     d:"Index tachibot research output into LanceDB. Deterministic IDs replace stale entries — no duplicates."},
-  {n:"bridge_import_plan",      l:"bridge",   st:"→ plans",       d:"Import planner_maker phases into devlog plans, usable by plan_check / _validate / _status."},
+  {n:"bridge_import_plan",      l:"bridge",   st:"→ plans",       d:"Import planner_maker phases into dokoro plans, usable by plan_check / _validate / _status."},
   {n:"bridge_get_context",      l:"bridge",   st:"sqlite + vec",  d:"Pull relevant prior research + plans as a paste-ready context block to seed the next reasoning call."}
 ];
 
@@ -865,7 +865,7 @@ const TOOLS = [
         <div class="sdesc">${L.desc}</div>
         <div class="ex">${L.ex}</div>
         <div class="swhere"><b>Lives in</b> &nbsp;${L.where}</div>
-        <div class="stools">${tools.map(t=>`<span class="stool">${t.n.replace('devlog_','')}</span>`).join("")}</div>
+        <div class="stools">${tools.map(t=>`<span class="stool">${t.n.replace('dokoro_','')}</span>`).join("")}</div>
       </div>`;
     col.appendChild(row);
   });
@@ -952,7 +952,7 @@ const bridgeCfg={
     {id:"t",   x:50,y:14, label:"tachibot",  sub:"multi-model reasoning", color:"var(--accent)"},
     {id:"idx", x:17,y:48, label:"index_research", sub:"→ semantic",  color:"var(--semantic)"},
     {id:"imp", x:83,y:48, label:"import_plan",    sub:"→ procedural",color:"var(--procedural)"},
-    {id:"mem", x:50,y:58, label:"devlog memory",  sub:"LanceDB · plans", kind:"store", color:"var(--episodic)"},
+    {id:"mem", x:50,y:58, label:"dokoro memory",  sub:"LanceDB · plans", kind:"store", color:"var(--episodic)"},
     {id:"ctx", x:50,y:88, label:"get_context",    sub:"→ back to tachibot", color:"var(--working)"}
   ],
   edges:[{from:"t",to:"idx"},{from:"t",to:"imp"},{from:"idx",to:"mem"},{from:"imp",to:"mem"},{from:"mem",to:"ctx"},{from:"ctx",to:"t"}],
@@ -983,7 +983,7 @@ initDia("dia-loop",loopCfg);initDia("dia-affective",affectiveCfg);initDia("dia-b
     factB.classList.toggle("live",!before);factB.classList.toggle("dead",before);
     const rel=before?"stateful-sessions":"jwt-stateless-tokens";
     const closed=before?"open (valid_to = null)":"closed 2026-04-01";
-    result.innerHTML=`<span class="q">devlog_entity_graph { entityId: 7, as_of: "${iso}T00:00:00Z" }</span><br>&nbsp;&nbsp;auth/session.ts &nbsp;--[uses]--&gt;&nbsp; <span class="r">${rel}</span><br><span class="q">&nbsp;&nbsp;stateful-sessions fact: ${closed}</span>`;
+    result.innerHTML=`<span class="q">dokoro_entity_graph { entityId: 7, as_of: "${iso}T00:00:00Z" }</span><br>&nbsp;&nbsp;auth/session.ts &nbsp;--[uses]--&gt;&nbsp; <span class="r">${rel}</span><br><span class="q">&nbsp;&nbsp;stateful-sessions fact: ${closed}</span>`;
   }
   slider.addEventListener("input",update);update();
 })();

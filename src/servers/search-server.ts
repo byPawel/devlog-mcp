@@ -4,7 +4,7 @@
  * Provides hybrid vector + FTS5 search with Ollama embeddings
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { lancedbTools } from '../tools/lancedb-tools.js';
 import { basicTools } from '../tools/basic-tools.js';
 import { getSqliteDb } from '../db/index.js';
@@ -33,7 +33,7 @@ async function main() {
     description: 'LanceDB-powered hybrid semantic search for Dokoro entries',
   };
 
-  const server = createDevlogServer(config);
+  const server = createDokoroServer(config);
 
   // Start the server, then kick off background indexing
   await startServer(server, allTools, config);

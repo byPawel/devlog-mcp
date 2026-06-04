@@ -1,6 +1,6 @@
-# devlog-mcp Guide
+# dokoro Guide
 
-`devlog-mcp` is a multi-layer **agent memory** MCP server (Working, Episodic, Semantic, Procedural, Affective memory). Built on the MCP TypeScript SDK, with SQLite (Drizzle ORM) + LanceDB vector storage and a file-backed workspace.
+`dokoro` is a multi-layer **agent memory** MCP server (Working, Episodic, Semantic, Procedural, Affective memory). Built on the MCP TypeScript SDK, with SQLite (Drizzle ORM) + LanceDB vector storage and a file-backed workspace.
 
 ## Build & Test Commands
 
@@ -36,8 +36,8 @@ npm run dev:core     # Run the core server in watch mode (also: dev:search, dev:
 
 ## Tools by memory layer
 
-- **Working**: `devlog_workspace_*`, `devlog_session_log`, `devlog_question_*`
-- **Episodic**: `devlog_session_recall`, `devlog_compress_week`
-- **Semantic**: `devlog_entity_graph` (bi-temporal `as_of`), `devlog_entity_extract_deep`
-- **Procedural**: `devlog_plan_*`
-- **Affective**: `devlog_feedback_record`, `devlog_feedback_query`
+- **Working**: `dokoro_workspace_*`, `dokoro_session_log`, `dokoro_question_*`
+- **Episodic**: `dokoro_session_recall`, `dokoro_compress_week`
+- **Semantic**: `dokoro_entity_graph` (bi-temporal `as_of`), `dokoro_entity_extract_deep`
+- **Procedural**: `dokoro_plan_*`
+- **Affective**: `dokoro_feedback_record`, `dokoro_feedback_query`

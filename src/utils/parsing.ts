@@ -1,10 +1,10 @@
 import matter from 'gray-matter';
-import { ParsedDevlog } from '../types/dokoro.js';
+import { ParsedDokoro } from '../types/dokoro.js';
 
 /**
  * Parse dokoro content with frontmatter
  */
-export function parseDevlogContent(content: string): ParsedDevlog {
+export function parseDokoroContent(content: string): ParsedDokoro {
   let parsed;
   
   try {

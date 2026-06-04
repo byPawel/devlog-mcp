@@ -1,5 +1,5 @@
 ---
-title: "Plan: Implement auto entity extraction for a TypeScript MCP server's GraphRAG knowledge graph. Extract entities (person, project, file, service, component, concept) and relations (mentions, implements, depends_on, blocks, authored_by) from markdown devlog documents using regex/heuristics. Zero API cost, works offline. Integrate into background indexer, create MCP tool for querying the graph. SQLite database with Drizzle ORM, existing schema has entities, docEntities, entityRelations tables."
+title: "Plan: Implement auto entity extraction for a TypeScript MCP server's GraphRAG knowledge graph. Extract entities (person, project, file, service, component, concept) and relations (mentions, implements, depends_on, blocks, authored_by) from markdown dokoro documents using regex/heuristics. Zero API cost, works offline. Integrate into background indexer, create MCP tool for querying the graph. SQLite database with Drizzle ORM, existing schema has entities, docEntities, entityRelations tables."
 date: "2026-02-21T16:46:29.439Z"
 status: "in-progress"
 type: "plan"
@@ -11,7 +11,7 @@ tags:
   focus: "Implement auto entity extraction for a TypeScript MCP server"
 ---
 
-# Plan: Implement auto entity extraction for a TypeScript MCP server's GraphRAG knowledge graph. Extract entities (person, project, file, service, component, concept) and relations (mentions, implements, depends_on, blocks, authored_by) from markdown devlog documents using regex/heuristics. Zero API cost, works offline. Integrate into background indexer, create MCP tool for querying the graph. SQLite database with Drizzle ORM, existing schema has entities, docEntities, entityRelations tables.
+# Plan: Implement auto entity extraction for a TypeScript MCP server's GraphRAG knowledge graph. Extract entities (person, project, file, service, component, concept) and relations (mentions, implements, depends_on, blocks, authored_by) from markdown dokoro documents using regex/heuristics. Zero API cost, works offline. Integrate into background indexer, create MCP tool for querying the graph. SQLite database with Drizzle ORM, existing schema has entities, docEntities, entityRelations tables.
 
 Status: IN PROGRESS - 0/7 steps (0%)
 

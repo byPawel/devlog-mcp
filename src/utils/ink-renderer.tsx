@@ -1,5 +1,5 @@
 /**
- * Ink-to-String Renderer for DevLog MCP
+ * Ink-to-String Renderer for Dokoro MCP
  * Ported from tachibot-mcp
  *
  * Renders React Ink components to ANSI strings for MCP tool responses.
@@ -212,7 +212,7 @@ export const SessionInfo: React.FC<{
     <Box flexDirection="column" borderStyle="round" borderColor={statusColors[status]} padding={1}>
       <Box marginBottom={1}>
         <Gradient name="cristal">
-          <Text bold>{Icon.workspace} DevLog Session</Text>
+          <Text bold>{Icon.workspace} Dokoro Session</Text>
         </Gradient>
       </Box>
       <Box>
@@ -932,7 +932,7 @@ export const ReceiptPrinter: React.FC<ReceiptData> = ({
       )}
 
       <Box justifyContent="center" marginTop={1}>
-        <Text dimColor>devlog-mcp</Text>
+        <Text dimColor>dokoro</Text>
       </Box>
     </Box>
   );

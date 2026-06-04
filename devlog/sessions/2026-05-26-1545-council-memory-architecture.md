@@ -1,7 +1,7 @@
 # Council: Does the 5-layer memory split + code make sense?
 
 **Date:** 2026-05-26
-**Query:** Evaluate devlog-mcp's 5-layer memory split (Working/Episodic/Semantic/Procedural/Affective) and the actual code vs other agent-memory tools.
+**Query:** Evaluate dokoro's 5-layer memory split (Working/Episodic/Semantic/Procedural/Affective) and the actual code vs other agent-memory tools.
 
 ## Pipeline
 Research (perplexity_reason + grok_search) → grok_reason code review (schema + tools) → Claude code verification → gemini_judge resolution.
@@ -15,7 +15,7 @@ Research (perplexity_reason + grok_search) → grok_reason code review (schema +
 
 ### Code reality (verified)
 - agent_feedback HAS 5 single-col indexes (grok wrongly said none); missing composite (agent_id, tool_name, recorded_at).
-- agent_feedback is a passive LOG: devlog_feedback_query returns aggregates, no recency/decay, no ranked route-score → affective layer can't yet DRIVE routing.
+- agent_feedback is a passive LOG: dokoro_feedback_query returns aggregates, no recency/decay, no ranked route-score → affective layer can't yet DRIVE routing.
 - BI-TEMPORAL WRITE GAP (P0): entity-extractor.ts uses `INSERT OR IGNORE INTO entity_relations` with no valid_to handling → never closes windows on contradiction. as_of READ works; WRITE doesn't. README overclaims "contradictions close a window."
 
 ## Punch-list

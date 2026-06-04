@@ -281,7 +281,7 @@ export const assetTools: ToolDefinition[] = [
           };
         }
 
-        let output = `## ${icon('note')} Devlog Assets\n\n`;
+        let output = `## ${icon('note')} Dokoro Assets\n\n`;
         for (const { category: cat, files } of results) {
           output += `### ${cat.charAt(0).toUpperCase() + cat.slice(1)} (${files.length})\n`;
           files.forEach(f => {

@@ -1,10 +1,10 @@
-# DevLog MCP Tools Documentation
+# Dokoro MCP Tools Documentation
 
-This document provides detailed information about all available tools in the DevLog MCP servers.
+This document provides detailed information about all available tools in the Dokoro MCP servers.
 
 ## Core Server Tools
 
-### devlog_workspace_status
+### dokoro_workspace_status
 
 Check the current workspace status including active agents and locks.
 
@@ -20,11 +20,11 @@ Check the current workspace status including active agents and locks.
 
 **Example:**
 ```typescript
-const status = await devlog_workspace_status();
+const status = await dokoro_workspace_status();
 // Returns: { exists: true, currentAgent: "agent-12345", isLocked: false }
 ```
 
-### devlog_workspace_claim
+### dokoro_workspace_claim
 
 Claim a workspace with multi-agent lock support and session tracking.
 
@@ -39,13 +39,13 @@ Claim a workspace with multi-agent lock support and session tracking.
 
 **Example:**
 ```typescript
-const result = await devlog_workspace_claim({
+const result = await dokoro_workspace_claim({
   task: "Implement user authentication",
   tags: { feature: "auth", priority: "high" }
 });
 ```
 
-### devlog_workspace_dump
+### dokoro_workspace_dump
 
 Export the current workspace data including session information.
 
@@ -57,10 +57,10 @@ Export the current workspace data including session information.
 
 **Example:**
 ```typescript
-const data = await devlog_workspace_dump({ format: "markdown" });
+const data = await dokoro_workspace_dump({ format: "markdown" });
 ```
 
-### devlog_session_log
+### dokoro_session_log
 
 Log entries for the current development session.
 
@@ -74,7 +74,7 @@ Log entries for the current development session.
 
 **Example:**
 ```typescript
-await devlog_session_log({
+await dokoro_session_log({
   entries: [
     "Implemented login endpoint",
     "Added JWT token generation",
@@ -85,7 +85,7 @@ await devlog_session_log({
 });
 ```
 
-### devlog_current_update
+### dokoro_current_update
 
 Update the current.md file with latest information.
 
@@ -98,7 +98,7 @@ Update the current.md file with latest information.
 
 **Example:**
 ```typescript
-await devlog_current_update({
+await dokoro_current_update({
   content: "## Today's Progress\n- Completed auth implementation",
   append: true
 });
@@ -106,7 +106,7 @@ await devlog_current_update({
 
 ## Analytics Server Tools
 
-### devlog_analytics_summary
+### dokoro_analytics_summary
 
 Get a summary of development analytics.
 
@@ -121,10 +121,10 @@ Get a summary of development analytics.
 
 **Example:**
 ```typescript
-const summary = await devlog_analytics_summary({ days: 30 });
+const summary = await dokoro_analytics_summary({ days: 30 });
 ```
 
-### devlog_analytics_patterns
+### dokoro_analytics_patterns
 
 Analyze work patterns and productivity insights.
 
@@ -137,7 +137,7 @@ Analyze work patterns and productivity insights.
 - Peak productivity times
 - Task completion rates
 
-### devlog_analytics_report
+### dokoro_analytics_report
 
 Generate a detailed analytics report.
 
@@ -152,7 +152,7 @@ Generate a detailed analytics report.
 
 ## Planning Server Tools
 
-### devlog_plan_create
+### dokoro_plan_create
 
 Create a new development plan.
 
@@ -167,7 +167,7 @@ Create a new development plan.
 
 **Example:**
 ```typescript
-const plan = await devlog_plan_create({
+const plan = await dokoro_plan_create({
   goal: "Implement OAuth2 integration",
   tasks: [
     "Research OAuth2 providers",
@@ -178,7 +178,7 @@ const plan = await devlog_plan_create({
 });
 ```
 
-### devlog_plan_update
+### dokoro_plan_update
 
 Update an existing plan.
 
@@ -189,7 +189,7 @@ Update an existing plan.
 **Returns:**
 - Updated plan details
 
-### devlog_task_add
+### dokoro_task_add
 
 Add a new task to the current plan.
 
@@ -202,7 +202,7 @@ Add a new task to the current plan.
 **Returns:**
 - Created task with ID
 
-### devlog_task_update
+### dokoro_task_update
 
 Update task status or details.
 
@@ -216,7 +216,7 @@ Update task status or details.
 
 ## Search Server Tools
 
-### devlog_search
+### dokoro_search
 
 Basic search across all development logs.
 
@@ -230,13 +230,13 @@ Basic search across all development logs.
 
 **Example:**
 ```typescript
-const results = await devlog_search({
+const results = await dokoro_search({
   query: "authentication bug",
   limit: 20
 });
 ```
 
-### devlog_search_semantic
+### dokoro_search_semantic
 
 AI-powered semantic search using embeddings.
 
@@ -249,7 +249,7 @@ AI-powered semantic search using embeddings.
 **Returns:**
 - Semantically similar entries with relevance scores
 
-### devlog_search_by_date
+### dokoro_search_by_date
 
 Search within specific date ranges.
 
@@ -261,7 +261,7 @@ Search within specific date ranges.
 **Returns:**
 - Entries within date range
 
-### devlog_search_by_tag
+### dokoro_search_by_tag
 
 Search entries by tags.
 
@@ -302,16 +302,16 @@ All tools follow consistent error handling:
 
 ```typescript
 // 1. Check and claim workspace
-const status = await devlog_workspace_status();
+const status = await dokoro_workspace_status();
 if (!status.isLocked || status.lockInfo.isExpired) {
-  await devlog_workspace_claim({
+  await dokoro_workspace_claim({
     task: "Feature: User Dashboard",
     tags: { sprint: "S24-3", team: "frontend" }
   });
 }
 
 // 2. Create a plan
-const plan = await devlog_plan_create({
+const plan = await dokoro_plan_create({
   goal: "Implement user dashboard",
   tasks: [
     "Design dashboard layout",
@@ -321,23 +321,23 @@ const plan = await devlog_plan_create({
 });
 
 // 3. Work and log progress
-await devlog_session_log({
+await dokoro_session_log({
   entries: ["Completed dashboard wireframes"],
   tags: { milestone: "design-complete" }
 });
 
 // 4. Update task status
-await devlog_task_update({
+await dokoro_task_update({
   taskId: plan.tasks[0].id,
   status: "completed"
 });
 
 // 5. Search for related work
-const related = await devlog_search_semantic({
+const related = await dokoro_search_semantic({
   query: "dashboard implementation patterns",
   useEmbeddings: true
 });
 
 // 6. Generate analytics
-const report = await devlog_analytics_summary({ days: 7 });
+const report = await dokoro_analytics_summary({ days: 7 });
 ```

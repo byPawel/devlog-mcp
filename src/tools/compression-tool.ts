@@ -1,5 +1,5 @@
 /**
- * Devlog compression tool
+ * Dokoro compression tool
  * Consolidates daily files into weekly summaries
  */
 

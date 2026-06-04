@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DevLog MCP Test Client</title>
+    <title>Dokoro MCP Test Client</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,7 +66,7 @@
     </style>
 </head>
 <body>
-    <h1>DevLog MCP Test Client</h1>
+    <h1>Dokoro MCP Test Client</h1>
     
     <div class="status disconnected" id="status">
         Not connected - Click "Initialize" to start
@@ -83,7 +83,7 @@
             <button onclick="listTools()">List Tools</button>
             <button onclick="testConnection()">Test Connection</button>
             
-            <h3>3. Search DevLogs</h3>
+            <h3>3. Search Dokoros</h3>
             <input type="text" id="searchQuery" placeholder="Search query (e.g., 'template')">
             <select id="searchType">
                 <option value="all">All</option>
@@ -91,7 +91,7 @@
                 <option value="ideas">Ideas</option>
                 <option value="features">Features</option>
             </select>
-            <button onclick="searchDevlogs()">Search</button>
+            <button onclick="searchDokoros()">Search</button>
             
             <h3>4. List Recent</h3>
             <input type="number" id="recentDays" placeholder="Days (default: 7)" value="7">
@@ -182,12 +182,12 @@
         
         async function testConnection() {
             await sendRequest('tools/call', {
-                name: 'test_devlog_connection',
+                name: 'test_dokoro_connection',
                 arguments: {}
             });
         }
         
-        async function searchDevlogs() {
+        async function searchDokoros() {
             const query = document.getElementById('searchQuery').value;
             const type = document.getElementById('searchType').value;
             
@@ -197,7 +197,7 @@
             }
             
             await sendRequest('tools/call', {
-                name: 'search_devlogs',
+                name: 'search_dokoros',
                 arguments: {
                     query: query,
                     type: type,
@@ -210,7 +210,7 @@
             const days = parseInt(document.getElementById('recentDays').value) || 7;
             
             await sendRequest('tools/call', {
-                name: 'list_recent_devlogs',
+                name: 'list_recent_dokoros',
                 arguments: {
                     days: days,
                     type: 'all'

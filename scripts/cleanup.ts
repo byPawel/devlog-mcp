@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
 /**
- * Devlog Cleanup Script
+ * Dokoro Cleanup Script
  *
- * Organizes and cleans up devlog directory structure with:
+ * Organizes and cleans up dokoro directory structure with:
  * - Dry-run mode (preview changes without modifying)
  * - Backup before changes
  * - Rollback capability
@@ -10,10 +10,10 @@
  * - File organization
  *
  * Usage:
- *   npx tsx scripts/cleanup.ts --devlog /path/to/devlog --dry-run
- *   npx tsx scripts/cleanup.ts --devlog /path/to/devlog --backup
- *   npx tsx scripts/cleanup.ts --devlog /path/to/devlog --execute
- *   npx tsx scripts/cleanup.ts --devlog /path/to/devlog --rollback
+ *   npx tsx scripts/cleanup.ts --dokoro /path/to/dokoro --dry-run
+ *   npx tsx scripts/cleanup.ts --dokoro /path/to/dokoro --backup
+ *   npx tsx scripts/cleanup.ts --dokoro /path/to/dokoro --execute
+ *   npx tsx scripts/cleanup.ts --dokoro /path/to/dokoro --rollback
  */
 
 import * as fs from "fs";
@@ -61,7 +61,7 @@ interface CleanupPlan {
 }
 
 interface CleanupOptions {
-  devlogPath: string;
+  dokoroPath: string;
   dryRun: boolean;
   backup: boolean;
   execute: boolean;
@@ -84,7 +84,7 @@ const TARGET_FOLDERS = {
   prd: "prd",
 };
 
-const IGNORED_FOLDERS = [".mcp", ".obsidian", ".private", ".tags", ".git", "node_modules", ".devlog"];
+const IGNORED_FOLDERS = [".mcp", ".obsidian", ".private", ".tags", ".git", "node_modules", ".dokoro"];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UTILITIES
@@ -178,9 +178,9 @@ function inferTargetFolder(file: FileInfo): string {
 // SCANNER
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function scanDevlog(devlogPath: string): Promise<FileInfo[]> {
+async function scanDokoro(dokoroPath: string): Promise<FileInfo[]> {
   const files: FileInfo[] = [];
-  const pattern = path.join(devlogPath, "**/*.md");
+  const pattern = path.join(dokoroPath, "**/*.md");
 
   const matches = await glob(pattern, {
     ignore: IGNORED_FOLDERS.map((f) => `**/${f}/**`),
@@ -188,7 +188,7 @@ async function scanDevlog(devlogPath: string): Promise<FileInfo[]> {
 
   for (const filePath of matches) {
     const stat = fs.statSync(filePath);
-    const relativePath = path.relative(devlogPath, filePath);
+    const relativePath = path.relative(dokoroPath, filePath);
     const folder = path.dirname(relativePath);
     const content = fs.readFileSync(filePath, "utf-8");
     const { tags, status } = extractFrontmatter(content);
@@ -248,7 +248,7 @@ function findDuplicates(files: FileInfo[]): DuplicateGroup[] {
   return duplicates;
 }
 
-function findEmptyFolders(devlogPath: string): string[] {
+function findEmptyFolders(dokoroPath: string): string[] {
   const emptyFolders: string[] = [];
 
   function checkFolder(folderPath: string): boolean {
@@ -260,7 +260,7 @@ function findEmptyFolders(devlogPath: string): string[] {
     );
 
     if (nonIgnored.length === 0) {
-      emptyFolders.push(path.relative(devlogPath, folderPath));
+      emptyFolders.push(path.relative(dokoroPath, folderPath));
       return true;
     }
 
@@ -274,13 +274,13 @@ function findEmptyFolders(devlogPath: string): string[] {
     return false;
   }
 
-  checkFolder(devlogPath);
+  checkFolder(dokoroPath);
   return emptyFolders.filter((f) => f !== "");
 }
 
 function createCleanupPlan(
   files: FileInfo[],
-  devlogPath: string,
+  dokoroPath: string,
   archiveAfterDays: number
 ): CleanupPlan {
   const plan: CleanupPlan = {
@@ -288,7 +288,7 @@ function createCleanupPlan(
     deleteOperations: [],
     archiveOperations: [],
     duplicates: findDuplicates(files),
-    emptyFolders: findEmptyFolders(devlogPath),
+    emptyFolders: findEmptyFolders(dokoroPath),
     summary: {
       totalFiles: files.length,
       rootFiles: 0,
@@ -355,9 +355,9 @@ function createCleanupPlan(
 // BACKUP & RESTORE
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function createBackup(devlogPath: string): Promise<string> {
+async function createBackup(dokoroPath: string): Promise<string> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").split("T")[0];
-  const backupDir = path.join(devlogPath, ".devlog-backup", `${timestamp}-pre-cleanup`);
+  const backupDir = path.join(dokoroPath, ".dokoro-backup", `${timestamp}-pre-cleanup`);
 
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -370,19 +370,19 @@ async function createBackup(devlogPath: string): Promise<string> {
   };
 
   // Copy all markdown files to backup using glob
-  const mdFiles = await glob(path.join(devlogPath, "**/*.md"), {
+  const mdFiles = await glob(path.join(dokoroPath, "**/*.md"), {
     ignore: [
       ...IGNORED_FOLDERS.map((f) => `**/${f}/**`),
       "**/node_modules/**",
-      "**/.devlog-backup/**",
+      "**/.dokoro-backup/**",
     ],
   });
 
   for (const filePath of mdFiles) {
-    const relativePath = path.relative(devlogPath, filePath);
+    const relativePath = path.relative(dokoroPath, filePath);
 
     // Skip backup folder itself
-    if (relativePath.startsWith(".devlog-backup")) continue;
+    if (relativePath.startsWith(".dokoro-backup")) continue;
 
     const targetPath = path.join(backupDir, relativePath);
     const targetDir = path.dirname(targetPath);
@@ -404,8 +404,8 @@ async function createBackup(devlogPath: string): Promise<string> {
   return backupDir;
 }
 
-function findLatestBackup(devlogPath: string): string | null {
-  const backupRoot = path.join(devlogPath, ".devlog-backup");
+function findLatestBackup(dokoroPath: string): string | null {
+  const backupRoot = path.join(dokoroPath, ".dokoro-backup");
 
   if (!fs.existsSync(backupRoot)) return null;
 
@@ -419,8 +419,8 @@ function findLatestBackup(devlogPath: string): string | null {
   return backups.length > 0 ? path.join(backupRoot, backups[0]) : null;
 }
 
-function rollback(devlogPath: string): void {
-  const backupDir = findLatestBackup(devlogPath);
+function rollback(dokoroPath: string): void {
+  const backupDir = findLatestBackup(dokoroPath);
 
   if (!backupDir) {
     console.error("No backup found to rollback from");
@@ -441,7 +441,7 @@ function rollback(devlogPath: string): void {
 
   for (const file of manifest.files) {
     const sourcePath = path.join(backupDir, file.path);
-    const targetPath = path.join(devlogPath, file.path);
+    const targetPath = path.join(dokoroPath, file.path);
     const targetDir = path.dirname(targetPath);
 
     if (!fs.existsSync(targetDir)) {
@@ -459,7 +459,7 @@ function rollback(devlogPath: string): void {
 // EXECUTION
 // ═══════════════════════════════════════════════════════════════════════════
 
-function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
+function executeCleanup(plan: CleanupPlan, dokoroPath: string): void {
   let moved = 0;
   let deleted = 0;
   let archived = 0;
@@ -467,7 +467,7 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
   // Create target folders
   for (const folder of Object.values(TARGET_FOLDERS)) {
-    const folderPath = path.join(devlogPath, folder);
+    const folderPath = path.join(dokoroPath, folder);
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
@@ -475,8 +475,8 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
   // Execute move operations
   for (const op of plan.moveOperations) {
-    const sourcePath = path.join(devlogPath, op.from);
-    const targetPath = path.join(devlogPath, op.to);
+    const sourcePath = path.join(dokoroPath, op.from);
+    const targetPath = path.join(dokoroPath, op.to);
     const targetDir = path.dirname(targetPath);
 
     if (!fs.existsSync(targetDir)) {
@@ -492,8 +492,8 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
   // Execute archive operations
   for (const op of plan.archiveOperations) {
-    const sourcePath = path.join(devlogPath, op.from);
-    const targetPath = path.join(devlogPath, op.to);
+    const sourcePath = path.join(dokoroPath, op.from);
+    const targetPath = path.join(dokoroPath, op.to);
     const targetDir = path.dirname(targetPath);
 
     if (!fs.existsSync(targetDir)) {
@@ -509,7 +509,7 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
   // Execute delete operations (duplicates)
   for (const op of plan.deleteOperations) {
-    const filePath = path.join(devlogPath, op.path);
+    const filePath = path.join(dokoroPath, op.path);
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -520,7 +520,7 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
   // Delete empty folders
   for (const folder of plan.emptyFolders.sort((a, b) => b.length - a.length)) {
-    const folderPath = path.join(devlogPath, folder);
+    const folderPath = path.join(dokoroPath, folder);
 
     if (fs.existsSync(folderPath)) {
       try {
@@ -548,7 +548,7 @@ function executeCleanup(plan: CleanupPlan, devlogPath: string): void {
 
 function printDryRunReport(plan: CleanupPlan): void {
   console.log("\n" + "═".repeat(60));
-  console.log("            DEVLOG CLEANUP PREVIEW (DRY RUN)");
+  console.log("            DOKORO CLEANUP PREVIEW (DRY RUN)");
   console.log("═".repeat(60));
 
   console.log("\nANALYSIS COMPLETE");
@@ -622,7 +622,7 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   const options: CleanupOptions = {
-    devlogPath: "",
+    dokoroPath: "",
     dryRun: args.includes("--dry-run"),
     backup: args.includes("--backup"),
     execute: args.includes("--execute"),
@@ -631,10 +631,10 @@ async function main(): Promise<void> {
     verbose: args.includes("--verbose") || args.includes("-v"),
   };
 
-  // Parse --devlog path
-  const devlogIndex = args.indexOf("--devlog");
-  if (devlogIndex !== -1 && args[devlogIndex + 1]) {
-    options.devlogPath = args[devlogIndex + 1];
+  // Parse --dokoro path
+  const dokoroIndex = args.indexOf("--dokoro");
+  if (dokoroIndex !== -1 && args[dokoroIndex + 1]) {
+    options.dokoroPath = args[dokoroIndex + 1];
   }
 
   // Parse --archive-days
@@ -644,8 +644,8 @@ async function main(): Promise<void> {
   }
 
   // Validate
-  if (!options.devlogPath) {
-    console.error("Usage: npx tsx scripts/cleanup.ts --devlog /path/to/devlog [options]");
+  if (!options.dokoroPath) {
+    console.error("Usage: npx tsx scripts/cleanup.ts --dokoro /path/to/dokoro [options]");
     console.error("");
     console.error("Options:");
     console.error("  --dry-run        Preview changes without modifying files");
@@ -657,25 +657,25 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (!fs.existsSync(options.devlogPath)) {
-    console.error(`Devlog path not found: ${options.devlogPath}`);
+  if (!fs.existsSync(options.dokoroPath)) {
+    console.error(`Dokoro path not found: ${options.dokoroPath}`);
     process.exit(1);
   }
 
   // Handle rollback
   if (options.rollback) {
-    rollback(options.devlogPath);
+    rollback(options.dokoroPath);
     return;
   }
 
-  console.log(`Scanning devlog: ${options.devlogPath}`);
+  console.log(`Scanning dokoro: ${options.dokoroPath}`);
 
   // Scan files
-  const files = await scanDevlog(options.devlogPath);
+  const files = await scanDokoro(options.dokoroPath);
   console.log(`Found ${files.length} markdown files`);
 
   // Create cleanup plan
-  const plan = createCleanupPlan(files, options.devlogPath, options.archiveAfterDays);
+  const plan = createCleanupPlan(files, options.dokoroPath, options.archiveAfterDays);
 
   // Default to dry-run if no action specified
   if (!options.execute && !options.backup) {
@@ -690,7 +690,7 @@ async function main(): Promise<void> {
   // Create backup before execution
   if (options.backup || options.execute) {
     console.log("\nCreating backup...");
-    const backupDir = await createBackup(options.devlogPath);
+    const backupDir = await createBackup(options.dokoroPath);
     console.log(`Backup saved to: ${backupDir}`);
 
     if (options.backup && !options.execute) {
@@ -702,7 +702,7 @@ async function main(): Promise<void> {
   // Execute cleanup
   if (options.execute) {
     console.log("\nExecuting cleanup...\n");
-    executeCleanup(plan, options.devlogPath);
+    executeCleanup(plan, options.dokoroPath);
   }
 }
 

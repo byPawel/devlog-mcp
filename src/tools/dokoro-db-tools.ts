@@ -1,5 +1,5 @@
 /**
- * Devlog MCP Tools - Database Operations
+ * Dokoro MCP Tools - Database Operations
  *
  * MCP tools for the new SQLite-based dokoro system.
  * These tools work with per-project databases.
@@ -25,10 +25,10 @@ import {
   startTimeEntry,
   endTimeEntry,
   getActiveTimeEntries,
-  type DevlogDbConfig,
+  type DokoroDbConfig,
   type SearchOptions,
 } from "../db/index.js";
-import { migrateDevlog, type MigrationOptions } from "../db/migrate.js";
+import { migrateDokoro, type MigrationOptions } from "../db/migrate.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -50,7 +50,7 @@ interface ToolDefinition {
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function getDbConfig(projectPath?: string): DevlogDbConfig {
+function getDbConfig(projectPath?: string): DokoroDbConfig {
   const resolvedPath = projectPath || process.cwd();
 
   // Find dokoro folder (check common locations)
@@ -140,7 +140,7 @@ const dokoroInitTool: ToolDefinition = {
       }
 
       return success({
-        message: "Devlog initialized successfully",
+        message: "Dokoro initialized successfully",
         path: dokoroPath,
         database: path.join(dbPath, "dokoro.sqlite"),
         folders: folders.map((f) => path.relative(config.projectPath, f)),
@@ -171,7 +171,7 @@ const dokoroMigrateTool: ToolDefinition = {
         verbose: false,
       };
 
-      const result = await migrateDevlog(options);
+      const result = await migrateDokoro(options);
 
       return success({
         message: args.dry_run ? "Migration preview (dry run)" : "Migration complete",

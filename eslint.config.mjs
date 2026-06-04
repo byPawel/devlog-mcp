@@ -51,7 +51,7 @@ export default tseslint.config(
         }
     },
     {
-        // Standalone devlog server entrypoints cast Zod tool schemas and handler
+        // Standalone dokoro server entrypoints cast Zod tool schemas and handler
         // args to `any` as an intentional workaround for the MCP SDK's tool()
         // overload typings. Inline disable directives proved fragile across
         // reformatting (the de-vendor refactor split the object literals and

@@ -1,24 +1,24 @@
-# DevLog MCP with Multiple AI CLIs
+# Dokoro MCP with Multiple AI CLIs
 
-DevLog MCP is designed to work with various AI CLI tools, not just Claude Code.
+Dokoro MCP is designed to work with various AI CLI tools, not just Claude Code.
 
 ## Supported CLIs
 
 ### Claude Code (Primary)
 ```bash
-claude mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
+claude mcp add dokoro "node" "$(pwd)/bin/dokoro-core.js"
 ```
 
 ### Gemini CLI
 ```bash
 # Using gemini-cli (https://github.com/google-gemini/gemini-cli)
-gemini mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
+gemini mcp add dokoro "node" "$(pwd)/bin/dokoro-core.js"
 ```
 
 ### Qwen3 Coder
 ```bash
 # Using Qwen3 Coder (https://qwenlm.github.io/blog/qwen3-coder/)
-qwen mcp add devlog "node" "$(pwd)/bin/devlog-core.js"
+qwen mcp add dokoro "node" "$(pwd)/bin/dokoro-core.js"
 ```
 
 ## CLI-Specific Configuration
@@ -59,22 +59,22 @@ Create CLI-specific config files:
 ```bash
 # .env.claude
 ANTHROPIC_API_KEY=sk-ant-...
-DEVLOG_WORKSPACE_ID=claude-workspace
+DOKORO_WORKSPACE_ID=claude-workspace
 
 # .env.gemini
 GEMINI_API_KEY=...
-DEVLOG_WORKSPACE_ID=gemini-workspace
+DOKORO_WORKSPACE_ID=gemini-workspace
 
 # .env.qwen
 QWEN_API_KEY=...
-DEVLOG_WORKSPACE_ID=qwen-workspace
+DOKORO_WORKSPACE_ID=qwen-workspace
 ```
 
 Add servers with different names:
 ```bash
-claude mcp add devlog-claude "./mcp-wrapper.sh" ".env.claude" "node" "bin/devlog-core.js"
-gemini mcp add devlog-gemini "./mcp-wrapper.sh" ".env.gemini" "node" "bin/devlog-core.js"
-qwen mcp add devlog-qwen "./mcp-wrapper.sh" ".env.qwen" "node" "bin/devlog-core.js"
+claude mcp add dokoro-claude "./mcp-wrapper.sh" ".env.claude" "node" "bin/dokoro-core.js"
+gemini mcp add dokoro-gemini "./mcp-wrapper.sh" ".env.gemini" "node" "bin/dokoro-core.js"
+qwen mcp add dokoro-qwen "./mcp-wrapper.sh" ".env.qwen" "node" "bin/dokoro-core.js"
 ```
 
 ### Option 2: Unified Configuration
@@ -87,13 +87,13 @@ ANTHROPIC_API_KEY=sk-ant-...
 GEMINI_API_KEY=...
 QWEN_API_KEY=...
 
-# DevLog will auto-detect which CLI is calling it
-DEVLOG_AUTO_DETECT_CLI=true
+# Dokoro will auto-detect which CLI is calling it
+DOKORO_AUTO_DETECT_CLI=true
 ```
 
 ## CLI Detection
 
-DevLog automatically detects which CLI is using it and adapts responses accordingly:
+Dokoro automatically detects which CLI is using it and adapts responses accordingly:
 
 ```typescript
 // Auto-detection in action
@@ -112,20 +112,20 @@ Each CLI can have its own workspace:
 
 ```bash
 # Automatic workspace naming
-DEVLOG_WORKSPACE_ID=${CLI_NAME:-default}-workspace
+DOKORO_WORKSPACE_ID=${CLI_NAME:-default}-workspace
 
 # Or explicit naming
-DEVLOG_WORKSPACE_ID=my-claude-project  # for Claude
-DEVLOG_WORKSPACE_ID=my-gemini-project  # for Gemini
+DOKORO_WORKSPACE_ID=my-claude-project  # for Claude
+DOKORO_WORKSPACE_ID=my-gemini-project  # for Gemini
 ```
 
 ## Tool Compatibility
 
-All core DevLog tools work with all CLIs:
-- `devlog_workspace_status`
-- `devlog_workspace_claim`
-- `devlog_session_log`
-- `devlog_analytics_summary`
+All core Dokoro tools work with all CLIs:
+- `dokoro_workspace_status`
+- `dokoro_workspace_claim`
+- `dokoro_session_log`
+- `dokoro_analytics_summary`
 
 Some tools may have reduced functionality:
 - Streaming tools → batch mode for Qwen3
@@ -142,18 +142,18 @@ Some tools may have reduced functionality:
 
 ```bash
 # Morning: Use Claude for complex analysis
-export DEVLOG_WORKSPACE_ID=project-claude
+export DOKORO_WORKSPACE_ID=project-claude
 claude chat "Analyze the codebase architecture"
 
 # Afternoon: Use Gemini for quick queries
-export DEVLOG_WORKSPACE_ID=project-gemini
+export DOKORO_WORKSPACE_ID=project-gemini
 gemini chat "List recent changes"
 
 # Evening: Use Qwen for code generation
-export DEVLOG_WORKSPACE_ID=project-qwen
+export DOKORO_WORKSPACE_ID=project-qwen
 qwen generate "Create a test suite"
 
-# All sessions logged separately in DevLog!
+# All sessions logged separately in Dokoro!
 ```
 
 ## Troubleshooting
@@ -161,17 +161,17 @@ qwen generate "Create a test suite"
 ### CLI Not Detected
 ```bash
 # Manually specify CLI
-DEVLOG_CLI_NAME=gemini node bin/devlog-core.js
+DOKORO_CLI_NAME=gemini node bin/dokoro-core.js
 ```
 
 ### Feature Not Supported
 Check logs for messages like:
 ```
-[DevLog] CLI 'qwen3-coder' does not support streaming, using batch mode
+[Dokoro] CLI 'qwen3-coder' does not support streaming, using batch mode
 ```
 
 ### Workspace Conflicts
 Use unique workspace IDs:
 ```bash
-DEVLOG_WORKSPACE_ID=${USER}-${CLI_NAME}-${PROJECT}
+DOKORO_WORKSPACE_ID=${USER}-${CLI_NAME}-${PROJECT}
 ```

@@ -33,7 +33,7 @@ export interface ThemeProviderProps {
  * Theme Provider Component
  *
  * Wraps children with theme context.
- * If no theme provided, uses DEVLOG_THEME env var or defaults to nebula.
+ * If no theme provided, uses DOKORO_THEME env var or defaults to nebula.
  */
 export function ThemeProvider({ theme, children }: ThemeProviderProps): React.ReactElement {
   const resolvedTheme = theme || getCurrentTheme();

@@ -28,7 +28,7 @@ jest.mock('../utils/color-setup.js', () => ({}));
 // Stub the server runtime so importing core-server.ts to inspect its exported
 // coreTools selection does NOT start a real MCP server as an import side-effect.
 jest.mock('./base-server.js', () => ({
-  createDevlogServer: () => ({}),
+  createDokoroServer: () => ({}),
   startServer: () => Promise.resolve(),
 }));
 

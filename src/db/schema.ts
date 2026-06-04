@@ -1,5 +1,5 @@
 /**
- * Devlog-MCP 2.0 Database Schema (Drizzle ORM)
+ * Dokoro-MCP 2.0 Database Schema (Drizzle ORM)
  *
  * Per-Project SQLite Database with:
  * - Document management (issues, PRDs, research, decisions)

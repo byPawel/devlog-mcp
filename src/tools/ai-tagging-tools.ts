@@ -18,7 +18,7 @@ export const aiTaggingTools: ToolDefinition[] = [
     title: 'Auto Tag Content',
     description: 'Automatically suggest tags for dokoro content',
     inputSchema: {
-      content: z.string().describe('Devlog content to analyze'),
+      content: z.string().describe('Dokoro content to analyze'),
       threshold: z.number().optional().default(0.6).describe('Confidence threshold (0-1)'),
       categories: z.array(z.string()).optional().describe('Specific categories to focus on'),
       existingTags: z.array(z.string()).optional().describe('Current tags to improve upon')

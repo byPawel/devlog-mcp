@@ -1,5 +1,5 @@
 /**
- * Devlog initialization tool
+ * Dokoro initialization tool
  * Creates dokoro structure in a project
  */
 

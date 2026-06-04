@@ -153,4 +153,4 @@ drizzle/meta/
 # MCP-specific
 .mcp-current
 session-logs/
-.devlog/
+.dokoro/

@@ -1,4 +1,4 @@
-# DevLog
+# Dokoro
 
 This is the development log for tracking project progress, decisions, and insights.
 
@@ -14,9 +14,9 @@ This is the development log for tracking project progress, decisions, and insigh
 
 ## Getting Started
 
-1. Use `devlog_workspace_claim` to start a new session
-2. Track progress with `devlog_session_log`
-3. End sessions with `devlog_workspace_dump`
+1. Use `dokoro_workspace_claim` to start a new session
+2. Track progress with `dokoro_session_log`
+3. End sessions with `dokoro_workspace_dump`
 
 ## Conventions
 

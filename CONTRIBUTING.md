@@ -1,11 +1,11 @@
-# Contributing to devlog-mcp
+# Contributing to dokoro
 
-Thanks for your interest in contributing to `devlog-mcp` — a multi-layer agent-memory MCP server. This document outlines how to get set up and submit changes.
+Thanks for your interest in contributing to `dokoro` — a multi-layer agent-memory MCP server. This document outlines how to get set up and submit changes.
 
 ## Getting Started
 
 1. Fork the repository.
-2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/devlog-mcp.git`
+2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/dokoro.git`
 3. Install dependencies: `npm install`
 4. Build the project: `npm run build`
 5. Run the tests: `npm test`
@@ -26,7 +26,7 @@ Node.js >= 18 is required.
 npm run dev:core        # core server (workspace, sessions, entities, plans, feedback)
 npm run dev:search      # search server
 npm run dev:planning    # planning server
-npm run dev:analytics   # analytics server (adds devlog_compress_week)
+npm run dev:analytics   # analytics server (adds dokoro_compress_week)
 ```
 
 ## Pull Request Guidelines
@@ -43,7 +43,7 @@ This project follows our [Code of Conduct](CODE_OF_CONDUCT.md). Please review it
 
 ## Reporting Issues
 
-- Use the [GitHub issue tracker](https://github.com/byPawel/devlog-mcp/issues).
+- Use the [GitHub issue tracker](https://github.com/byPawel/dokoro/issues).
 - Search existing issues before creating a new one.
 - Provide clear reproduction steps.
 

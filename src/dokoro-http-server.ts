@@ -15,7 +15,7 @@ const DOKORO_PATH = process.env.DOKORO_PATH || path.join(process.cwd(), '..', 'd
 const MCP_PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT) : 3100;
 
 // Helper to read dokoro files
-async function readDevlogFile(filePath: string) {
+async function readDokoroFile(filePath: string) {
   try {
     return await fs.readFile(filePath, 'utf-8');
   } catch (error) {
@@ -25,7 +25,7 @@ async function readDevlogFile(filePath: string) {
 }
 
 // Helper to search dokoro entries
-async function searchDevlogs(query: string, type: string = 'all') {
+async function searchDokoros(query: string, type: string = 'all') {
   const patterns: Record<string, string> = {
     posts: 'posts/**/*.md',
     ideas: 'ideas-to-verify/**/*.md',
@@ -38,7 +38,7 @@ async function searchDevlogs(query: string, type: string = 'all') {
   
   const results = [];
   for (const file of files) {
-    const content = await readDevlogFile(path.join(DOKORO_PATH, file));
+    const content = await readDokoroFile(path.join(DOKORO_PATH, file));
     if (content && content.toLowerCase().includes(query.toLowerCase())) {
       results.push({
         file,
@@ -80,7 +80,7 @@ const getDokoroServer = () => {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async ({ query, type, limit }: any): Promise<CallToolResult> => {
-      const results = await searchDevlogs(query, type);
+      const results = await searchDokoros(query, type);
       const limited = results.slice(0, limit);
       
       return {
@@ -159,7 +159,7 @@ const getDokoroServer = () => {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async ({ featureName }: any): Promise<CallToolResult> => {
-      const results = await searchDevlogs(featureName);
+      const results = await searchDokoros(featureName);
       
       // Group by type
       const posts = results.filter(r => r.file.startsWith('posts/'));

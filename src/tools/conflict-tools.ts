@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
-import { searchDevlogs } from '../utils/search.js';
+import { searchDokoros } from '../utils/search.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { renderOutput } from '../utils/render-output.js';
 
@@ -14,7 +14,7 @@ export const conflictTools: ToolDefinition[] = [
     },
     handler: async ({ feature }): Promise<CallToolResult> => {
       // Search for similar features
-      const results = await searchDevlogs(feature);
+      const results = await searchDokoros(feature);
       
       const conflicts = results.filter(r => {
         const content = r.fullContent?.toLowerCase() || '';
@@ -73,7 +73,7 @@ export const conflictTools: ToolDefinition[] = [
     },
     handler: async ({ description }): Promise<CallToolResult> => {
       // Search for similar descriptions in features
-      const results = await searchDevlogs(description, 'features');
+      const results = await searchDokoros(description, 'features');
       
       const duplicates = results.filter(r => {
         const content = r.fullContent?.toLowerCase() || '';
@@ -130,7 +130,7 @@ export const conflictTools: ToolDefinition[] = [
     },
     handler: async ({ component }): Promise<CallToolResult> => {
       // Search for regression patterns
-      const results = await searchDevlogs(component);
+      const results = await searchDokoros(component);
       
       const regressions = results.filter(r => {
         const content = r.fullContent?.toLowerCase() || '';

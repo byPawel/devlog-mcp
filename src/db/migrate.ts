@@ -1,5 +1,5 @@
 /**
- * Devlog Migration Tool
+ * Dokoro Migration Tool
  *
  * Imports markdown files into SQLite database with:
  * - Frontmatter extraction (YAML)
@@ -21,7 +21,7 @@ import {
   getDoc,
   addTagsToDoc,
   addSectionTag,
-  type DevlogDbConfig,
+  type DokoroDbConfig,
   type DocCreateInput,
 } from "./index.js";
 
@@ -406,12 +406,12 @@ function parseTimeEstimate(frontmatter: Record<string, unknown>): number | undef
 // MIGRATION
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function migrateDevlog(options: MigrationOptions): Promise<MigrationResult> {
+export async function migrateDokoro(options: MigrationOptions): Promise<MigrationResult> {
   const dokoroFolder = options.dokoroFolder || "dokoro";
   const dokoroRoot = path.join(options.projectPath, dokoroFolder);
 
   if (!fs.existsSync(dokoroRoot)) {
-    throw new Error(`Devlog folder not found: ${dokoroRoot}`);
+    throw new Error(`Dokoro folder not found: ${dokoroRoot}`);
   }
 
   const result: MigrationResult = {
@@ -435,7 +435,7 @@ export async function migrateDevlog(options: MigrationOptions): Promise<Migratio
   }
 
   // Get database
-  const dbConfig: DevlogDbConfig = {
+  const dbConfig: DokoroDbConfig = {
     projectPath: options.projectPath,
     dokoroFolder,
   };
@@ -594,14 +594,14 @@ async function main(): Promise<void> {
   }
 
   console.log("═".repeat(60));
-  console.log("         DEVLOG MIGRATION");
+  console.log("         DOKORO MIGRATION");
   console.log("═".repeat(60));
   console.log(`Project: ${options.projectPath}`);
-  console.log(`Devlog:  ${options.dokoroFolder}`);
+  console.log(`Dokoro:  ${options.dokoroFolder}`);
   console.log(`Mode:    ${options.dryRun ? "DRY RUN" : "EXECUTE"}`);
   console.log("─".repeat(60));
 
-  const result = await migrateDevlog(options);
+  const result = await migrateDokoro(options);
 
   console.log("\n" + "─".repeat(60));
   console.log("RESULTS:");

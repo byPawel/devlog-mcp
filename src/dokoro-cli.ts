@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Devlog CLI
+ * Dokoro CLI
  *
  * Command-line interface for dokoro management.
  * Run from your project folder to manage dokoro files and database.
@@ -33,9 +33,9 @@ import {
   endTimeEntry,
   getActiveTimeEntries,
   closeAllDbs,
-  type DevlogDbConfig,
+  type DokoroDbConfig,
 } from "./db/index.js";
-import { migrateDevlog } from "./db/migrate.js";
+import { migrateDokoro } from "./db/migrate.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -55,7 +55,7 @@ function findProjectRoot(): string {
   return process.cwd();
 }
 
-function getConfig(): DevlogDbConfig {
+function getConfig(): DokoroDbConfig {
   const projectPath = findProjectRoot();
   const possibleFolders = ["dokoro", "docs/dokoro", ".dokoro"];
   let dokoroFolder = "dokoro";
@@ -72,7 +72,7 @@ function getConfig(): DevlogDbConfig {
 
 function printHelp(): void {
   console.log(`
-Devlog CLI - Developer Knowledge Management
+Dokoro CLI - Developer Knowledge Management
 
 USAGE:
   dokoro <command> [options]
@@ -186,7 +186,7 @@ async function cmdInit(): Promise<void> {
     console.log(`  Config: .dokoro/config.json`);
   }
 
-  console.log(`\nDevlog initialized at: ${dokoroPath}`);
+  console.log(`\nDokoro initialized at: ${dokoroPath}`);
   console.log("\nNext steps:");
   console.log("  1. Run 'dokoro migrate' to import existing markdown files");
   console.log("  2. Run 'dokoro list' to see your documents");
@@ -197,14 +197,14 @@ async function cmdMigrate(flags: Record<string, string | boolean>): Promise<void
   const dryRun = !!flags["dry-run"];
 
   console.log("═".repeat(60));
-  console.log("         DEVLOG MIGRATION");
+  console.log("         DOKORO MIGRATION");
   console.log("═".repeat(60));
   console.log(`Project: ${config.projectPath}`);
-  console.log(`Devlog:  ${config.dokoroFolder}`);
+  console.log(`Dokoro:  ${config.dokoroFolder}`);
   console.log(`Mode:    ${dryRun ? "DRY RUN" : "EXECUTE"}`);
   console.log("─".repeat(60));
 
-  const result = await migrateDevlog({
+  const result = await migrateDokoro({
     projectPath: config.projectPath,
     dokoroFolder: config.dokoroFolder,
     dryRun,

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { ToolDefinition } from './registry.js';
-import { searchDevlogs } from '../utils/search.js';
+import { searchDokoros } from '../utils/search.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DOKORO_PATH } from '../types/dokoro.js';
 // renderOutput available for future migration
@@ -11,7 +11,7 @@ import { icon } from '../utils/icons.js';
 
 // Helper function for analyzing codebase (duplicate for now, will be refactored)
 // async function analyzeCodebaseForFeature(feature: string) {
-//   const results = await searchDevlogs(feature);
+//   const results = await searchDokoros(feature);
 //   
 //   return {
 //     checklist: [
@@ -54,7 +54,7 @@ export const planningTools: ToolDefinition[] = [
       switch (approach) {
         case 'use_existing_research': {
           // Search for existing research
-          const research = await searchDevlogs(feature, 'insights');
+          const research = await searchDokoros(feature, 'insights');
           if (research.length > 0) {
             plan += `## ${icon('search')} Existing Research Found\n`;
             research.slice(0, 3).forEach(r => {
@@ -88,7 +88,7 @@ export const planningTools: ToolDefinition[] = [
       }
 
       // Search for similar features to learn from
-      const similarFeatures = await searchDevlogs(feature.split(' ')[0], 'features');
+      const similarFeatures = await searchDokoros(feature.split(' ')[0], 'features');
       if (similarFeatures.length > 0) {
         plan += `## ${icon('folder')} Similar Features (for reference)\n`;
         similarFeatures.slice(0, 3).forEach(f => {
@@ -98,7 +98,7 @@ export const planningTools: ToolDefinition[] = [
       }
 
       // Check for conflicts
-      const conflicts = await searchDevlogs(feature);
+      const conflicts = await searchDokoros(feature);
       const potentialConflicts = conflicts.filter(c =>
         c.fullContent?.includes('conflict') ||
         c.fullContent?.includes('broke') ||
@@ -258,7 +258,7 @@ export const planningTools: ToolDefinition[] = [
     },
     handler: async ({ context }): Promise<CallToolResult> => {
       // Get pending items
-      const allResults = await searchDevlogs('');
+      const allResults = await searchDokoros('');
       
       // Find incomplete items
       const pending = allResults.filter(r => {

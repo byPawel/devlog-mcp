@@ -4,7 +4,7 @@
  * Provides issue tracking, feature tracking, weekly integration, and backup tools
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { issueTrackingTools } from '../tools/issue-tracking-tools.js';
 import { featureTrackingTools } from '../tools/feature-tracking-tools.js';
 import { weeklyIntegrationTools } from '../tools/weekly-integration-tools.js';
@@ -36,7 +36,7 @@ const config = {
   description: 'Issue & Feature tracking tools with time integration and backup'
 };
 
-const server = createDevlogServer(config);
+const server = createDokoroServer(config);
 
 // Start the server
 startServer(server, trackingTools, config).catch(console.error);

@@ -16,10 +16,10 @@ tags:
 - [ ] Review project requirements
 
 ## 🚧 In Progress
-- [ ] DevLog initialization
+- [ ] Dokoro initialization
 
 ## 💭 Quick Notes & Ideas
-- DevLog initialized successfully
+- Dokoro initialized successfully
 
 ## ⏭️ Next Session
 - [ ] Start feature planning
@@ -28,4 +28,4 @@ tags:
 - Project setup tasks
 
 ---
-*DevLog initialized: 2025-08-05*
+*Dokoro initialized: 2025-08-05*

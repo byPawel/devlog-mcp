@@ -4,12 +4,12 @@
   "description": "Multi-layer agent-memory MCP server (working, episodic, semantic, procedural, affective) for Claude Code and any MCP client.",
   "license": "MIT",
   "author": "Pawel Pawlowski",
-  "homepage": "https://github.com/byPawel/devlog-mcp",
-  "bugs": "https://github.com/byPawel/devlog-mcp/issues",
+  "homepage": "https://github.com/byPawel/dokoro",
+  "bugs": "https://github.com/byPawel/dokoro/issues",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/byPawel/devlog-mcp.git"
+    "url": "git+https://github.com/byPawel/dokoro.git"
   },
   "engines": {
     "node": ">=22"

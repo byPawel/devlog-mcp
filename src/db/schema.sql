@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- DEVLOG-MCP 2.0 SQLite Schema
--- Per-Project Database (each project gets its own .devlog/db/devlog.sqlite)
+-- DOKORO 2.0 SQLite Schema
+-- Per-Project Database (each project gets its own .dokoro/db/dokoro.sqlite)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 PRAGMA journal_mode = WAL;
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS schema_version (
   description TEXT
 );
 
-INSERT INTO schema_version (version, description) VALUES (1, 'Initial schema - Devlog 2.0');
+INSERT INTO schema_version (version, description) VALUES (1, 'Initial schema - Dokoro 2.0');
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- PROJECT METADATA
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS project (
   id TEXT PRIMARY KEY DEFAULT 'default',
   name TEXT NOT NULL,
   root_path TEXT NOT NULL,              -- Absolute path to project root
-  devlog_path TEXT NOT NULL,            -- Relative path to devlog folder (usually 'devlog')
+  dokoro_path TEXT NOT NULL,            -- Relative path to dokoro folder (usually 'dokoro')
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   settings_json TEXT                    -- Project-specific settings
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS project (
 
 CREATE TABLE IF NOT EXISTS docs (
   id TEXT PRIMARY KEY,                  -- filename stem: 2025-01-26-field-bug
-  filepath TEXT UNIQUE NOT NULL,        -- relative path from devlog root
+  filepath TEXT UNIQUE NOT NULL,        -- relative path from dokoro root
   title TEXT NOT NULL,
   content TEXT,                         -- full markdown content for FTS
   doc_type TEXT NOT NULL DEFAULT 'issue', -- issue|prd|research|decision|note
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS conversation_summaries (
 CREATE TABLE IF NOT EXISTS agent_feedback (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   agent_id TEXT NOT NULL,                  -- model id, e.g. 'claude-opus-4-7'
-  tool_name TEXT NOT NULL,                 -- MCP tool name, e.g. 'devlog_entity_extract_deep'
+  tool_name TEXT NOT NULL,                 -- MCP tool name, e.g. 'dokoro_entity_extract_deep'
   outcome TEXT NOT NULL,                   -- 'success' | 'failure' | 'partial'
   confidence REAL DEFAULT 1.0,             -- calibration score (0-1)
   latency_ms INTEGER,                      -- wall-clock latency of the tool call

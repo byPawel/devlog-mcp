@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
-import { searchDevlogs } from '../utils/search.js';
+import { searchDokoros } from '../utils/search.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { renderOutput } from '../utils/render-output.js';
 // icon available for future use
@@ -16,7 +16,7 @@ export const tagTools: ToolDefinition[] = [
       limit: z.number().optional().default(10),
     },
     handler: async ({ tags, limit }): Promise<CallToolResult> => {
-      const results = await searchDevlogs('', 'all', tags);
+      const results = await searchDokoros('', 'all', tags);
       const limited = results.slice(0, limit);
       
       if (limited.length === 0) {
@@ -53,7 +53,7 @@ export const tagTools: ToolDefinition[] = [
     description: 'Get statistics about tag usage in dokoros',
     inputSchema: {},
     handler: async (): Promise<CallToolResult> => {
-      const results = await searchDevlogs('');
+      const results = await searchDokoros('');
       
       const tagStats: Record<string, Record<string, number>> = {};
       let totalFiles = 0;
@@ -123,7 +123,7 @@ export const tagTools: ToolDefinition[] = [
       tagName: z.string().describe('The tag name to list values for'),
     },
     handler: async ({ tagName }): Promise<CallToolResult> => {
-      const results = await searchDevlogs('');
+      const results = await searchDokoros('');
       
       const values = new Set<string>();
       let count = 0;

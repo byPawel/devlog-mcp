@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolDefinition } from './registry.js';
-import { searchDevlogs } from '../utils/search.js';
+import { searchDokoros } from '../utils/search.js';
 import { DOKORO_PATH } from '../types/dokoro.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { renderOutput } from '../utils/render-output.js';
@@ -44,7 +44,7 @@ export const basicTools: ToolDefinition[] = [
       tags: z.record(z.any()).optional().describe('Tag filters as key-value pairs'),
     },
     handler: async ({ query, type, limit, tags }): Promise<CallToolResult> => {
-      const results = await searchDevlogs(query || '', type, tags);
+      const results = await searchDokoros(query || '', type, tags);
       const limited = results.slice(0, limit);
 
       return {
@@ -79,7 +79,7 @@ export const basicTools: ToolDefinition[] = [
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      const results = await searchDevlogs('', type);
+      const results = await searchDokoros('', type);
       const recent = results.filter(r => r.lastModified > cutoffDate);
 
       if (recent.length === 0) {

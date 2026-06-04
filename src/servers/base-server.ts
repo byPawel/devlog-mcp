@@ -19,7 +19,7 @@ export interface ServerConfig {
   description: string;
 }
 
-export function createDevlogServer(config: ServerConfig): McpServer {
+export function createDokoroServer(config: ServerConfig): McpServer {
   const server = new McpServer({
     name: config.name,
     version: config.version,
@@ -32,7 +32,7 @@ export function createDevlogServer(config: ServerConfig): McpServer {
   return server;
 }
 
-async function isDevlogInitialized(): Promise<boolean> {
+async function isDokoroInitialized(): Promise<boolean> {
   try {
     await fs.access(DOKORO_PATH);
     return true;
@@ -55,7 +55,7 @@ export async function startServer(server: McpServer, tools: ToolDefinition[], co
   await server.connect(transport);
   
   // Check if dokoro is initialized
-  const dokoroExists = await isDevlogInitialized();
+  const dokoroExists = await isDokoroInitialized();
   
   if (!dokoroExists) {
     console.error('⚠️  Dokoro not initialized in this project!');

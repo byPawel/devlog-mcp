@@ -1,6 +1,6 @@
 // Shared types for Dokoro MCP Server
 
-export interface ParsedDevlog {
+export interface ParsedDokoro {
   content: string;
   data: Record<string, unknown>;
   tags: Record<string, unknown>;

@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the project maintainer responsible for enforcement by opening a
-report through the repository's [Security tab](https://github.com/byPawel/devlog-mcp/security)
+report through the repository's [Security tab](https://github.com/byPawel/dokoro/security)
 or contacting the maintainer ([@byPawel](https://github.com/byPawel)).
 All complaints will be reviewed and investigated promptly and fairly.
 

@@ -1,5 +1,5 @@
 /**
- * Render Output Middleware for DevLog MCP
+ * Render Output Middleware for Dokoro MCP
  *
  * Converts RenderableResult types to React Ink components
  * and renders them to ANSI strings for MCP tool responses.
@@ -772,7 +772,7 @@ function RenderableRouter({ result }: { result: RenderableResult }): React.React
  * Render a RenderableResult to ANSI string
  *
  * @param result - The structured result to render
- * @param theme - Optional theme override (defaults to DEVLOG_THEME env var or nebula)
+ * @param theme - Optional theme override (defaults to DOKORO_THEME env var or nebula)
  * @returns ANSI-formatted string for terminal output
  *
  * @example

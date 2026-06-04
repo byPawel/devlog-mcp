@@ -6,7 +6,7 @@
  * Registers core + search + planning + tracking tools.
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { workspaceTools } from '../tools/workspace-tools.js';
 import { currentWorkspaceTools } from '../tools/current-workspace-tools.js';
 import { dokoroInitTool } from '../tools/dokoro-init-tool.js';
@@ -53,7 +53,7 @@ async function main() {
     description: 'Unified Dokoro MCP Server - all tools in one process',
   };
 
-  const server = createDevlogServer(config);
+  const server = createDokoroServer(config);
   await startServer(server, allTools, config);
 }
 

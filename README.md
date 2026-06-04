@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🧠 devlog-mcp
+# 🧠 dokoro
 
-### Agent memory for Claude Code — with affective routing & bi-temporal facts
+### Agentic memory for coding agents — affective routing & bi-temporal facts
 
 A multi-layer **agent memory** MCP server: a persistent brain for your LLM agent.
 Remember what you're doing, what you did, what you know, and **how well each tool actually performs** — across sessions, models, and projects.
 
-[![Website](https://img.shields.io/badge/website-bypawel.github.io%2Fdevlog--mcp-6e5494.svg)](https://bypawel.github.io/devlog-mcp/)
+[![Website](https://img.shields.io/badge/website-bypawel.github.io%2Fdokoro-6e5494.svg)](https://bypawel.github.io/dokoro/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-43853d.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](https://www.typescriptlang.org/)
@@ -24,7 +24,7 @@ Remember what you're doing, what you did, what you know, and **how well each too
 
 An LLM agent's context window is its only memory, and it's wiped at the end of every session. The agent re-learns the codebase, re-discovers decisions it already made, and repeats tools that failed last time. Most "memory" plugins paper over this with a single undifferentiated vector store — everything dumped in, everything retrieved by fuzzy similarity.
 
-`devlog-mcp` takes the opposite stance: **memory is separated by function**, following the CoALA-inspired taxonomy used by Letta, Zep, Mem0, and Cognee. Each layer answers a different question, so the agent retrieves *the right kind of memory* instead of the *most textually similar* one.
+`dokoro` takes the opposite stance: **memory is separated by function**, following the CoALA-inspired taxonomy used by Letta, Zep, Mem0, and Cognee. Each layer answers a different question, so the agent retrieves *the right kind of memory* instead of the *most textually similar* one.
 
 | The agent asks… | …and the right layer answers |
 |---|---|
@@ -42,7 +42,7 @@ An LLM agent's context window is its only memory, and it's wiped at the end of e
 
 ```
 You    ▸ The concurrent-login test is flaky. Fix it.
-Claude ▸ [calls devlog_session_log] Logged: root cause = race in session refresh,
+Claude ▸ [calls dokoro_session_log] Logged: root cause = race in session refresh,
          partial fix in auth/session.ts. Open question: needs a regression test.
 ```
 
@@ -50,11 +50,11 @@ Claude ▸ [calls devlog_session_log] Logged: root cause = race in session refre
 
 ```
 You    ▸ Pick up the login bug from earlier this week.
-Claude ▸ [calls devlog_session_recall { query: "login", since: "2026-05-12" }]
+Claude ▸ [calls dokoro_session_recall { query: "login", since: "2026-05-12" }]
          Resuming from Monday's session — writing the regression test now.
 ```
 
-Summaries are written at session end with `devlog_session_summary_add` (and tool outcomes are auto-captured along the way). `devlog_session_recall` then returns the matching episodic summaries — narrowed by `query` substring and an ISO `since` bound, then semantically re-ranked by embedding similarity (falling back to recency when offline) — as compact text the agent reads directly. Long sessions are auto-compacted once their summaries grow past the token budget; the consolidated summary is retained as a single recallable entry, so nothing drops out of recall:
+Summaries are written at session end with `dokoro_session_summary_add` (and tool outcomes are auto-captured along the way). `dokoro_session_recall` then returns the matching episodic summaries — narrowed by `query` substring and an ISO `since` bound, then semantically re-ranked by embedding similarity (falling back to recency when offline) — as compact text the agent reads directly. Long sessions are auto-compacted once their summaries grow past the token budget; the consolidated summary is retained as a single recallable entry, so nothing drops out of recall:
 
 ```
 [2026-05-19T14:32:00Z] session=2026-05-19-login model=claude-opus-4-7 msgs=42
@@ -65,25 +65,25 @@ Summaries are written at session end with `devlog_session_summary_add` (and tool
 
 ## What makes it different
 
-Most memory servers stop at "store text, retrieve by similarity." Two capabilities set `devlog-mcp` apart — and both are queryable as plain MCP tool calls.
+Most memory servers stop at "store text, retrieve by similarity." Two capabilities set `dokoro` apart — and both are queryable as plain MCP tool calls.
 
 ### ❤️ Affective memory — the agent learns which tools to trust
 
-Every tool outcome is recorded — **outcome and latency are captured automatically** for wrapped tool calls; **confidence is recorded when provided** via an explicit `devlog_feedback_record` call. The agent then asks `devlog_feedback_route` for a **ranked** track record and biases itself accordingly — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
+Every tool outcome is recorded — **outcome and latency are captured automatically** for wrapped tool calls; **confidence is recorded when provided** via an explicit `dokoro_feedback_record` call. The agent then asks `dokoro_feedback_route` for a **ranked** track record and biases itself accordingly — no other popular OSS memory lib (Mem0, Letta, Zep, Cognee, LangMem) does this natively.
 
 ```jsonc
 // MCP tools/call — ranked routing scores for this agent
 {
-  "name": "devlog_feedback_route",
+  "name": "dokoro_feedback_route",
   "arguments": { "agent_id": "claude-code", "half_life_days": 14 }
 }
 ```
 ```
-devlog_session_recall:      n=89  success=89  failure=0 partial=0 rejected=0 timeout=0  decayed_rate=1.000 wilson_lower=0.9583 confident=true
-devlog_entity_extract_deep: n=142 success=125 failure=2 partial=0 rejected=0 timeout=15 decayed_rate=0.864 wilson_lower=0.8213 confident=true
+dokoro_session_recall:      n=89  success=89  failure=0 partial=0 rejected=0 timeout=0  decayed_rate=1.000 wilson_lower=0.9583 confident=true
+dokoro_entity_extract_deep: n=142 success=125 failure=2 partial=0 rejected=0 timeout=15 decayed_rate=0.864 wilson_lower=0.8213 confident=true
 ```
 
-> Ranking is a **Wilson lower bound** (so a single lucky success can't outrank a long track record) with **recency decay** (`half_life_days`, so stale failures fade) and a `confident` flag once a tool clears the minimum sample size. The agent prefers the higher `wilson_lower` — turning past outcomes into a routing policy. Raw aggregates remain available via `devlog_feedback_query`.
+> Ranking is a **Wilson lower bound** (so a single lucky success can't outrank a long track record) with **recency decay** (`half_life_days`, so stale failures fade) and a `confident` flag once a tool clears the minimum sample size. The agent prefers the higher `wilson_lower` — turning past outcomes into a routing policy. Raw aggregates remain available via `dokoro_feedback_query`.
 
 ### 🕒 Bi-temporal facts — query the graph "as of" any point in time
 
@@ -92,7 +92,7 @@ Every `entity_relations` row carries `valid_from` / `valid_to` (Zep/Graphiti-sty
 ```jsonc
 // MCP tools/call — what did this module relate to as of April 2026?
 {
-  "name": "devlog_entity_graph",
+  "name": "dokoro_entity_graph",
   "arguments": { "entityId": 7, "as_of": "2026-04-01T00:00:00Z" }
 }
 ```
@@ -113,7 +113,7 @@ Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusio
 
 ## How an agent uses it
 
-`devlog-mcp` is an MCP server: it exposes tools, and the agent — Claude Code, Gemini CLI, or any MCP client — calls them. There is no autonomy on the server side. **The server stores and serves; the agent reads and writes.** A typical session forms a loop across the layers:
+`dokoro` is an MCP server: it exposes tools, and the agent — Claude Code, Gemini CLI, or any MCP client — calls them. There is no autonomy on the server side. **The server stores and serves; the agent reads and writes.** A typical session forms a loop across the layers:
 
 ```
    ┌──────────────────────────── session ────────────────────────────┐
@@ -129,12 +129,12 @@ Plus: **hybrid search** (SQLite FTS5 + LanceDB vectors via Reciprocal Rank Fusio
    └───────────────────────────────────────────────────────────────────◄─┘
 ```
 
-1. **Resume** — `devlog_workspace_status` shows whether a task is already in flight; `devlog_session_recall` loads summaries of prior sessions. The agent starts informed instead of blank.
-2. **Orient** — `devlog_entity_graph` reveals the relevant files/services/decisions and how they relate; `devlog_plan_status` shows which plan tasks remain.
-3. **Act** — it claims the workspace (`devlog_workspace_claim`, a file-based lock so two agents don't collide), logs progress with `devlog_session_log`, records open questions with `devlog_question_add`.
-4. **Reflect** — after each significant tool call, `devlog_feedback_record` captures the outcome (success / failure / latency / confidence).
-5. **Route** — `devlog_feedback_query` lets the agent bias itself toward the model or tool that has historically succeeded.
-6. **Persist** — `devlog_workspace_dump` flushes the active workspace into durable storage, ready for the next recall.
+1. **Resume** — `dokoro_workspace_status` shows whether a task is already in flight; `dokoro_session_recall` loads summaries of prior sessions. The agent starts informed instead of blank.
+2. **Orient** — `dokoro_entity_graph` reveals the relevant files/services/decisions and how they relate; `dokoro_plan_status` shows which plan tasks remain.
+3. **Act** — it claims the workspace (`dokoro_workspace_claim`, a file-based lock so two agents don't collide), logs progress with `dokoro_session_log`, records open questions with `dokoro_question_add`.
+4. **Reflect** — after each significant tool call, `dokoro_feedback_record` captures the outcome (success / failure / latency / confidence).
+5. **Route** — `dokoro_feedback_query` lets the agent bias itself toward the model or tool that has historically succeeded.
+6. **Persist** — `dokoro_workspace_dump` flushes the active workspace into durable storage, ready for the next recall.
 
 The payoff: the agent never holds all of this in its context window. It pulls the slice it needs from the layer that owns it, then writes back what it learned.
 
@@ -144,11 +144,11 @@ The payoff: the agent never holds all of this in its context window. It pulls th
 
 | Layer | What it remembers | Where it lives | MCP tools |
 |---|---|---|---|
-| 🟢 **Working** | Current task, locks, open questions | `current-workspace.md` + `sessions(status='active')` + `questions.json` | `devlog_workspace_claim`, `devlog_workspace_dump`, `devlog_workspace_status`, `devlog_session_log`, `devlog_question_*` |
-| 🔵 **Episodic** | Past sessions, time entries, conversation summaries | `sessions`, `time_entries`, `conversation_summaries` | `devlog_session_recall`, `devlog_session_log` |
-| 🟣 **Semantic** | Facts, entities, relations, tags, doc vectors | `entities`, `entity_relations` (bi-temporal), `doc_entities`, `tags`, `doc_tags`, `docs`, LanceDB `doc_vectors` + `chunks` | `devlog_entity_graph`, `devlog_entity_extract_deep` |
-| 🟠 **Procedural** | Plans, workflows, checklists | `docs(doc_type='plan')` + plan JSON files | `devlog_plan_create`, `devlog_plan_check`, `devlog_plan_validate`, `devlog_plan_status`, `devlog_plan_list`, `devlog_plan_blocker` |
-| 🔴 **Affective** | Per-tool/per-agent success, failure, latency, confidence | `agent_feedback` | `devlog_feedback_record`, `devlog_feedback_query` |
+| 🟢 **Working** | Current task, locks, open questions | `current-workspace.md` + `sessions(status='active')` + `questions.json` | `dokoro_workspace_claim`, `dokoro_workspace_dump`, `dokoro_workspace_status`, `dokoro_session_log`, `dokoro_question_*` |
+| 🔵 **Episodic** | Past sessions, time entries, conversation summaries | `sessions`, `time_entries`, `conversation_summaries` | `dokoro_session_recall`, `dokoro_session_log` |
+| 🟣 **Semantic** | Facts, entities, relations, tags, doc vectors | `entities`, `entity_relations` (bi-temporal), `doc_entities`, `tags`, `doc_tags`, `docs`, LanceDB `doc_vectors` + `chunks` | `dokoro_entity_graph`, `dokoro_entity_extract_deep` |
+| 🟠 **Procedural** | Plans, workflows, checklists | `docs(doc_type='plan')` + plan JSON files | `dokoro_plan_create`, `dokoro_plan_check`, `dokoro_plan_validate`, `dokoro_plan_status`, `dokoro_plan_list`, `dokoro_plan_blocker` |
+| 🔴 **Affective** | Per-tool/per-agent success, failure, latency, confidence | `agent_feedback` | `dokoro_feedback_record`, `dokoro_feedback_query` |
 
 ```
 ┌───────────── working ─────────────┐    ┌───────── affective ──────────┐
@@ -174,17 +174,17 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_workspace_status` | Check workspace status and active sessions |
-| `devlog_workspace_claim` | Claim workspace with a file-based lock |
-| `devlog_workspace_dump` | Export workspace data (registers docs in SQLite) |
-| `devlog_session_log` | Log development session entries with tags |
-| `devlog_regenerate_current` | Auto-generate or update `current.md` from recent activity |
-| `devlog_update_current_section` | Update a specific section in `current.md` |
-| `devlog_get_current_focus` | Read the current focus and active tasks from `current.md` |
-| `devlog_question_add` | Log a question during development |
-| `devlog_question_answer` | Answer a previously logged question |
-| `devlog_question_list` | List all tracked questions |
-| `devlog_question_check` | Check status of open questions |
+| `dokoro_workspace_status` | Check workspace status and active sessions |
+| `dokoro_workspace_claim` | Claim workspace with a file-based lock |
+| `dokoro_workspace_dump` | Export workspace data (registers docs in SQLite) |
+| `dokoro_session_log` | Log development session entries with tags |
+| `dokoro_regenerate_current` | Auto-generate or update `current.md` from recent activity |
+| `dokoro_update_current_section` | Update a specific section in `current.md` |
+| `dokoro_get_current_focus` | Read the current focus and active tasks from `current.md` |
+| `dokoro_question_add` | Log a question during development |
+| `dokoro_question_answer` | Answer a previously logged question |
+| `dokoro_question_list` | List all tracked questions |
+| `dokoro_question_check` | Check status of open questions |
 
 </details>
 
@@ -193,9 +193,9 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_session_recall` | Read past session summaries (filter by query, session_id, since timestamp) |
-| `devlog_session_summary_add` | Write a session-end summary — the episodic **write** path |
-| `devlog_compress_week` | Generate a compressed weekly summary (sessions, tasks completed, decisions made) — *analytics server only* |
+| `dokoro_session_recall` | Read past session summaries (filter by query, session_id, since timestamp) |
+| `dokoro_session_summary_add` | Write a session-end summary — the episodic **write** path |
+| `dokoro_compress_week` | Generate a compressed weekly summary (sessions, tasks completed, decisions made) — *analytics server only* |
 
 </details>
 
@@ -204,8 +204,8 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_entity_graph` | Query the entity graph — search by name/type or traverse from a specific entity. Accepts `as_of` ISO timestamp for point-in-time queries against bi-temporal `entity_relations`. |
-| `devlog_entity_extract_deep` | Run LLM-powered deep extraction on a document via Ollama (requires `llama3.2`) |
+| `dokoro_entity_graph` | Query the entity graph — search by name/type or traverse from a specific entity. Accepts `as_of` ISO timestamp for point-in-time queries against bi-temporal `entity_relations`. |
+| `dokoro_entity_extract_deep` | Run LLM-powered deep extraction on a document via Ollama (requires `llama3.2`) |
 
 </details>
 
@@ -214,12 +214,12 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_plan_create` | Create a development plan with tasks |
-| `devlog_plan_check` | Check progress on a plan's tasks |
-| `devlog_plan_blocker` | Report a blocker on a plan task |
-| `devlog_plan_validate` | Validate plan completion criteria |
-| `devlog_plan_status` | Get overall plan status summary |
-| `devlog_plan_list` | List all plans |
+| `dokoro_plan_create` | Create a development plan with tasks |
+| `dokoro_plan_check` | Check progress on a plan's tasks |
+| `dokoro_plan_blocker` | Report a blocker on a plan task |
+| `dokoro_plan_validate` | Validate plan completion criteria |
+| `dokoro_plan_status` | Get overall plan status summary |
+| `dokoro_plan_list` | List all plans |
 
 </details>
 
@@ -228,9 +228,9 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_feedback_record` | Record the outcome of a tool call (success / failure / partial / rejected / timeout) with confidence and latency |
-| `devlog_feedback_route` | Ranked track record (Wilson lower bound + recency decay) to bias tool/model routing |
-| `devlog_feedback_query` | Per-tool success rates, recent failures, agent-specific stats |
+| `dokoro_feedback_record` | Record the outcome of a tool call (success / failure / partial / rejected / timeout) with confidence and latency |
+| `dokoro_feedback_route` | Ranked track record (Wilson lower bound + recency decay) to bias tool/model routing |
+| `dokoro_feedback_query` | Per-tool success rates, recent failures, agent-specific stats |
 
 </details>
 
@@ -239,20 +239,20 @@ Tools are organised by which memory layer they read or write.
 
 | Tool | Description |
 |------|-------------|
-| `devlog_init` | Initialize devlog workspace and database |
-| `devlog_save_image` | Save an image asset (base64 or URL) |
-| `devlog_save_file` | Save a file asset |
-| `devlog_list_assets` | List saved assets |
+| `dokoro_init` | Initialize dokoro workspace and database |
+| `dokoro_save_image` | Save an image asset (base64 or URL) |
+| `dokoro_save_file` | Save a file asset |
+| `dokoro_list_assets` | List saved assets |
 
 </details>
 
-> Tools above are exposed by the **core server** (`bin/devlog-core.js`). The optional **analytics server** (`bin/devlog-analytics.js`) adds `devlog_compress_week`. Other modular servers (search, planning, tracking) expose additional tools not yet wired into core — see `src/servers/*.ts`.
+> Tools above are exposed by the **core server** (`bin/dokoro-core.js`). The optional **analytics server** (`bin/dokoro-analytics.js`) adds `dokoro_compress_week`. Other modular servers (search, planning, tracking) expose additional tools not yet wired into core — see `src/servers/*.ts`.
 
 ---
 
 ## Works with your agent
 
-Claude Code is the hero use case throughout this README, but `devlog-mcp` is a standard MCP server — any MCP-compatible client connects the same way and speaks the same tools.
+Claude Code is the hero use case throughout this README, but `dokoro` is a standard MCP server — any MCP-compatible client connects the same way and speaks the same tools.
 
 | Client / Agent | How it connects |
 |---|---|
@@ -267,8 +267,8 @@ Claude Code is the hero use case throughout this README, but `devlog-mcp` is a s
 
 ```bash
 # 1. Clone
-git clone https://github.com/byPawel/devlog-mcp
-cd devlog-mcp
+git clone https://github.com/byPawel/dokoro
+cd dokoro
 
 # 2. Install dependencies
 npm install
@@ -284,15 +284,15 @@ Register the server with Claude:
 
 ```bash
 # Core server (essential features)
-claude mcp add devlog-core "node" "$(pwd)/bin/devlog-core.js"
+claude mcp add dokoro-core "node" "$(pwd)/bin/dokoro-core.js"
 
 # …or with environment variables
-claude mcp add devlog-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/bin/devlog-core.js"
+claude mcp add dokoro-core "$(pwd)/../mcp-wrapper.sh" ".env.local" "node" "$(pwd)/bin/dokoro-core.js"
 ```
 
 ### Ollama setup (optional)
 
-Enables embeddings and deep entity extraction. Needed only for `devlog_entity_extract_deep` and LanceDB vector indexing — every other tool works without it.
+Enables embeddings and deep entity extraction. Needed only for `dokoro_entity_extract_deep` and LanceDB vector indexing — every other tool works without it.
 
 ```bash
 # Install from https://ollama.com, then:
@@ -307,13 +307,13 @@ ollama serve            # runs as a background service on most platforms
 
 [`tachibot-mcp`](https://github.com/byPawel/tachibot-mcp) is a multi-model orchestrator: it lets an agent reason, research, and plan across many models (Claude, GPT, Gemini, Grok, Perplexity, Qwen, Kimi…). The catch with multi-model work is that each call is stateless — the research one model did, or the plan another drafted, evaporates when the turn ends.
 
-`devlog-mcp` is tachibot's **memory backend**: tachibot does the thinking, devlog remembers it. Three opt-in **bridge tools** (enable with `DEVLOG_ENABLE_TACHIBOT_BRIDGE=true`) connect the two, so reasoning outputs land in the right memory layer and flow back into the next decision:
+`dokoro` is tachibot's **memory backend**: tachibot does the thinking, dokoro remembers it. Three opt-in **bridge tools** (enable with `DOKORO_ENABLE_TACHIBOT_BRIDGE=true`) connect the two, so reasoning outputs land in the right memory layer and flow back into the next decision:
 
 | Bridge tool | Direction | What it does |
 |---|---|---|
 | `bridge_index_research` | tachibot → **semantic** | Indexes research output (perplexity / grok / openai / gemini) into LanceDB. Deterministic IDs mean re-indexing the same `source`+`query` replaces the old entry — no duplicates. |
-| `bridge_import_plan` | tachibot → **procedural** | Imports `planner_maker` phases into devlog plans, so they work with `devlog_plan_check` / `_validate` / `_status`. |
-| `bridge_get_context` | **devlog → tachibot** | Pulls relevant prior research + plans as a compact, paste-ready context block to seed the next reasoning call. |
+| `bridge_import_plan` | tachibot → **procedural** | Imports `planner_maker` phases into dokoro plans, so they work with `dokoro_plan_check` / `_validate` / `_status`. |
+| `bridge_get_context` | **dokoro → tachibot** | Pulls relevant prior research + plans as a compact, paste-ready context block to seed the next reasoning call. |
 
 ### The agentic loop it enables
 
@@ -322,15 +322,15 @@ ollama serve            # runs as a background service on most platforms
   ▼                                                                    │
   tachibot reasons / researches / plans  (multi-model)                 │
   │                                                                    │
-  ├─ bridge_index_research  ─▶  devlog semantic memory (LanceDB)       │
-  ├─ bridge_import_plan     ─▶  devlog procedural memory (plans)       │
+  ├─ bridge_index_research  ─▶  dokoro semantic memory (LanceDB)       │
+  ├─ bridge_import_plan     ─▶  dokoro procedural memory (plans)       │
   │                                                                    │
-  next task: bridge_get_context  ◀──  devlog recalls what’s relevant ──┘
+  next task: bridge_get_context  ◀──  dokoro recalls what’s relevant ──┘
 ```
 
-The agent stops re-researching what it already looked up and stops re-planning what it already scoped. Each model's output compounds into shared, queryable memory — and because devlog also tracks the affective layer (per-tool/per-agent success rates), the agent can even learn *which model* to route a given kind of task to.
+The agent stops re-researching what it already looked up and stops re-planning what it already scoped. Each model's output compounds into shared, queryable memory — and because dokoro also tracks the affective layer (per-tool/per-agent success rates), the agent can even learn *which model* to route a given kind of task to.
 
-> Bridge tools are exposed by the **search server** (and the unified server) only when `DEVLOG_ENABLE_TACHIBOT_BRIDGE=true`; they're off by default so a plain devlog install stays focused.
+> Bridge tools are exposed by the **search server** (and the unified server) only when `DOKORO_ENABLE_TACHIBOT_BRIDGE=true`; they're off by default so a plain dokoro install stays focused.
 
 ---
 
@@ -338,7 +338,7 @@ The agent stops re-researching what it already looked up and stops re-planning w
 
 | Project | Architecture | Native temporal | Native affective |
 |---|:---:|:---:|:---:|
-| **devlog-mcp** | SQLite + LanceDB + entity graph | ✅ bi-temporal relations | ✅ `agent_feedback` |
+| **dokoro** | SQLite + LanceDB + entity graph | ✅ bi-temporal relations | ✅ `agent_feedback` |
 | Mem0 | Vector + optional graph | ❌ | ❌ |
 | Letta (MemGPT) | Tiered, OS-like, self-editing | ◐ via metadata | ◐ via metadata |
 | Zep / Graphiti | Temporal knowledge graph | ✅ bi-temporal | ❌ |
@@ -360,7 +360,7 @@ npm run lint     # lint code
 ### Project structure
 
 ```
-devlog-mcp/
+dokoro/
 ├── src/
 │   ├── servers/          # MCP server implementations
 │   ├── tools/            # Tool implementations

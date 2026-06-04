@@ -9,12 +9,12 @@ import { promises as fs, existsSync } from 'fs';
 // Prevents dokoro/dokoro doubling when cwd is already the dokoro directory
 export const DOKORO_PATH = process.env.DOKORO_PATH || (() => {
   const cwd = process.cwd();
-  const withDevlog = path.join(cwd, 'dokoro');
+  const withDokoro = path.join(cwd, 'dokoro');
   // If cwd is already named 'dokoro' and there's no nested dokoro/ subfolder, use cwd directly
-  if (path.basename(cwd) === 'dokoro' && !existsSync(withDevlog)) {
+  if (path.basename(cwd) === 'dokoro' && !existsSync(withDokoro)) {
     return cwd;
   }
-  return withDevlog;
+  return withDokoro;
 })();
 
 // Shared date formatting functions

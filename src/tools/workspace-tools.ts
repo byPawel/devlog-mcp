@@ -551,7 +551,7 @@ export const workspaceTools: ToolDefinition[] = [
               text: renderOutput({
                 type: 'status-card',
                 data: {
-                  title: `${icon('completed')} Saved to Devlog`,
+                  title: `${icon('completed')} Saved to Dokoro`,
                   status: 'success',
                   message: `📍 ${sessionFile}`,
                   details,

@@ -1,4 +1,4 @@
-# Devlog MCP — Architecture
+# Dokoro MCP — Architecture
 
 ## System Overview
 
@@ -17,7 +17,7 @@ graph TB
         T_META["Meta<br/><small>think · nextThought<br/>prompt_techniques · workflows</small>"]
     end
 
-    subgraph DEVLOG["📋 Devlog MCP"]
+    subgraph DOKORO["📋 Dokoro MCP"]
         direction TB
         subgraph CORE["Core Tools"]
             D_WS["Workspace<br/><small>claim · status · dump · session_log</small>"]
@@ -49,7 +49,7 @@ graph TB
 
     %% ─── Connections ───
     CC -->|"stdio JSON-RPC"| TACHIBOT
-    CC -->|"stdio JSON-RPC"| DEVLOG
+    CC -->|"stdio JSON-RPC"| DOKORO
 
     T_SEARCH -.->|"research output"| B_IDX
     T_PLAN -.->|"plan phases"| B_IMP
@@ -75,14 +75,14 @@ graph TB
     %% ─── Styling ───
     classDef orchestrator fill:#1a1a2e,stroke:#e94560,color:#fff,stroke-width:3px
     classDef tachibox fill:#16213e,stroke:#0f3460,color:#e0e0e0
-    classDef devlogbox fill:#1a1a2e,stroke:#533483,color:#e0e0e0
+    classDef dokorobox fill:#1a1a2e,stroke:#533483,color:#e0e0e0
     classDef bridgebox fill:#2d1b4e,stroke:#e94560,color:#fff
     classDef storage fill:#0f3460,stroke:#53a8b6,color:#fff
     classDef external fill:#222,stroke:#e94560,color:#e94560,stroke-dasharray:5
 
     class CC orchestrator
     class T_REASON,T_SEARCH,T_CODE,T_PLAN,T_META tachibox
-    class D_WS,D_PLAN,D_Q,D_ASSET,D_ENTITY,D_SEARCH devlogbox
+    class D_WS,D_PLAN,D_Q,D_ASSET,D_ENTITY,D_SEARCH dokorobox
     class B_IDX,B_IMP,B_CTX bridgebox
     class SQLITE,LANCE,FS storage
     class OLLAMA external
@@ -94,7 +94,7 @@ graph TB
 sequenceDiagram
     participant CC as Claude Code
     participant T as Tachibot MCP
-    participant D as Devlog MCP
+    participant D as Dokoro MCP
     participant B as Bridge Tools
     participant S as SQLite
     participant L as LanceDB
@@ -119,7 +119,7 @@ sequenceDiagram
 
     Note over CC,O: Knowledge Retrieval
 
-    CC->>D: devlog_entity_graph("auth service")
+    CC->>D: dokoro_entity_graph("auth service")
     D->>S: recursive CTE traversal
     S-->>D: entities + relations
     D-->>CC: knowledge subgraph
@@ -152,13 +152,13 @@ graph LR
     end
 
     subgraph FILES["Filesystem"]
-        DAILY["devlog/daily/*.md"]
-        CURRENT["devlog/current.md"]
-        PLANS["devlog/.mcp/plans/*.json"]
-        QUESTIONS["devlog/.mcp/questions.json"]
-        ASSETS["devlog/assets/*"]
-        LOCK["devlog/.mcp/lock.json"]
-        DB["devlog/.devlog/db/devlog.sqlite"]
+        DAILY["dokoro/daily/*.md"]
+        CURRENT["dokoro/current.md"]
+        PLANS["dokoro/.mcp/plans/*.json"]
+        QUESTIONS["dokoro/.mcp/questions.json"]
+        ASSETS["dokoro/assets/*"]
+        LOCK["dokoro/.mcp/lock.json"]
+        DB["dokoro/.dokoro/db/dokoro.sqlite"]
     end
 
     DOCS --- CHUNKS
@@ -174,7 +174,7 @@ graph LR
 
 | Aspect | Detail |
 |--------|--------|
-| **Separation of concerns** | Tachibot = multi-model AI reasoning. Devlog = structured knowledge. No overlap. |
+| **Separation of concerns** | Tachibot = multi-model AI reasoning. Dokoro = structured knowledge. No overlap. |
 | **Bridge pattern** | 3 opt-in tools create a clean integration boundary. Zero cost when disabled. |
 | **Layered storage** | SQLite (structured), LanceDB (vectors), filesystem (human-readable). Each plays to its strength. |
 | **Graceful degradation** | Without Ollama: regex entity extraction works, semantic search unavailable. |

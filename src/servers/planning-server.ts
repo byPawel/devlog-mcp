@@ -4,7 +4,7 @@
  * Provides planning, research capture, and roadmap generation
  */
 
-import { createDevlogServer, startServer } from './base-server.js';
+import { createDokoroServer, startServer } from './base-server.js';
 import { planningTools } from '../tools/planning-tools.js';
 import { conflictTools } from '../tools/conflict-tools.js';
 import { ToolDefinition } from '../tools/registry.js';
@@ -24,7 +24,7 @@ const config = {
   description: 'Feature planning and research tools for Dokoro'
 };
 
-const server = createDevlogServer(config);
+const server = createDokoroServer(config);
 
 // Start the server
 startServer(server, planningServerTools, config).catch(console.error);

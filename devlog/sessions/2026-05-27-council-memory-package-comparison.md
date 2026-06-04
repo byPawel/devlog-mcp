@@ -1,4 +1,4 @@
-# Council: devlog-mcp vs the 2026 agent-memory field
+# Council: dokoro vs the 2026 agent-memory field
 
 Date: 2026-05-27
 Pipeline: Research → Debate → Reasoning chain → Resolution (+ file validation)
@@ -6,7 +6,7 @@ Models: perplexity_reason (research), grok + kimi + openai (reasoning), gemini_j
 Confidence: Medium-High
 
 ## Query
-Compare devlog-mcp (Working/Episodic/Semantic-bitemporal/Procedural/Affective memory;
+Compare dokoro (Working/Episodic/Semantic-bitemporal/Procedural/Affective memory;
 SQLite+Drizzle, LanceDB, file workspace, MCP TS SDK) against Mem0, Letta/MemGPT,
 Zep/Graphiti, Cognee, LangMem, OpenAI file_search, Anthropic Dreaming. Where do we
 win, where is positioning hollow, top improvements?
@@ -58,7 +58,7 @@ Top 3 leverage moves (exploit existing assets):
 Bonus: deepen affective layer with an exploration/bandit term (Thompson/UCB) to make it
 a true learning loop, not just descriptive stats — turns the copyable feature into a moat.
 
-Biggest risk if nothing changes: devlog-mcp stays a fragmented set of neat SQLite tricks
+Biggest risk if nothing changes: dokoro stays a fragmented set of neat SQLite tricks
 rather than a cohesive cognitive architecture, and loses to Mem0/Letta once they adopt MCP.
 
 Verdict: PARTIAL — core infra is SOTA, but the differentiating cognition is dead code.

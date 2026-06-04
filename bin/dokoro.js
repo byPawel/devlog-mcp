@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Devlog CLI Entry Point
+ * Dokoro CLI Entry Point
  *
  * This is the bin entry that gets installed when you npm install -g @dokoro-mcp/core
  * It delegates to the TypeScript CLI via tsx.

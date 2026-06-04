@@ -1,13 +1,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { globSync } from 'glob';
-import { parseDevlogContent } from './parsing.js';
+import { parseDokoroContent } from './parsing.js';
 import { SearchResult, DOKORO_PATH } from '../types/dokoro.js';
 
 /**
  * Read a dokoro file
  */
-export async function readDevlogFile(filePath: string): Promise<string | null> {
+export async function readDokoroFile(filePath: string): Promise<string | null> {
   try {
     return await fs.readFile(filePath, 'utf-8');
   } catch (error) {
@@ -19,7 +19,7 @@ export async function readDevlogFile(filePath: string): Promise<string | null> {
 /**
  * Search dokoro entries with optional tag filtering
  */
-export async function searchDevlogs(
+export async function searchDokoros(
   query: string, 
   type: string = 'all', 
   tagFilters?: Record<string, unknown>
@@ -40,10 +40,10 @@ export async function searchDevlogs(
   
   const results: SearchResult[] = [];
   for (const file of files) {
-    const content = await readDevlogFile(path.join(DOKORO_PATH, file));
+    const content = await readDokoroFile(path.join(DOKORO_PATH, file));
     if (!content) continue;
     
-    const parsed = parseDevlogContent(content);
+    const parsed = parseDokoroContent(content);
     
     // Check text content match
     const contentMatch = !query || 

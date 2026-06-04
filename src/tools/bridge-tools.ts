@@ -127,7 +127,7 @@ export const bridgeTools: ToolDefinition[] = [
 
   {
     name: 'bridge_get_context',
-    title: 'Get Devlog Context',
+    title: 'Get Dokoro Context',
     description:
       'Pull relevant knowledge from dokoro (research, plans, docs) as compact context for tachibot reasoning tools. ' +
       'Returns title/type/excerpt/score entries optimized for pasting into tool inputs.',

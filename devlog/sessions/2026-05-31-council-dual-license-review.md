@@ -1,11 +1,11 @@
-# Council: devlog-mcp licensing decision
+# Council: dokoro licensing decision
 
 **Date:** 2026-05-31
 **Query:** "review the new license, check dual-license branch?, readme change — does it make sense?" (models: grok, gemini, kimi, qwen, opus)
 
 ## Premise correction (verified from repo)
 - NO new license committed, NO dual-license branch exists. LICENSE = plain MIT, "Copyright (c) 2024 Anthropic, PBC". README still says MIT.
-- devlog-mcp is a FORK of Anthropic's MCP TypeScript SDK ("based on MCP SDK v1.17.1"). SDK source is VENDORED into src/ (server/mcp.ts, client/*, streamableHttp.ts, inMemory.ts, examples/*).
+- dokoro is a FORK of Anthropic's MCP TypeScript SDK ("based on MCP SDK v1.17.1"). SDK source is VENDORED into src/ (server/mcp.ts, client/*, streamableHttp.ts, inMemory.ts, examples/*).
 - Maintainer is sole author, NO contributors → owns 100% of his own code (no CLA problem). The blocker is the vendored Anthropic MIT code, not contributors.
 
 ## Research (Phase 1)
