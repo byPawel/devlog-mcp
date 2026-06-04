@@ -414,6 +414,7 @@ footer .meta b{color:var(--text);font-weight:700}
     <span><span class="bname">dokoro</span><small>Agentic memory</small></span>
   </a>
   <div class="navlinks">
+    <a href="#install">Start</a>
     <a href="#strata">Layers</a>
     <a href="#lineage">Lineage</a>
     <a href="#loop">Loop</a>
@@ -451,6 +452,29 @@ footer .meta b{color:var(--text);font-weight:700}
   </div>
   <div class="scrollcue">SCROLL<div class="bar"></div></div>
 </header>
+
+<!-- ============ INSTALL ============ -->
+<section id="install">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-code">§ 00 — Get started</div>
+      <h2>Install <span class="accent">per project</span></h2>
+      <p>On npm as <span class="kbd">dokoro</span>. One command — no clone, no build. Each project gets its own isolated memory in <span class="kbd">./dokoro</span>, so sessions, entities and tool-trust never leak between repos.</p>
+    </div>
+    <div class="ledger reveal">
+      <div class="lhead"><span class="d" style="background:var(--accent)"></span> add to a project · run from the project directory</div>
+<pre><span class="c"># add dokoro to the current project (Claude Code, or any MCP client)</span>
+claude mcp add dokoro -- npx -y dokoro
+
+<span class="c"># CLI subcommands</span>
+npx dokoro init        <span class="c"># scaffold the .dokoro workspace</span>
+npx dokoro migrate     <span class="c"># run DB migrations</span>
+
+<span class="c"># lean install — skip the ~100MB native vector deps (lazy-loaded)</span>
+npm install --omit=optional</pre>
+    </div>
+  </div>
+</section>
 
 <!-- ============ STRATA ============ -->
 <section id="strata">
