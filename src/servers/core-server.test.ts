@@ -79,4 +79,12 @@ describe('core-server tool registration', () => {
     expect(names).toContain('dokoro_update_current_section');
     expect(names).toContain('dokoro_get_current_focus');
   });
+
+  it('coreTools includes the shared working-memory tools (concurrent multi-agent)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { coreTools } = require('./core-server.js') as typeof import('./core-server.js');
+    const names = coreTools.map((t: { name: string }) => t.name);
+    expect(names).toContain('dokoro_shared_note_append');
+    expect(names).toContain('dokoro_shared_note_read');
+  });
 });

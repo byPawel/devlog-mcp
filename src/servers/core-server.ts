@@ -13,6 +13,7 @@ import { assetTools } from '../tools/asset-tools.js';
 import { planTools } from '../tools/plan-tools.js';
 import { entityTools } from '../tools/entity-tools.js';
 import { feedbackTools } from '../tools/feedback-tools.js';
+import { sharedNotesTools } from '../tools/shared-notes-tools.js';
 
 // Select only the core tools
 // Exported for use in tests.
@@ -42,6 +43,9 @@ export const coreTools = [
 
   // Affective memory (agent feedback)
   ...feedbackTools,
+
+  // Shared working memory (concurrent multi-agent notes, per-project)
+  ...sharedNotesTools,
 
   // Initialization
   dokoroInitTool

@@ -140,6 +140,31 @@ export const MIGRATIONS: Migration[] = [
     ];
     for (const s of statements) db.prepare(s).run();
   } },
+  // Shared working memory (Letta-style shared blocks), per-project only.
+  // An append-only, agent_id-tagged notes table that multiple agents in the
+  // SAME project can write/read concurrently. Lives entirely in the per-project
+  // SQLite DB (WAL + busy_timeout already configured in getSqliteDb), so it
+  // bypasses the single-claimant current.md workspace lock — shared notes are
+  // additive, not exclusive, and SQLite serialises concurrent INSERTs under the
+  // write lock (last-writer-safe, no lost rows). No global/cross-project store
+  // is introduced; isolation is structural (one DB file per project).
+  // Statements run individually — NOT db.exec — consistent with v2/v7.
+  // No down() path (consistent with v1–v7): drop shared_notes manually to revert.
+  { version: 8, description: 'shared_notes table for concurrent multi-agent working memory', up: (db) => {
+    const statements = [
+      `CREATE TABLE IF NOT EXISTS shared_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        agent_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        note_type TEXT DEFAULT 'scratch',
+        metadata_json TEXT,
+        created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_shared_notes_created_at ON shared_notes(created_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_shared_notes_agent_id ON shared_notes(agent_id)`,
+    ];
+    for (const s of statements) db.prepare(s).run();
+  } },
 ];
 
 export function runMigrations(db: Database.Database): void {

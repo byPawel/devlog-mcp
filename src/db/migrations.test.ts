@@ -245,6 +245,75 @@ describe('runMigrations', () => {
     expect(() => runMigrations(db)).not.toThrow();
   });
 
+  it('migration v8 creates shared_notes table with the expected columns and indexes', () => {
+    runMigrations(db);
+
+    // Table exists.
+    expect(
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='shared_notes'`).get()
+    ).toBeDefined();
+
+    // Columns match the design.
+    const cols = new Map(
+      (db.prepare(`PRAGMA table_info(shared_notes)`).all() as Array<{ name: string; type: string }>)
+        .map((c) => [c.name, c.type])
+    );
+    for (const c of ['id', 'agent_id', 'content', 'note_type', 'metadata_json', 'created_at']) {
+      expect(cols.has(c)).toBe(true);
+    }
+
+    // Indexes exist.
+    for (const idx of ['idx_shared_notes_created_at', 'idx_shared_notes_agent_id']) {
+      expect(
+        db.prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name=?`).get(idx)
+      ).toBeDefined();
+    }
+
+    // Functional: AUTOINCREMENT id + defaults populate without explicit values.
+    db.prepare(`INSERT INTO shared_notes (agent_id, content) VALUES ('a','hello')`).run();
+    const row = db.prepare(`SELECT id, note_type, created_at FROM shared_notes`).get() as {
+      id: number; note_type: string; created_at: string;
+    };
+    expect(typeof row.id).toBe('number');
+    expect(row.note_type).toBe('scratch');
+    expect(row.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('migration v8 creates shared_notes on a legacy DB seeded up to v7 (idempotent)', () => {
+    // Seed schema_version through v7 so only v8 runs.
+    db.prepare(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, description TEXT, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    for (let v = 1; v <= 7; v++) {
+      db.prepare(`INSERT INTO schema_version (version, description) VALUES (?, ?)`).run(v, `seeded v${v}`);
+    }
+
+    expect(
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='shared_notes'`).get()
+    ).toBeUndefined();
+
+    expect(() => runMigrations(db)).not.toThrow();
+
+    expect(
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='shared_notes'`).get()
+    ).toBeDefined();
+    for (const idx of ['idx_shared_notes_created_at', 'idx_shared_notes_agent_id']) {
+      expect(
+        db.prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name=?`).get(idx)
+      ).toBeDefined();
+    }
+
+    // Insert a row, then run migrations again — idempotent, no data loss, no extra version rows.
+    db.prepare(`INSERT INTO shared_notes (agent_id, content) VALUES ('a','keep me')`).run();
+    const before = (db.prepare(`SELECT COUNT(*) c FROM shared_notes`).get() as { c: number }).c;
+    const versionsBefore = (db.prepare(`SELECT COUNT(*) c FROM schema_version`).get() as { c: number }).c;
+
+    expect(() => runMigrations(db)).not.toThrow();
+
+    const after = (db.prepare(`SELECT COUNT(*) c FROM shared_notes`).get() as { c: number }).c;
+    const versionsAfter = (db.prepare(`SELECT COUNT(*) c FROM schema_version`).get() as { c: number }).c;
+    expect(after).toBe(before);
+    expect(versionsAfter).toBe(versionsBefore);
+  });
+
   it('rolls back a failing migration: no version row is recorded', () => {
     runMigrations(db); // apply existing migrations first
     const failingVersion = MIGRATIONS[MIGRATIONS.length - 1].version + 1;
