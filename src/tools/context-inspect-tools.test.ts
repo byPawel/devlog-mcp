@@ -185,6 +185,24 @@ describe('context-inspect-tools', () => {
     expect(matches).toHaveLength(1);
   });
 
+  it('log with a calendar-invalid timestamp falls back to the current UTC date file', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const event = makeEvent({ turn: 42, timestamp: '2026-13-99T00:00:00.000Z' });
+    const res = await findTool('dokoro_context_log').handler({ event });
+    expect(res.isError).toBeFalsy();
+
+    const dir = path.join(tmpDir, 'context-inspect');
+    const files = await fs.readdir(dir);
+    // The bad date must NOT become a file; it lands in today's file instead.
+    expect(files).not.toContain('2026-13-99.jsonl');
+    expect(files).toContain(`${today}.jsonl`);
+
+    // And the event is retrievable via last.
+    const last = await findTool('dokoro_context_last').handler({});
+    const events = JSON.parse(textOf(last)) as Array<{ turn: number }>;
+    expect(events[0].turn).toBe(42);
+  });
+
   it('last and search skip malformed lines without throwing', async () => {
     // Write a file by hand mixing valid and malformed JSONL lines.
     const dir = path.join(tmpDir, 'context-inspect');

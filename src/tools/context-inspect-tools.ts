@@ -32,6 +32,12 @@ const SNIPPET_MAX = 500;
 const LAST_LIMIT_MAX = 500;
 const SEARCH_LIMIT_MAX = 500;
 
+/**
+ * Upper bound on how many of the most-recent events search will scan before
+ * filtering. Bounds memory regardless of how large the store grows.
+ */
+const SEARCH_SCAN_MAX = 5000;
+
 interface ContextInspectLayer {
   name: string;
   reason: string;
@@ -93,7 +99,9 @@ const eventShape = z.object({
  */
 function partitionDate(timestamp: string | undefined): string {
   if (typeof timestamp === 'string' && /^\d{4}-\d{2}-\d{2}/.test(timestamp)) {
-    return timestamp.slice(0, 10);
+    const candidate = timestamp.slice(0, 10);
+    const d = new Date(candidate);
+    if (!isNaN(d.getTime())) return candidate;
   }
   return new Date().toISOString().slice(0, 10);
 }
@@ -248,8 +256,9 @@ export const contextInspectTools: ToolDefinition[] = [
         const limit = a.limit ?? 10;
         const needle = a.query.toLowerCase();
 
-        // Read all events newest-first, then filter; cap output at `limit`.
-        const all = await readEventsNewestFirst(Infinity);
+        // Scan the most-recent SEARCH_SCAN_MAX events newest-first, then filter;
+        // cap output at `limit`. Bounds memory as the store grows.
+        const all = await readEventsNewestFirst(SEARCH_SCAN_MAX);
         const matches: ContextInspectEvent[] = [];
         for (const ev of all) {
           if (eventMatches(ev, needle)) {
