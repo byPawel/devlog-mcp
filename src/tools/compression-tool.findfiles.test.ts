@@ -48,6 +48,9 @@ describe('findDailyFiles', () => {
     await fs.writeFile(path.join(tmpDir, 'daily', name), '# stub\n');
   }
 
+  // NOTE: production passes local-midnight Dates from getWeekDates while these
+  // tests exercise UTC-midnight inputs (pre-existing skew, documented not fixed).
+
   it('matches old-format (local-TZ weekday) and new-format (UTC slug) files by date prefix', async () => {
     // Old format: weekday came from toLocaleDateString and could disagree
     // with the UTC date (2026-06-08 is a Monday; "sunday" simulates the skew).
@@ -80,5 +83,10 @@ describe('findDailyFiles', () => {
       '2026-06-08-00h01-monday-session-start.md',
       '2026-06-14-23h59-sunday-session-end.md',
     ]);
+  });
+
+  it('returns empty array when daily/ contains no files', async () => {
+    const files = await mod.findDailyFiles(new Date('2026-06-08'), new Date('2026-06-14'));
+    expect(files).toEqual([]);
   });
 });

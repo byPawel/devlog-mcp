@@ -35,7 +35,7 @@ import { ensureEpisodicEmbeddingColumn } from '../db/episodic-tables.js';
 import { startHeartbeat, stopHeartbeat } from '../utils/heartbeat-manager.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
-import { formatTimestampSlug, dateStamp } from '../utils/timestamp.js';
+import { formatTimestampSlug } from '../utils/timestamp.js';
 
 export const workspaceTools: ToolDefinition[] = [
   {
@@ -408,9 +408,11 @@ export const workspaceTools: ToolDefinition[] = [
       const now = new Date();
       // All-UTC slug: `YYYY-MM-DD-HHhMM-dayname` (weekday always agrees with the UTC date).
       const timestampSlug = formatTimestampSlug(now);
-      const dateStr = dateStamp(now);
-      // Slug layout after the date: `HHhMM-dayname` (weekday names contain no hyphens).
-      const [timeStr, dayName] = timestampSlug.slice(dateStr.length + 1).split('-');
+      // Layout: YYYY-MM-DD-HHhMM-dayname (en-US weekday, no hyphens)
+      const slugParts = timestampSlug.split('-');
+      const dateStr = slugParts.slice(0, 3).join('-');
+      const timeStr = slugParts[3];
+      const dayName = slugParts[4];
 
       // Extract focus from task
       const taskMatch = workspace.content.match(/task:\s*"([^"]+)"/);
