@@ -48,6 +48,11 @@ describe('isoWeekDir', () => {
     expect(isoWeekDir(new Date(Date.UTC(2025, 0, 1)))).toBe('2025-W01');
   });
 
+  it('handles a Sunday at the year boundary (ISO weekday 7 branch)', () => {
+    // 2023-01-01 is a Sunday; its ISO week's Thursday is 2022-12-29 -> 2022-W52.
+    expect(isoWeekDir(new Date(Date.UTC(2023, 0, 1)))).toBe('2022-W52');
+  });
+
   it('zero-pads the week number', () => {
     expect(isoWeekDir(new Date(Date.UTC(2026, 0, 5)))).toBe('2026-W02');
   });

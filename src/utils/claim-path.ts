@@ -48,6 +48,9 @@ export function normalizeClaimPath(input: string, root: string): ClaimPathResult
   if (typeof input !== 'string' || input.trim() === '') {
     return { ok: false, error: 'Claim path is empty' };
   }
+  if (typeof root !== 'string' || root.trim() === '') {
+    return { ok: false, error: 'Workspace root is empty or invalid' };
+  }
 
   // Normalize Unicode early so containment checks and outputs agree, and
   // convert backslash separators to POSIX before resolving.

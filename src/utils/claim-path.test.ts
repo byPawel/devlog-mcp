@@ -62,6 +62,13 @@ describe('normalizeClaimPath', () => {
     expect(lower.relPath).toBe('notes/todo.md');
   });
 
+  it('casefolds non-ASCII NFC uppercase in claimKey (CAFÉ.MD)', () => {
+    const r = normalizeClaimPath('CAF\u00c9.MD', ROOT); // precomposed E-acute (NFC uppercase)
+    if (!r.ok) throw new Error('expected ok result');
+    expect(r.claimKey).toBe('caf\u00e9.md');
+    expect(r.relPath).toBe('CAF\u00c9.MD');
+  });
+
   it('strips trailing slashes and leading ./ from relPath', () => {
     expect(normalizeClaimPath('./sub/dir/', ROOT)).toEqual({
       ok: true,

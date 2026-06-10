@@ -47,6 +47,9 @@ export function isoWeekDir(date: Date): string {
   d.setUTCDate(d.getUTCDate() + 4 - isoDay);
   const weekYear = d.getUTCFullYear();
   const yearStart = Date.UTC(weekYear, 0, 1);
+  // Jan 1 of the ISO week-year is always within W01 (ISO guarantee), so
+  // daysSinceJan1 ∈ [0,6] for W01. Both dates are Date.UTC() midnight, so
+  // the division is exact (no DST residual).
   const week = Math.ceil(((d.getTime() - yearStart) / MS_PER_DAY + 1) / 7);
   return `${weekYear}-W${pad2(week)}`;
 }
