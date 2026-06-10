@@ -88,6 +88,7 @@ COMMANDS:
   tags [--doc=ID]         List tags (optionally for specific doc)
   tag <id> <tag>          Add tag to document
   untag <id> <tag>        Remove tag from document
+  browse [--path=DIR]     Interactive workspace browser (TUI)
 
   session start [--focus=ID]   Start work session
   session end [--summary=X]    End work session
@@ -102,6 +103,7 @@ COMMANDS:
 OPTIONS:
   --project=PATH          Override project path
   --dokoro=FOLDER         Override dokoro folder name
+  --path=DIR              Dokoro folder for 'browse' (default: auto-discover)
   --help                  Show this help
 
 EXAMPLES:
@@ -531,6 +533,19 @@ async function main(): Promise<void> {
         }
         await cmdTag(positional[0], positional[1]);
         break;
+
+      case "browse": {
+        // Lazy import: keep ink/react startup cost off every other command.
+        const { runBrowse } = await import("./cli/browse-ui.js");
+        // Explicit --path wins; otherwise reuse the CLI's dokoro-folder discovery.
+        const config = getConfig();
+        const dokoroPath =
+          typeof flags.path === "string"
+            ? path.resolve(flags.path)
+            : path.join(config.projectPath, config.dokoroFolder!);
+        await runBrowse(dokoroPath);
+        break;
+      }
 
       case "session":
         await cmdSession(positional[0] || "status", flags);
