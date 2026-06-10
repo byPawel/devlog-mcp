@@ -167,6 +167,7 @@ describe('file-claim-tools', () => {
     const res = await claim({ paths: ['src/a.ts'], agent_id: 'bob', force: true });
     expect(res.isError).toBeFalsy();
     expect(textOf(res)).toMatch(/taken_over_forced/);
+    expect(textOf(res)).toMatch(/FORCED over live holder alice/); // audit trail in the summary
     expect(getRow('src/a.ts')!.agent_id).toBe('bob');
     const json = jsonOf(res) as { report: Array<{ status: string }> };
     expect(json.report[0].status).toBe('taken_over_forced');
@@ -195,6 +196,14 @@ describe('file-claim-tools', () => {
     const json2 = jsonOf(res2) as { report: Array<{ status: string }> };
     expect(json2.report[0].status).toBe('released');
     expect(getRow('src/a.ts')!.released_at).not.toBeNull();
+  });
+
+  it('release reports the stored display form of the path, not the caller spelling', async () => {
+    await claim({ paths: ['src/Mixed.TS'], agent_id: 'alice' });
+    const res = await release({ paths: ['SRC/MIXED.ts'], agent_id: 'alice' }); // same claimKey, different case
+    expect(res.isError).toBeFalsy();
+    const json = jsonOf(res) as { report: Array<{ path: string; status: string }> };
+    expect(json.report[0]).toEqual({ path: 'src/Mixed.TS', status: 'released' }); // DB's file_path, like all:true
   });
 
   it('release of an unknown path is idempotent not_found, never an error', async () => {
@@ -248,6 +257,15 @@ describe('file-claim-tools', () => {
     const bobs = (jsonOf(onlyBob) as { claims: Array<{ path: string; agent_id: string }> }).claims;
     expect(bobs).toHaveLength(1);
     expect(bobs[0]).toMatchObject({ path: 'src/stale.ts', agent_id: 'bob' });
+  });
+
+  it('claim_list escapes pipes in user-supplied fields so the table stays 5 columns', async () => {
+    await claim({ paths: ['src/a.ts'], agent_id: 'alice', intent: 'edit a | maybe b' });
+    const res = await list();
+    const dataRow = textOf(res).split('\n')[2];
+    expect(dataRow).toContain('edit a \\| maybe b'); // raw | is escaped
+    // unescaped pipes are exactly the 6 column delimiters of a 5-column row
+    expect(dataRow.match(/(?<!\\)\|/g)).toHaveLength(6);
   });
 
   it('claim_list shows released claims never', async () => {

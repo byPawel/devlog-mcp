@@ -208,8 +208,11 @@ export const fileClaimTools: ToolDefinition[] = [
               intent = COALESCE(?, intent), session_id = COALESCE(?, session_id)
             WHERE claim_key = ? AND released_at IS NULL AND agent_id = ?
           `);
-          // Stale takeover is GUARDED: it only fires while the row is still the
-          // expired/stale claim we evaluated (re-checked inside the txn).
+          // Stale takeover is GUARDED by a dual-arm WHERE: `expires_at <= ?`
+          // covers expired claims; `agent_id = ?` covers the stale-presence
+          // case where the claim is unexpired but the holder is dead — and it
+          // doubles as a guard that the row still belongs to the holder we
+          // evaluated (changes=0 -> throw -> rollback if anything shifted).
           const guardedTakeover = sqlite.prepare(`
             UPDATE file_claims SET file_path = ?, agent_id = ?, session_id = ?, intent = ?,
               claimed_at = ?, expires_at = ?, heartbeat_seq = 0, released_at = NULL
@@ -388,12 +391,16 @@ export const fileClaimTools: ToolDefinition[] = [
             UPDATE file_claims SET released_at = strftime('%s','now')
             WHERE claim_key = ? AND agent_id = ? AND released_at IS NULL
           `);
-          const lookup = sqlite.prepare('SELECT agent_id, released_at FROM file_claims WHERE claim_key = ?');
+          const lookup = sqlite.prepare('SELECT file_path, agent_id, released_at FROM file_claims WHERE claim_key = ?');
           return normalized.targets.map((t) => {
-            if (release.run(t.claimKey, a.agent_id).changes === 1) return { path: t.relPath, status: 'released' as const };
-            const row = lookup.get(t.claimKey) as { agent_id: string; released_at: number | null } | undefined;
-            if (row && row.released_at === null) return { path: t.relPath, status: 'not_held_by_you' as const };
-            return { path: t.relPath, status: 'not_found' as const };
+            // Report the DB's stored file_path (authoritative display form,
+            // same source as the all:true branch) — the caller's spelling may
+            // differ in case. not_found has no row, so the normalized input
+            // is the only display form available.
+            const row = lookup.get(t.claimKey) as { file_path: string; agent_id: string; released_at: number | null } | undefined;
+            if (!row || row.released_at !== null) return { path: t.relPath, status: 'not_found' as const };
+            if (release.run(t.claimKey, a.agent_id).changes === 1) return { path: row.file_path, status: 'released' as const };
+            return { path: row.file_path, status: 'not_held_by_you' as const };
           });
         });
         const report = txn.immediate();
@@ -456,11 +463,14 @@ export const fileClaimTools: ToolDefinition[] = [
             presence,
           };
         });
+        // Escape pipes in user-supplied fields so a stray `|` cannot break
+        // the markdown table's column structure.
+        const esc = (s: string): string => s.replace(/\|/g, '\\|');
         const table = [
           '| path | agent | intent | expires_in_s | presence |',
           '| --- | --- | --- | --- | --- |',
           ...enriched.map((r) =>
-            `| ${r.path} | ${r.agent_id} | ${r.intent ?? ''} | ${r.expires_in_seconds} | ${r.presence} |`),
+            `| ${esc(r.path)} | ${esc(r.agent_id)} | ${esc(r.intent ?? '')} | ${r.expires_in_seconds} | ${r.presence} |`),
         ].join('\n');
         return {
           content: [
