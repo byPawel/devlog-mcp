@@ -180,8 +180,10 @@ function entryTitle(entry: PlanIndexEntry | undefined, planId: string): string {
 /**
  * Locate an already-archived plan file by scanning the month partitions.
  * Heals the crash window where the file moved but the index write was lost.
+ * Returns a path relative to `.mcp/plans/` (e.g. `archive/2026-06/<id>.json`),
+ * or null. Exported for archive-aware plan reads (plan-tools).
  */
-async function findInArchive(planId: string): Promise<string | null> {
+export async function findInArchive(planId: string): Promise<string | null> {
   let entries: Array<{ name: string; isDirectory(): boolean }> = [];
   try {
     entries = await fs.readdir(PLANS_ARCHIVE_DIR, { withFileTypes: true });

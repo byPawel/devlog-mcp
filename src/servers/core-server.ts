@@ -18,6 +18,7 @@ import { sharedBlocksTools } from '../tools/shared-blocks-tools.js';
 import { handoffTools } from '../tools/handoff-tools.js';
 import { presenceTools } from '../tools/presence-tools.js';
 import { fileClaimTools } from '../tools/file-claim-tools.js';
+import { archiveTools } from '../tools/archive-tools.js';
 import { contextInspectTools } from '../tools/context-inspect-tools.js';
 
 // Select only the core tools
@@ -63,6 +64,9 @@ export const coreTools = [
 
   // Advisory per-file claims (lease + takeover, per-project)
   ...fileClaimTools,
+
+  // Archive maintenance (workspace sweep + status readout)
+  ...archiveTools,
 
   // Context-inspector events (file-based JSONL, per-day)
   ...contextInspectTools,
