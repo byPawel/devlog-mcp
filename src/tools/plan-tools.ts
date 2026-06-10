@@ -102,6 +102,21 @@ async function loadPlanWithLocation(planId: string): Promise<PlanLocation | null
   return null;
 }
 
+/** Find the most recent live (non-archived) plan matching the given statuses. */
+async function findLatestLivePlan(allowedStatuses: Plan['status'][]): Promise<Plan | null> {
+  const index = await loadPlansIndex();
+  for (const id of Object.keys(index).reverse()) {
+    if (isArchivedEntry(index[id])) continue;
+    const located = await loadPlanWithLocation(id);
+    // `!archived` belt: covers the crash window where the index entry is
+    // still a bare string but the plan file already moved to the archive.
+    if (located && !located.archived && allowedStatuses.includes(located.plan.status)) {
+      return located.plan;
+    }
+  }
+  return null;
+}
+
 /** Archived plans are read-only — write tools refuse with this error. */
 function archivedPlanError(planId: string, archivePath?: string): CallToolResult {
   const location = archivePath ? ` at \`.mcp/plans/${archivePath}\`` : '';
@@ -287,17 +302,7 @@ export const planTools: ToolDefinition[] = [
         if (located?.archived) return archivedPlanError(planId, located.archivePath);
         plan = located?.plan ?? null;
       } else {
-        // Get latest active plan (archived plans are never active)
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          if (isArchivedEntry(index[id])) continue;
-          const located = await loadPlanWithLocation(id);
-          if (located && !located.archived && located.plan.status === 'active') {
-            plan = located.plan;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active']);
       }
 
       if (!plan) {
@@ -415,16 +420,7 @@ export const planTools: ToolDefinition[] = [
         if (located?.archived) return archivedPlanError(planId, located.archivePath);
         plan = located?.plan ?? null;
       } else {
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          if (isArchivedEntry(index[id])) continue;
-          const located = await loadPlanWithLocation(id);
-          if (located && !located.archived && located.plan.status === 'active') {
-            plan = located.plan;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active']);
       }
 
       if (!plan) {
@@ -437,7 +433,7 @@ export const planTools: ToolDefinition[] = [
                 data: {
                   title: 'Plan Not Found',
                   status: 'error',
-                  message: 'No active plan found',
+                  message: planId ? `No plan with ID: ${planId}` : 'No active plans',
                 },
               }),
             },
@@ -519,17 +515,7 @@ export const planTools: ToolDefinition[] = [
         if (located?.archived) return archivedPlanError(planId, located.archivePath);
         plan = located?.plan ?? null;
       } else {
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          if (isArchivedEntry(index[id])) continue;
-          const located = await loadPlanWithLocation(id);
-          if (located && !located.archived &&
-              (located.plan.status === 'active' || located.plan.status === 'completed')) {
-            plan = located.plan;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active', 'completed']);
       }
 
       if (!plan) {
