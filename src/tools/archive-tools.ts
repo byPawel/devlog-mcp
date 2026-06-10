@@ -65,12 +65,15 @@ export const archiveTools: ToolDefinition[] = [
         .describe('Preview only — report what WOULD move without touching anything. Default FALSE (files are moved).'),
       status_only: z.boolean().optional().default(false)
         .describe('Do not sweep; pretty-print .mcp/archive-status.json from the last sweep.'),
+      claimRoot: z.string().optional()
+        .describe('Workspace root the file-claim keys are relative to (defaults to the server process cwd, ' +
+          'same as the claim tools). Override when the MCP server\'s cwd differs from the worktree.'),
     },
     handler: async (args): Promise<CallToolResult> => {
       try {
         const a = args as {
           olderThanDays?: number; planOlderThanDays?: number;
-          dryRun?: boolean; status_only?: boolean;
+          dryRun?: boolean; status_only?: boolean; claimRoot?: string;
         };
 
         if (a.status_only) {
@@ -96,6 +99,7 @@ export const archiveTools: ToolDefinition[] = [
           olderThanDays: a.olderThanDays,
           planOlderThanDays: a.planOlderThanDays,
           dryRun: a.dryRun ?? false,
+          claimRoot: a.claimRoot,
         });
 
         // Benign singleton outcome: another sweep holds the lock.

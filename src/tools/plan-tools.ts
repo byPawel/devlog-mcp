@@ -8,7 +8,7 @@ import { DOKORO_PATH } from '../types/dokoro.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
 import { formatTimestampSlug } from '../utils/timestamp.js';
-import { archivePlan, findInArchive, PlansIndex, PlanIndexEntry } from '../utils/archive.js';
+import { archivePlan, findInArchive, writeFileAtomic, PlansIndex, PlanIndexEntry } from '../utils/archive.js';
 
 // Plan item interface
 interface PlanItem {
@@ -50,10 +50,11 @@ async function loadPlansIndex(): Promise<PlansIndex> {
   }
 }
 
-// Save plans index
+// Save plans index (temp-file + atomic rename, same as archive.ts's index writes,
+// so a crash mid-write can never leave a truncated index.json behind).
 async function savePlansIndex(index: PlansIndex): Promise<void> {
   await fs.mkdir(PLANS_DIR, { recursive: true });
-  await fs.writeFile(PLANS_INDEX, JSON.stringify(index, null, 2));
+  await writeFileAtomic(PLANS_INDEX, JSON.stringify(index, null, 2));
 }
 
 /** Where a plan was found: live in `.mcp/plans/` or in the read-only archive. */

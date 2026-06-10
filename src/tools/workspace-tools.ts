@@ -46,6 +46,7 @@ import { sweepWorkspace } from '../utils/archive.js';
  */
 async function runClaimSweep(): Promise<string> {
   try {
+    // No claimRoot override: the sweep's claim check uses process.cwd(), matching the claim tools' default root.
     const sweep = await sweepWorkspace({ dryRun: false });
     if (sweep.skipped === 'locked') return ''; // benign: another sweep is running
     if (sweep.error) {

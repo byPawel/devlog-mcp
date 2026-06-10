@@ -134,8 +134,11 @@ async function fileExists(p: string): Promise<boolean> {
   }
 }
 
-/** Write `content` to `filePath` via temp file + atomic rename. */
-async function writeFileAtomic(filePath: string, content: string): Promise<void> {
+/**
+ * Write `content` to `filePath` via temp file + atomic rename.
+ * Exported for other JSON-index writers (e.g. plan-tools' savePlansIndex).
+ */
+export async function writeFileAtomic(filePath: string, content: string): Promise<void> {
   const tmpPath = `${filePath}.tmp`;
   await fs.writeFile(tmpPath, content, 'utf-8');
   await fs.rename(tmpPath, filePath);
