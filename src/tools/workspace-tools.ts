@@ -35,6 +35,35 @@ import { ensureEpisodicEmbeddingColumn } from '../db/episodic-tables.js';
 import { startHeartbeat, stopHeartbeat } from '../utils/heartbeat-manager.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
+import { formatTimestampSlug } from '../utils/timestamp.js';
+import { sweepWorkspace } from '../utils/archive.js';
+
+/**
+ * Opportunistic archive sweep on workspace claim. NEVER fails the claim:
+ * every outcome is non-fatal, and only noteworthy ones produce a summary line
+ * (something moved, or a real error). `skipped: 'locked'` and empty sweeps
+ * stay silent. Returns '' when there is nothing worth mentioning.
+ */
+async function runClaimSweep(): Promise<string> {
+  try {
+    // No claimRoot override: the sweep's claim check uses process.cwd(), matching the claim tools' default root.
+    const sweep = await sweepWorkspace({ dryRun: false });
+    if (sweep.skipped === 'locked') return ''; // benign: another sweep is running
+    if (sweep.error) {
+      return `⚠ sweep error: ${sweep.error} (see .mcp/archive-status.json)`;
+    }
+    if (sweep.errors.length > 0) {
+      return `⚠ sweep hit ${sweep.errors.length} file error(s) (see .mcp/archive-status.json)`;
+    }
+    const parts: string[] = [];
+    if (sweep.movedDaily.length > 0) parts.push(`${sweep.movedDaily.length} old daily file(s)`);
+    if (sweep.archivedPlans.length > 0) parts.push(`${sweep.archivedPlans.length} finished plan(s)`);
+    return parts.length > 0 ? `🧹 archived ${parts.join(' and ')}` : '';
+  } catch (error) {
+    // sweepWorkspace is designed never to throw — defensive belt anyway.
+    return `⚠ sweep error: ${error instanceof Error ? error.message : String(error)} (see .mcp/archive-status.json)`;
+  }
+}
 
 export const workspaceTools: ToolDefinition[] = [
   {
@@ -120,6 +149,9 @@ export const workspaceTools: ToolDefinition[] = [
         await enableToolTracking();
         await startHeartbeat(agentId);
 
+        // Opportunistic workspace hygiene — non-fatal in every outcome.
+        const sweepNote = await runClaimSweep();
+
         return {
           content: [
             {
@@ -129,7 +161,7 @@ export const workspaceTools: ToolDefinition[] = [
                 data: {
                   title: 'Workspace Claimed',
                   status: 'success',
-                  message: `${icon('heart')} Tracking and heartbeat enabled.`,
+                  message: `${icon('heart')} Tracking and heartbeat enabled.${sweepNote ? `\n${sweepNote}` : ''}`,
                   details: {
                     'Agent': agentId,
                     'Session': sessionId,
@@ -405,10 +437,14 @@ export const workspaceTools: ToolDefinition[] = [
       }
       
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
-      const timeStr = now.toISOString().slice(11, 16).replace(':', 'h');
-      const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      
+      // All-UTC slug: `YYYY-MM-DD-HHhMM-dayname` (weekday always agrees with the UTC date).
+      const timestampSlug = formatTimestampSlug(now);
+      // Layout: YYYY-MM-DD-HHhMM-dayname (en-US weekday, no hyphens)
+      const slugParts = timestampSlug.split('-');
+      const dateStr = slugParts.slice(0, 3).join('-');
+      const timeStr = slugParts[3];
+      const dayName = slugParts[4];
+
       // Extract focus from task
       const taskMatch = workspace.content.match(/task:\s*"([^"]+)"/);
       const task = taskMatch ? taskMatch[1] : 'session';
@@ -418,7 +454,7 @@ export const workspaceTools: ToolDefinition[] = [
         .substring(0, 30);
       
       // Create filename
-      const filename = `${dateStr}-${timeStr}-${dayName}-session-${safeTopic}.md`;
+      const filename = `${timestampSlug}-session-${safeTopic}.md`;
       const dailyDir = path.join(DOKORO_PATH, 'daily');
       const sessionFile = path.join(dailyDir, filename);
       

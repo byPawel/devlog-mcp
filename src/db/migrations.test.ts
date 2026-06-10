@@ -351,6 +351,110 @@ describe('runMigrations', () => {
     expect(cols.find((c) => c.name === 'agent_id')?.pk).toBe(1);
   });
 
+  it('migration v12 creates file_claims keyed by claim_key with lease columns and indexes', () => {
+    runMigrations(db);
+
+    // Fresh DB lands on (at least) v12.
+    const max = (db.prepare('SELECT MAX(version) v FROM schema_version').get() as { v: number }).v;
+    expect(max).toBeGreaterThanOrEqual(12);
+
+    // Table exists with the expected columns.
+    const cols = db.prepare(`PRAGMA table_info(file_claims)`).all() as Array<{ name: string; pk: number }>;
+    const names = new Set(cols.map((c) => c.name));
+    for (const c of ['claim_key', 'file_path', 'agent_id', 'session_id', 'intent', 'claimed_at', 'expires_at', 'heartbeat_seq', 'released_at']) {
+      expect(names.has(c)).toBe(true);
+    }
+    // claim_key is the primary key (one file = one row).
+    expect(cols.find((c) => c.name === 'claim_key')?.pk).toBe(1);
+
+    // Indexes exist (idx_file_claims_live is partial: WHERE released_at IS NULL).
+    for (const idx of ['idx_file_claims_agent', 'idx_file_claims_live']) {
+      expect(
+        db.prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name=?`).get(idx)
+      ).toBeDefined();
+    }
+
+    // Functional: defaults populate — heartbeat_seq starts at 0, released_at NULL (open).
+    // Timestamps are unixepoch SECONDS (same clock domain as agent_presence v11).
+    db.prepare(`INSERT INTO file_claims (claim_key, file_path, agent_id, claimed_at, expires_at)
+      VALUES ('src/auth.ts', 'src/Auth.ts', 'agent-a',
+        CAST(strftime('%s','now') AS INTEGER),
+        CAST(strftime('%s','now') AS INTEGER) + 300)`).run();
+    const row = db.prepare(`SELECT heartbeat_seq, released_at FROM file_claims`).get() as {
+      heartbeat_seq: number; released_at: number | null;
+    };
+    expect(row.heartbeat_seq).toBe(0);
+    expect(row.released_at).toBeNull();
+  });
+
+  it('migration v12 file_claims: live-claim UPDATE guard touches only open, unexpired rows', () => {
+    runMigrations(db);
+    const now = (db.prepare(`SELECT CAST(strftime('%s','now') AS INTEGER) t`).get() as { t: number }).t;
+
+    // Three claims: open + unexpired (live), released, and open but expired.
+    db.prepare(`INSERT INTO file_claims (claim_key, file_path, agent_id, claimed_at, expires_at)
+      VALUES ('src/live.ts', 'src/live.ts', 'agent-a', ?, ?)`).run(now, now + 300);
+    db.prepare(`INSERT INTO file_claims (claim_key, file_path, agent_id, claimed_at, expires_at, released_at)
+      VALUES ('src/released.ts', 'src/released.ts', 'agent-a', ?, ?, ?)`).run(now - 600, now + 300, now - 60);
+    db.prepare(`INSERT INTO file_claims (claim_key, file_path, agent_id, claimed_at, expires_at)
+      VALUES ('src/expired.ts', 'src/expired.ts', 'agent-a', ?, ?)`).run(now - 600, now - 1);
+
+    const guard = db.prepare(
+      `UPDATE file_claims SET agent_id='thief' WHERE claim_key=? AND released_at IS NULL AND expires_at > ?`
+    );
+
+    // Live unexpired claim: exactly 1 row updated.
+    expect(guard.run('src/live.ts', now).changes).toBe(1);
+    // Released claim: untouched.
+    expect(guard.run('src/released.ts', now).changes).toBe(0);
+    // Expired claim: untouched.
+    expect(guard.run('src/expired.ts', now).changes).toBe(0);
+
+    const agents = db.prepare(`SELECT claim_key, agent_id FROM file_claims ORDER BY claim_key`).all() as
+      Array<{ claim_key: string; agent_id: string }>;
+    expect(agents).toEqual([
+      { claim_key: 'src/expired.ts', agent_id: 'agent-a' },
+      { claim_key: 'src/live.ts', agent_id: 'thief' },
+      { claim_key: 'src/released.ts', agent_id: 'agent-a' },
+    ]);
+  });
+
+  it('migration v12 upgrades a DB seeded at v11 and re-running is a no-op (idempotent)', () => {
+    // Seed schema_version through v11 so only v12 runs.
+    db.prepare(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, description TEXT, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    for (let v = 1; v <= 11; v++) {
+      db.prepare(`INSERT INTO schema_version (version, description) VALUES (?, ?)`).run(v, `seeded v${v}`);
+    }
+
+    expect(
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='file_claims'`).get()
+    ).toBeUndefined();
+
+    expect(() => runMigrations(db)).not.toThrow();
+
+    expect(
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='file_claims'`).get()
+    ).toBeDefined();
+    for (const idx of ['idx_file_claims_agent', 'idx_file_claims_live']) {
+      expect(
+        db.prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name=?`).get(idx)
+      ).toBeDefined();
+    }
+
+    // Insert a claim, then run migrations again — idempotent, no data loss, no extra version rows.
+    db.prepare(`INSERT INTO file_claims (claim_key, file_path, agent_id, claimed_at, expires_at)
+      VALUES ('src/db/migrations.ts', 'src/db/migrations.ts', 'agent-b', 1, 2)`).run();
+    const before = (db.prepare(`SELECT COUNT(*) c FROM file_claims`).get() as { c: number }).c;
+    const versionsBefore = (db.prepare(`SELECT COUNT(*) c FROM schema_version`).get() as { c: number }).c;
+
+    expect(() => runMigrations(db)).not.toThrow();
+
+    const after = (db.prepare(`SELECT COUNT(*) c FROM file_claims`).get() as { c: number }).c;
+    const versionsAfter = (db.prepare(`SELECT COUNT(*) c FROM schema_version`).get() as { c: number }).c;
+    expect(after).toBe(before);
+    expect(versionsAfter).toBe(versionsBefore);
+  });
+
   it('rolls back a failing migration: no version row is recorded', () => {
     runMigrations(db); // apply existing migrations first
     const failingVersion = MIGRATIONS[MIGRATIONS.length - 1].version + 1;

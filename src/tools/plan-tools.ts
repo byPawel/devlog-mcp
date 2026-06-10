@@ -7,6 +7,8 @@ import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DOKORO_PATH } from '../types/dokoro.js';
 import { renderOutput } from '../utils/render-output.js';
 import { icon } from '../utils/icons.js';
+import { formatTimestampSlug } from '../utils/timestamp.js';
+import { archivePlan, findInArchive, writeFileAtomic, PlansIndex, PlanIndexEntry } from '../utils/archive.js';
 
 // Plan item interface
 interface PlanItem {
@@ -37,8 +39,9 @@ interface Plan {
 const PLANS_DIR = path.join(DOKORO_PATH, '.mcp', 'plans');
 const PLANS_INDEX = path.join(PLANS_DIR, 'index.json');
 
-// Load plans index
-async function loadPlansIndex(): Promise<Record<string, string>> {
+// Load plans index. Live entries are bare title strings; archived entries
+// are `{ title, archived, archive_path }` objects (see src/utils/archive.ts).
+async function loadPlansIndex(): Promise<PlansIndex> {
   try {
     const content = await fs.readFile(PLANS_INDEX, 'utf-8');
     return JSON.parse(content);
@@ -47,21 +50,86 @@ async function loadPlansIndex(): Promise<Record<string, string>> {
   }
 }
 
-// Save plans index
-async function savePlansIndex(index: Record<string, string>): Promise<void> {
+// Save plans index (temp-file + atomic rename, same as archive.ts's index writes,
+// so a crash mid-write can never leave a truncated index.json behind).
+async function savePlansIndex(index: PlansIndex): Promise<void> {
   await fs.mkdir(PLANS_DIR, { recursive: true });
-  await fs.writeFile(PLANS_INDEX, JSON.stringify(index, null, 2));
+  await writeFileAtomic(PLANS_INDEX, JSON.stringify(index, null, 2));
 }
 
-// Load a specific plan
-async function loadPlan(planId: string): Promise<Plan | null> {
+/** Where a plan was found: live in `.mcp/plans/` or in the read-only archive. */
+interface PlanLocation {
+  plan: Plan;
+  archived: boolean;
+  /** Path relative to `.mcp/plans/` when archived (e.g. `archive/2026-06/<id>.json`). */
+  archivePath?: string;
+}
+
+/** True for index entries that archivePlan upgraded to archived metadata. */
+function isArchivedEntry(entry: PlanIndexEntry | undefined): boolean {
+  return typeof entry === 'object' && entry !== null && entry.archived === true;
+}
+
+async function readPlanFile(planPath: string): Promise<Plan | null> {
   try {
-    const planPath = path.join(PLANS_DIR, `${planId}.json`);
-    const content = await fs.readFile(planPath, 'utf-8');
-    return JSON.parse(content);
+    return JSON.parse(await fs.readFile(planPath, 'utf-8')) as Plan;
   } catch {
     return null;
   }
+}
+
+/**
+ * Load a plan, falling back to the archive: live file first, then the index's
+ * `archive_path`, then a scan of the archive partitions (heals the crash
+ * window where the file moved but the index write was lost). Archived plans
+ * are READ-ONLY — write tools must check `archived` and refuse.
+ */
+async function loadPlanWithLocation(planId: string): Promise<PlanLocation | null> {
+  const live = await readPlanFile(path.join(PLANS_DIR, `${planId}.json`));
+  if (live) return { plan: live, archived: false };
+
+  const entry = (await loadPlansIndex())[planId];
+  const candidates: string[] = [];
+  if (typeof entry === 'object' && entry !== null && typeof entry.archive_path === 'string') {
+    candidates.push(entry.archive_path);
+  }
+  const scanned = await findInArchive(planId);
+  if (scanned && !candidates.includes(scanned)) candidates.push(scanned);
+
+  for (const archivePath of candidates) {
+    const plan = await readPlanFile(path.join(PLANS_DIR, archivePath));
+    if (plan) return { plan, archived: true, archivePath };
+  }
+  return null;
+}
+
+/** Find the most recent live (non-archived) plan matching the given statuses. */
+async function findLatestLivePlan(allowedStatuses: Plan['status'][]): Promise<Plan | null> {
+  const index = await loadPlansIndex();
+  for (const id of Object.keys(index).reverse()) {
+    if (isArchivedEntry(index[id])) continue;
+    const located = await loadPlanWithLocation(id);
+    // `!archived` belt: covers the crash window where the index entry is
+    // still a bare string but the plan file already moved to the archive.
+    if (located && !located.archived && allowedStatuses.includes(located.plan.status)) {
+      return located.plan;
+    }
+  }
+  return null;
+}
+
+/** Archived plans are read-only — write tools refuse with this error. */
+function archivedPlanError(planId: string, archivePath?: string): CallToolResult {
+  const location = archivePath ? ` at \`.mcp/plans/${archivePath}\`` : '';
+  return {
+    isError: true,
+    content: [
+      {
+        type: 'text',
+        text: `Plan ${planId} is archived and read-only${location}. Archived plans cannot be modified — create a new plan instead.`,
+      },
+    ],
+  };
 }
 
 // Save a plan
@@ -228,21 +296,14 @@ export const planTools: ToolDefinition[] = [
       uncheck: z.boolean().optional().default(false).describe('Uncheck instead of check'),
     },
     handler: async ({ planId, itemIndex, notes, uncheck = false }): Promise<CallToolResult> => {
-      // Find plan
+      // Find plan (archived plans are read-only — refuse writes)
       let plan: Plan | null = null;
       if (planId) {
-        plan = await loadPlan(planId);
+        const located = await loadPlanWithLocation(planId);
+        if (located?.archived) return archivedPlanError(planId, located.archivePath);
+        plan = located?.plan ?? null;
       } else {
-        // Get latest active plan
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          const p = await loadPlan(id);
-          if (p && p.status === 'active') {
-            plan = p;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active']);
       }
 
       if (!plan) {
@@ -353,20 +414,14 @@ export const planTools: ToolDefinition[] = [
       blocker: z.string().describe('Description of the blocker'),
     },
     handler: async ({ planId, itemIndex, blocker }): Promise<CallToolResult> => {
-      // Find plan (same logic as plan_check)
+      // Find plan (same logic as plan_check; archived plans are read-only)
       let plan: Plan | null = null;
       if (planId) {
-        plan = await loadPlan(planId);
+        const located = await loadPlanWithLocation(planId);
+        if (located?.archived) return archivedPlanError(planId, located.archivePath);
+        plan = located?.plan ?? null;
       } else {
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          const p = await loadPlan(id);
-          if (p && p.status === 'active') {
-            plan = p;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active']);
       }
 
       if (!plan) {
@@ -379,7 +434,7 @@ export const planTools: ToolDefinition[] = [
                 data: {
                   title: 'Plan Not Found',
                   status: 'error',
-                  message: 'No active plan found',
+                  message: planId ? `No plan with ID: ${planId}` : 'No active plans',
                 },
               }),
             },
@@ -454,20 +509,14 @@ export const planTools: ToolDefinition[] = [
         .describe('Fail validation if not 100% complete'),
     },
     handler: async ({ planId, notes, requireComplete = false }): Promise<CallToolResult> => {
-      // Find plan
+      // Find plan (an archived plan is already finalized — refuse re-validation)
       let plan: Plan | null = null;
       if (planId) {
-        plan = await loadPlan(planId);
+        const located = await loadPlanWithLocation(planId);
+        if (located?.archived) return archivedPlanError(planId, located.archivePath);
+        plan = located?.plan ?? null;
       } else {
-        const index = await loadPlansIndex();
-        const planIds = Object.keys(index);
-        for (const id of planIds.reverse()) {
-          const p = await loadPlan(id);
-          if (p && (p.status === 'active' || p.status === 'completed')) {
-            plan = p;
-            break;
-          }
-        }
+        plan = await findLatestLivePlan(['active', 'completed']);
       }
 
       if (!plan) {
@@ -488,7 +537,8 @@ export const planTools: ToolDefinition[] = [
         };
       }
 
-      const now = new Date().toISOString();
+      const nowDate = new Date();
+      const now = nowDate.toISOString();
       plan.validated_at = now;
       plan.validation_notes = notes;
       plan.updated_at = now;
@@ -508,7 +558,9 @@ export const planTools: ToolDefinition[] = [
       const validationTable = generateValidationTable(plan);
 
       // Save validation report to file
-      const reportFilename = `${plan.id}-validation-${now.split('T')[0]}.md`;
+      // Standard UTC timestamp slug prefix + distinguishing `-validation-<planId>` suffix.
+      // (Previously `<planId>-validation-YYYY-MM-DD.md`; nothing reads these by pattern.)
+      const reportFilename = `${formatTimestampSlug(nowDate)}-validation-${plan.id}.md`;
       const reportPath = path.join(DOKORO_PATH, 'daily', reportFilename);
       await fs.mkdir(path.dirname(reportPath), { recursive: true });
 
@@ -537,11 +589,22 @@ export const planTools: ToolDefinition[] = [
         await fs.writeFile(workspace.path, workspace.content + logEntry);
       }
 
+      // Auto-archive validated plans so `.mcp/plans/` stays live-work-only.
+      // Non-fatal: a failed archive is reported as a warning, never an error
+      // (the plan is saved and the report written either way).
+      let archiveNote = '';
+      if (plan.status === 'validated') {
+        const archived = await archivePlan(plan.id);
+        archiveNote = archived.ok
+          ? `\n📦 **Plan archived to:** \`.mcp/plans/${archived.archivePath}\` (still listed via dokoro_plan_list)`
+          : `\n${icon('warning')} Plan archive failed (plan stays live): ${archived.error}`;
+      }
+
       return {
         content: [
           {
             type: 'text',
-            text: validationTable + `\n\n📄 **Report saved to:** \`${reportPath}\``,
+            text: validationTable + `\n\n📄 **Report saved to:** \`${reportPath}\`` + archiveNote,
           },
         ],
       };
@@ -556,21 +619,19 @@ export const planTools: ToolDefinition[] = [
       planId: z.string().optional().describe('Plan ID (shows latest if not specified)'),
     },
     handler: async ({ planId }): Promise<CallToolResult> => {
-      // Find plan
-      let plan: Plan | null = null;
+      // Find plan (read path — archived plans resolve too, marked read-only)
+      let located: PlanLocation | null = null;
       if (planId) {
-        plan = await loadPlan(planId);
+        located = await loadPlanWithLocation(planId);
       } else {
         const index = await loadPlansIndex();
         const planIds = Object.keys(index);
         for (const id of planIds.reverse()) {
-          const p = await loadPlan(id);
-          if (p) {
-            plan = p;
-            break;
-          }
+          located = await loadPlanWithLocation(id);
+          if (located) break;
         }
       }
+      const plan: Plan | null = located?.plan ?? null;
 
       if (!plan) {
         return {
@@ -591,8 +652,11 @@ export const planTools: ToolDefinition[] = [
       }
 
       // Build status output
-      let output = `## ${icon('task')} ${plan.title}\n\n`;
+      let output = `## ${icon('task')} ${plan.title}${located?.archived ? ' (archived)' : ''}\n\n`;
       output += `**Status:** ${plan.status.toUpperCase()}\n`;
+      if (located?.archived) {
+        output += `**Archived:** yes — \`.mcp/plans/${located.archivePath}\` (read-only)\n`;
+      }
       output += `**Progress:** ${plan.completion_percentage}% (${plan.items.filter(i => i.completed).length}/${plan.items.length})\n`;
       output += `**Created:** ${new Date(plan.created_at).toLocaleString()}\n`;
       output += `**Updated:** ${new Date(plan.updated_at).toLocaleString()}\n\n`;
@@ -658,9 +722,13 @@ export const planTools: ToolDefinition[] = [
       output += '| Status | Plan | Progress | Created |\n';
       output += '|--------|------|----------|----------|\n';
 
+      // Archived plans stay listed (read-only, marked), AFTER live plans.
+      const liveRows: string[] = [];
+      const archivedRows: string[] = [];
       for (const id of planIds.reverse()) {
-        const plan = await loadPlan(id);
-        if (!plan) continue;
+        const located = await loadPlanWithLocation(id);
+        if (!located) continue;
+        const { plan, archived } = located;
         if (status !== 'all' && plan.status !== status) continue;
 
         const statusIcon = {
@@ -671,8 +739,10 @@ export const planTools: ToolDefinition[] = [
           failed: '❌',
         }[plan.status];
 
-        output += `| ${statusIcon} ${plan.status} | ${plan.title} | ${plan.completion_percentage}% | ${new Date(plan.created_at).toLocaleDateString()} |\n`;
+        const row = `| ${statusIcon} ${plan.status} | ${plan.title}${archived ? ' (archived)' : ''} | ${plan.completion_percentage}% | ${new Date(plan.created_at).toLocaleDateString()} |\n`;
+        (archived ? archivedRows : liveRows).push(row);
       }
+      output += liveRows.join('') + archivedRows.join('');
 
       return {
         content: [{ type: 'text', text: output }],

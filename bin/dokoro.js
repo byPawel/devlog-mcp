@@ -14,8 +14,13 @@
  */
 
 const sub = process.argv[2];
+// Every subcommand the compiled CLI handles (see src/dokoro-cli.ts printHelp/main).
+// Anything missing here silently falls through to the MCP stdio server, which
+// looks like a hang — keep this in sync with the CLI's command switch.
 const CLI_COMMANDS = new Set([
-  'init', 'migrate', 'cleanup', 'help', '--help', '-h', 'version', '--version', '-v',
+  'init', 'migrate', 'search', 'list', 'ls', 'get', 'show', 'update',
+  'tags', 'tag', 'untag', 'browse', 'session', 'time', 'cleanup',
+  'help', '--help', '-h', 'version', '--version', '-v',
 ]);
 
 if (sub && CLI_COMMANDS.has(sub)) {

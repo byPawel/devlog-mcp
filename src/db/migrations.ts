@@ -222,6 +222,36 @@ export const MIGRATIONS: Migration[] = [
     ];
     for (const s of statements) db.prepare(s).run();
   } },
+  // v12: file_claims — ADVISORY per-file claims so multiple agents can cooperate in
+  // one worktree. Conflicts WARN, they never block: enforcement lives in the tools
+  // layer, not here. Identity is claim_key — the casefolded normalized root-relative
+  // path (src/utils/claim-path.ts) — so one file maps to exactly one row regardless
+  // of case or separator differences; file_path keeps the display form. Lease
+  // semantics: claimed_at/expires_at/released_at are server-assigned unixepoch
+  // seconds (single clock domain, same convention as agent_presence v11); T5 tools
+  // must use strftime('%s','now') for writes and comparisons, never Date.now().
+  // heartbeat_seq is a monotonic renewal counter (DynamoDB lock-client style
+  // version counter); released_at IS NULL means the claim is open. Rows are
+  // ephemeral coordination state, distinct from durable memory — safe to prune.
+  // Per-project only.
+  { version: 12, description: 'file_claims table for advisory per-file multi-agent claims', up: (db) => {
+    const statements = [
+      `CREATE TABLE IF NOT EXISTS file_claims (
+        claim_key TEXT PRIMARY KEY,
+        file_path TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        session_id TEXT,
+        intent TEXT,
+        claimed_at INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL,
+        heartbeat_seq INTEGER NOT NULL DEFAULT 0,
+        released_at INTEGER
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_file_claims_agent ON file_claims(agent_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_file_claims_live ON file_claims(expires_at) WHERE released_at IS NULL`,
+    ];
+    for (const s of statements) db.prepare(s).run();
+  } },
 ];
 
 export function runMigrations(db: Database.Database): void {
